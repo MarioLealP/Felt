@@ -33,8 +33,8 @@ path for something local can already handle.
 
 | Service | Repo | Status |
 |---|---|---|
-| `felt-core` | `services/felt-core` (submodule) | **scaffolded** — config system, plugin interface, project layout. Brain loop not built yet. |
-| `felt-voice` | not created yet | planned — local STT (`faster-whisper`) + TTS (Piper), push-to-talk v1 |
+| `felt-core` | `services/felt-core` (submodule) | **running** — brain, plugin system, router, 4 skills (`get_time`, `delegate_research`, `get_weather`, `remember_fact`), SQLite persistence (conversation + long-term facts), HTTP/WS API. Deployed on the clockmost server. |
+| `felt-voice` | `services/felt-voice` (submodule) | **built** — STT (`faster-whisper`, CPU) + TTS (Piper), `POST /v1/tts` + `POST /v1/stt`, verified via a real HTTP round trip. Not yet deployed anywhere long-term; not yet wired to felt-core. |
 | `felt-dashboard` | not created yet | planned — a plain website, wrapped for desktop use |
 | `felt-automation` | not created yet | planned — ntfy, desktop-notification passthrough, KDE Connect |
 

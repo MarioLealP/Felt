@@ -4,3 +4,6 @@
 [submodule "services/felt-voice"]
 	path = services/felt-voice
 	url = git@git.clockmost.com:Benylin/felt-voice.git
+[submodule "services/felt-desktop-agent"]
+	path = services/felt-desktop-agent
+	url = git@git.clockmost.com:Benylin/felt-desktop-agent.git

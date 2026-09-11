@@ -33,10 +33,11 @@ path for something local can already handle.
 
 | Service | Repo | Status |
 |---|---|---|
-| `felt-core` | `services/felt-core` (submodule) | **running** — brain, plugin system, router, 4 skills (`get_time`, `delegate_research`, `get_weather`, `remember_fact`), SQLite persistence (conversation + long-term facts), HTTP/WS API. Deployed on the clockmost server. |
-| `felt-voice` | `services/felt-voice` (submodule) | **built** — STT (`faster-whisper`, CPU) + TTS (Piper), `POST /v1/tts` + `POST /v1/stt`, verified via a real HTTP round trip. Not yet deployed anywhere long-term; not yet wired to felt-core. |
+| `felt-core` | `services/felt-core` (submodule) | **running** — brain, plugin system, deterministic router (temperature 0 + worked examples for tool disambiguation), 8 skills (`get_time`, `delegate_research`, `web_search`, `get_weather`, `remember_fact`, `get_recent_alerts`, `poe_price_check`, `set_timer`), SQLite persistence (conversation + long-term facts), ntfy subscribe (read) + publish (push, dedicated credential), HTTP/WS API. Deployed on the clockmost server. |
+| `felt-voice` | `services/felt-voice` (submodule) | **running** — STT + TTS, systemd service on the Nitro5, wired into felt-core via `/v1/voice-chat`. |
+| `felt-desktop-agent` | `services/felt-desktop-agent` (submodule) | **built** — D-Bus notification passthrough, read aloud via felt-voice. Runs on the user's own desktop. Not yet a persistent service; fullscreen-gating and real app allowlist entries still needed. |
 | `felt-dashboard` | not created yet | planned — a plain website, wrapped for desktop use |
-| `felt-automation` | not created yet | planned — ntfy, desktop-notification passthrough, KDE Connect |
+| KDE Connect integration | not created yet | planned — likely folds into `felt-desktop-agent` rather than its own service |
 
 Each gets its own submodule + row here once it's actually scaffolded —
 this table is the map, not a promise of what exists yet.

@@ -1,0 +1,3 @@
+[submodule "services/felt-core"]
+	path = services/felt-core
+	url = git@git.clockmost.com:Benylin/felt-core.git

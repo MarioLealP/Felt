@@ -33,11 +33,11 @@ path for something local can already handle.
 
 | Service | Repo | Status |
 |---|---|---|
-| `felt-core` | `services/felt-core` (submodule) | **running** — brain, plugin system, deterministic router (temperature 0 + worked examples for tool disambiguation), 8 skills (`get_time`, `delegate_research`, `web_search`, `get_weather`, `remember_fact`, `get_recent_alerts`, `poe_price_check`, `set_timer`), SQLite persistence (conversation + long-term facts), ntfy subscribe (read) + publish (push, dedicated credential), HTTP/WS API. Deployed on the clockmost server. |
+| `felt-core` | `services/felt-core` (submodule) | **running** — brain, plugin system, deterministic router (temperature 0 + worked examples + JSON repair for tool disambiguation), 11 skills (`get_time`, `delegate_research`, `web_search`, `get_weather`, `remember_fact`, `get_recent_alerts`, `poe_price_check`, `set_timer`, `get_phone_battery`, `find_phone`, `printer_status`), SQLite persistence (conversation + long-term facts), ntfy subscribe (read) + publish (push, dedicated credential), HTTP/WS API, CORS-enabled and LAN-reachable. Deployed on the clockmost server. |
 | `felt-voice` | `services/felt-voice` (submodule) | **running** — STT + TTS, systemd service on the Nitro5, wired into felt-core via `/v1/voice-chat`. |
-| `felt-desktop-agent` | `services/felt-desktop-agent` (submodule) | **built** — D-Bus notification passthrough, read aloud via felt-voice. Runs on the user's own desktop. Not yet a persistent service; fullscreen-gating and real app allowlist entries still needed. |
-| `felt-dashboard` | not created yet | planned — a plain website, wrapped for desktop use |
-| KDE Connect integration | not created yet | planned — likely folds into `felt-desktop-agent` rather than its own service |
+| `felt-desktop-agent` | `services/felt-desktop-agent` (submodule) | **running** — D-Bus notification passthrough (fullscreen/game-focus gated) + a small HTTP API for KDE Connect (battery, ring), both as a `systemctl --user` service on the desktop. |
+| `felt-dashboard` | `services/felt-dashboard` (submodule) | **running** — the actual way to use Felt: text + voice chat UI, React/Vite/Tailwind on the Endfield tokens (forked from `clockmost-frontend-template`), `systemctl --user` dev-server service. Not yet a production build or wrapped in Tauri. |
+| KDE Connect SMS/calls | not built yet | planned extension of `felt-desktop-agent`'s existing KDE Connect API |
 
 Each gets its own submodule + row here once it's actually scaffolded —
 this table is the map, not a promise of what exists yet.

@@ -7,3 +7,6 @@
 [submodule "services/felt-desktop-agent"]
 	path = services/felt-desktop-agent
 	url = git@git.clockmost.com:Benylin/felt-desktop-agent.git
+[submodule "services/felt-dashboard"]
+	path = services/felt-dashboard
+	url = git@git.clockmost.com:Benylin/felt-dashboard.git

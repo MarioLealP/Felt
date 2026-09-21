@@ -102,6 +102,8 @@ E:\Felt\
   LaunchFelt.ps1, UpdateFelt.ps1, godot_path.txt   <- tracked here (godot_path.txt is gitignored, machine-local)
   Launch Felt.bat, Update Felt.bat                 <- Desktop shortcuts point at these
   docs/plans/             <- design docs and task briefs, see below
+  Animations/             <- shortcut into felt-character-assets's animation library (see below)
+  Model/                  <- shortcut into felt-character-assets's characters/ folder (felt.vrm - the only one)
   felt-core/               \
   felt-animation/           |
   felt-tray/                 > each its own independent git clone,
@@ -114,6 +116,20 @@ E:\Felt\
 `F:\workspace\Projects\<repo>` is a directory junction pointing at each of
 these - editing/git from either path hits the same files in real time, so
 existing muscle memory pointed at the old workspace location still works.
+
+**`Animations\` and `Model\` are also junctions** (into
+`felt-character-assets\felt-godot-overlay\animations\library` and
+`...\characters` respectively) - added 2026-09-21 so the actual animation
+clips and the base VRM model are visible right here instead of buried four
+folders deep. The real, git-tracked files live in `felt-character-assets`;
+these are just direct shortcuts to them, so dropping a new `.vrma` into
+`E:\Felt\Animations\<tag>\` or swapping `E:\Felt\Model\felt.vrm` is exactly
+the same as doing it inside `felt-character-assets` itself - then run
+**Update Felt** to bake it in. `characters/` only ever held one real model
+(`felt.vrm`) as of 2026-09-21 - two abandoned reference models
+(`chen_qianyu.vrm`, `vroid_test.vrm`, plus the ~330MB `chen_qianyu/`
+conversion-experiment folder) were deleted, see
+`felt-character-assets/README.md` for what and why.
 
 ## docs/plans
 

@@ -9,5 +9,12 @@
 /felt-t2a-studio/
 /AnimToVrmaConverter/
 
+# Convenience junctions into felt-character-assets, so the animation
+# library and the base model are visible right at E:\Felt instead of
+# buried under felt-character-assets\felt-godot-overlay\... - the real
+# content lives (and is tracked) there, these are just shortcuts.
+/Animations/
+/Model/
+
 # Machine-local (which Godot.exe to use for exports) - never portable/shared
 /godot_path.txt

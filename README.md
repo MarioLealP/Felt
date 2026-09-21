@@ -1,55 +1,132 @@
 # Felt
 
-A local-first AI assistant — an orchestrator ("brain") that routes between
-a local model and on-demand cloud delegation, a growing set of pluggable
-skills, a voice pipeline, a dashboard, and (eventually) a rigged 2D puppet
-it can drive in real time.
+A local-first AI companion for Mario's desktop: text/voice chat backed by a
+local model (with opt-in cloud delegation for banter it isn't great at), and
+an animated VRM avatar that lives on the desktop and reacts to the
+conversation - lipsync, expressions, idle behavior, the works.
 
-This is the **umbrella repo**: architecture, cross-service docs, and git
-submodules pointing at each independently-deployable service. Felt is
-built as microservices deliberately — several pieces (voice, the
-dashboard, home-automation glue) naturally run on different machines
-(a GPU box, a desktop, a home server), so the repo structure reflects that
-rather than fighting it with one monolith.
+This is the **umbrella repo**: top-level docs, design history
+(`docs/plans/`), and the launcher scripts that boot the whole stack. Each
+real component below is its own independently-versioned git repo, cloned as
+a sibling folder here (not a submodule - see "Repo layout").
 
 ## Philosophy
 
-Felt assumes it may eventually be public and usable by someone who isn't
-its original author. Every service in this repo follows the same two
-rules:
+Felt is built assuming it may eventually be public, and to be genuinely
+usable by someone who isn't its original author. Two rules follow from
+that, enforced project-wide:
 
 1. **No hardcoding.** No IPs, hostnames, file paths, API keys, or other
-   environment-specific values in code — everything goes through config
-   (env vars / `.env`), documented per-service in each service's
+   environment-specific values baked into code - everything goes through
+   config (env vars / `.env`), documented per-service in each service's
    `.env.example`.
-2. **Modular / plugin architecture.** Skills/integrations are self-
-   contained, addable/removable without touching core code.
+2. **Modular / plugin architecture.** Skills (weather, price checks, smart
+   home, ...) are self-contained plugins implementing one small interface -
+   addable/removable without touching core code.
 
-And one architectural consequence worth stating up front: **the local
-model is the default brain; cloud is opt-in per call**, never a default
-path for something local can already handle.
+And one consequence worth stating up front: **the local model is the
+default brain; cloud is opt-in per call**, gated by a dedicated fail-closed
+privacy classifier, never a default path for something local can already
+handle.
 
-## Services
-
-| Service | Repo | Status |
-|---|---|---|
-| `felt-core` | `services/felt-core` (submodule) | **running** — brain, plugin system, deterministic router (temperature 0 + worked examples + JSON repair for tool disambiguation), 24 skills (`get_time`, `delegate_research`, `web_search`, `get_weather`, `remember_fact`, `get_recent_alerts`, `poe_price_check`, `set_timer`, `set_alarm`, `list_alarms`, `cancel_alarm`, `get_phone_battery`, `find_phone`, `printer_status`, `news_digest`, `get_gpu_status`, `get_container_status`, `media_control`, `check_email`, `generate_image`, `shopping_list`, `smart_home_control`, `list_calendar_events`, `create_calendar_event`), SQLite persistence (conversation + long-term facts), a proactive IMAP email watcher (needs real credentials in `.env` to run), image generation via the Nitro5's ComfyUI (verified live), ntfy subscribe (read) + publish (push, dedicated credential), HTTP/WS API, CORS-enabled and LAN-reachable, a real pytest suite + CI. Deployed on the clockmost server. |
-| `felt-voice` | `services/felt-voice` (submodule) | **running** — STT + TTS, systemd service on the Nitro5, wired into felt-core via `/v1/voice-chat`, with a pytest suite covering caching + text handling. |
-| `felt-desktop-agent` | `services/felt-desktop-agent` (submodule) | **running** — D-Bus notification passthrough (fullscreen/game-focus gated, native + KDE-Connect-relay filtering) + a small HTTP API for KDE Connect (battery, ring) and MPRIS media transport control (play/pause/skip/volume via `playerctl`), all as a `systemctl --user` service on the desktop, with a pytest suite + CI. |
-| `felt-dashboard` | `services/felt-dashboard` (submodule) | **running** — the actual way to use Felt: text + voice chat UI, React/Vite/Tailwind on the Endfield tokens (forked from `clockmost-frontend-template`). Two ways to run it: a browser-tab production build served via a `systemctl --user` service (`felt-dashboard.service`), and a native Tauri app (`src-tauri/`) that lives in the system tray with a global keybind to show/hide, real native mic capture (cpal, bypassing a WebKitGTK MediaRecorder bug), and its own `systemctl --user` service (`felt-tray.service`). |
-| KDE Connect SMS/calls | not built yet | planned extension of `felt-desktop-agent`'s existing KDE Connect API — deliberately deferred, sending a real message on Mario's behalf needs its own discussion first |
-
-Each gets its own submodule + row here once it's actually scaffolded —
-this table is the map, not a promise of what exists yet.
-
-## Working with submodules
+## How a message actually flows
 
 ```
-git clone --recurse-submodules git@git.clockmost.com:Benylin/Felt.git
-# or, if already cloned:
-git submodule update --init --recursive
+you (voice or typed text)
+  -> felt-tray (push-to-talk / hotkey / chat window)
+     or felt-dashboard (the chat UI felt-tray hosts)
+  -> felt-core  [the brain]
+       - routes tool-vs-chat (small dedicated classifier model)
+       - plain chat: local model, or Gemini direct API if the privacy
+         classifier clears it (never for tool-result replies - those can
+         carry real personal data, so they always stay local)
+       - skills: weather, calendar, email, smart home, PoE2 prices, ...
+       - felt-voice: STT in, TTS out
+  -> felt-tray plays the reply (toast + audio) and forwards the resolved
+     animation_tag on to felt-animation
+  -> felt-animation decides the actual reaction clip, generates lipsync
+     cues (Rhubarb, fully local/offline), and drives felt-overlay over a
+     small local TCP relay
+  -> felt-overlay (felt-character-assets/felt-godot-overlay) is what you
+     actually see: the VRM avatar animating, lipsyncing, and expressing on
+     the desktop
 ```
 
-Each service is developed and versioned independently (its own commits,
-its own `.env.example`); this repo just pins which commit of each is the
-current "known good" combination.
+`felt-animation` and `felt-overlay` are themselves fed by two offline
+authoring pipelines: `AnimToVrmaConverter` (Mixamo animations → `.vrma`)
+and `felt-t2a-studio` (text prompt → `.vrma`, using a T2M-GPT server on the
+Nitro5 laptop) - both promote approved clips straight into
+`felt-character-assets`'s curated animation library.
+
+## Components
+
+| Repo | Role | Runs | Status |
+|---|---|---|---|
+| [`felt-core`](https://git.clockmost.com/Benylin/felt-core) | The brain - routing, skills, conversation memory, cloud/local chat split | clockmost server | running |
+| [`felt-voice`](https://git.clockmost.com/Benylin/felt-voice) | STT + TTS | Nitro5 laptop | running (not checked out locally on the desktop) |
+| [`felt-tray`](https://git.clockmost.com/Benylin/felt-tray) | Desktop shell - tray icon, global hotkeys, push-to-talk, felt-overlay lifecycle + relay | this desktop | running |
+| [`felt-dashboard`](https://git.clockmost.com/Benylin/felt-dashboard) | The chat UI (text + voice), hosted inside felt-tray's window | this desktop (built, hosted by felt-tray) | running |
+| [`felt-animation`](https://git.clockmost.com/Benylin/felt-animation) | Behavior/reaction decisions, lipsync generation, owns the felt-overlay process | this desktop | running |
+| [`felt-character-assets`](https://git.clockmost.com/Benylin/felt-character-assets) | The VRM avatar + `felt-godot-overlay` (the actual on-screen renderer) | this desktop | running |
+| [`felt-t2a-studio`](https://git.clockmost.com/Benylin/felt-t2a-studio) | Text-prompt-to-animation authoring tool | this desktop (+ Nitro5 for inference) | working |
+| [`AnimToVrmaConverter`](https://git.clockmost.com/Benylin/AnimToVrmaConverter) | Mixamo animation → `.vrma` conversion pipeline | this desktop (+ headless Unity) | working |
+
+**Retired, from the pre-Windows-migration Linux setup, no longer part of
+this project:** `felt-desktop-agent` (D-Bus/KDE-Connect glue, Linux-only)
+and the Tauri (`src-tauri/`) dashboard shell - replaced by `felt-tray`'s
+Python/pywebview shell after the desktop moved from Linux to Windows
+(2026-09).
+
+## Running it
+
+Desktop shortcuts (created 2026-09-21):
+
+- **Launch Felt** - starts everything: checks/starts local Ollama, then
+  `felt-animation` (which also launches `felt-overlay`) and `felt-tray`.
+- **Update Felt** - commits any new assets dropped into
+  `felt-character-assets` (new `.vrma` clips, a swapped model), re-exports
+  the Godot overlay, and restarts `felt-animation`. Run this after adding
+  new animations - felt-overlay only plays clips baked in at export time.
+- **Convert Animation** - drag a Mixamo `.anim`/`.unitypackage` file onto
+  it to convert straight to `.vrma` (`AnimToVrmaConverter/anim2vrma.bat`).
+- **Felt Folder** - opens `E:\Felt` in Explorer.
+
+From a terminal, the same two scripts: `E:\Felt\LaunchFelt.ps1` /
+`E:\Felt\UpdateFelt.ps1`.
+
+## Repo layout
+
+```
+E:\Felt\
+  README.md              <- this file
+  LaunchFelt.ps1, UpdateFelt.ps1, godot_path.txt   <- tracked here (godot_path.txt is gitignored, machine-local)
+  Launch Felt.bat, Update Felt.bat                 <- Desktop shortcuts point at these
+  docs/plans/             <- design docs and task briefs, see below
+  felt-core/               \
+  felt-animation/           |
+  felt-tray/                 > each its own independent git clone,
+  felt-dashboard/            | not a submodule of this repo
+  felt-character-assets/    |
+  felt-t2a-studio/          |
+  AnimToVrmaConverter/      /
+```
+
+`F:\workspace\Projects\<repo>` is a directory junction pointing at each of
+these - editing/git from either path hits the same files in real time, so
+existing muscle memory pointed at the old workspace location still works.
+
+## docs/plans
+
+Design docs and the original task briefs written for delegated work on
+this project - kept for the *why*, not day-to-day reference:
+
+- `gemini-task-felt-animation.md` - the original felt-animation/felt-overlay
+  behavior design brief.
+- `gemini-task-felt-natural-animation.md` - the follow-up pass (blend
+  timing, expressions, blinking, anti-repeat).
+- `t2a-architecture-whitepaper.md`, `t2a-6gb-implementation-plan.md` - the
+  text-to-animation (T2A) pipeline design, built around the Nitro5's 6GB
+  VRAM budget.
+
+Each component repo's own `README.md` is the source of truth for its
+current state - these are history, not living docs.

@@ -1,0 +1,13 @@
+# Each of these is its own independent git repo (junctioned in from
+# F:\workspace\Projects) - never tracked here, this repo only owns the
+# top-level docs/launchers tying them together.
+/felt-core/
+/felt-animation/
+/felt-tray/
+/felt-dashboard/
+/felt-character-assets/
+/felt-t2a-studio/
+/AnimToVrmaConverter/
+
+# Machine-local (which Godot.exe to use for exports) - never portable/shared
+/godot_path.txt

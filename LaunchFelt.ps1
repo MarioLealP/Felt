@@ -24,13 +24,24 @@ if (-not $ollamaUp) {
 }
 
 Write-Host "Stopping running Felt instances..."
-Get-WmiObject Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -match "felt_animation" -or $_.CommandLine -match "felt-tray" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Get-WmiObject Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -match "felt_animation" -or $_.CommandLine -match "felt-tray" -or $_.CommandLine -match "felt_vision" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Stop-Process -Name "FeltOverlay" -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 1
 
 Write-Host "Starting Felt Animation (also launches the overlay)..."
 Set-Location -Path "E:\Felt\felt-animation"
 Start-Process -FilePath ".venv\Scripts\python.exe" -ArgumentList "-m felt_animation" -WindowStyle Hidden
+
+# Not yet moved into E:\Felt (Gemini scaffolded it straight into the old
+# workspace location, no git remote configured either) - referenced at its
+# real current path for now rather than leaving it as a manually-run dev
+# server. Without this running, felt-tray's desktop watcher silently fails
+# every single trigger (connection refused) with nothing visible anywhere -
+# confirmed live, 2026-09-22: this is why screen-reaction voice/animation
+# never happened, not a bug in the reaction logic itself.
+Write-Host "Starting Felt Vision..."
+Set-Location -Path "F:\workspace\Projects\felt-vision"
+Start-Process -FilePath ".venv\Scripts\felt-vision.exe" -WindowStyle Hidden
 
 Write-Host "Starting Felt Tray..."
 Set-Location -Path "E:\Felt\felt-tray"

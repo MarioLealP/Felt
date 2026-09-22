@@ -21,16 +21,32 @@ def main():
             gap: 20px;
             margin-top: 20px;
         }}
+        .image-container-wrapper {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }}
         .image-container {{
             background: #333;
-            padding: 20px;
+            width: 800px;
+            height: 800px;
             border-radius: 8px;
-            text-align: center;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }}
         .image-container img {{
-            max-width: 800px; /* Big! */
-            max-height: 80vh;
-            border-radius: 8px;
+            /* The source image is 1920x1080 with her in the center. 
+               We don't want to squish it into 800x800. 
+               We scale it up so she's big! */
+            width: 1920px;
+            height: 1080px;
+            min-width: 1920px;
+            min-height: 1080px;
+            object-fit: none; /* Keep original pixel size */
+            transform: scale(2.0) translateY(10%); /* Zoom 2x, shift down slightly if she is at the bottom center */
+            transform-origin: center center;
         }}
         .nav-btn {{
             background: #555;
@@ -80,8 +96,10 @@ def main():
     
     <div class="carousel">
         <button class="nav-btn" onclick="prev()">&#10094;</button>
-        <div class="image-container">
-            <img id="main-image" src="" />
+        <div class="image-container-wrapper">
+            <div class="image-container">
+                <img id="main-image" src="" />
+            </div>
             <h2 id="tee-name"></h2>
         </div>
         <button class="nav-btn" onclick="next()">&#10095;</button>

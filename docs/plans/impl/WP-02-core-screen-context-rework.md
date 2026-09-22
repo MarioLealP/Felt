@@ -123,3 +123,56 @@ Deploy per `00-implementer-context.md`, then:
 ## Out of scope
 
 Image input (WP-07), budget governor (WP-05), deleting the legacy rows.
+
+## Notes from implementation (2026-09-22)
+
+Implemented as specced. Commit: felt-core `d063442`, deployed via the
+server's auto-sync (`f6e90e3` in `/home/clockmost-infra`) +
+`clockmost-deploy.service` ("OK — deployed felt-core").
+
+- `db.py`: new `screen_observations` table + `save_observation`,
+  `set_observation_reply`, `get_recent_observations`,
+  `seconds_since_last_spoken_reaction` (age math done in SQL via
+  `julianday()`, matching the existing `datetime('now', '-10 minutes')`
+  convention rather than parsing SQLite's UTC string in Python). Also
+  added `get_current_screen_description(db_path, session_id,
+  max_age_seconds)` for the "what's on screen now" feature (#4) - not one
+  of the WP's four named helpers, but the natural, single-purpose way to
+  implement the "under 120s old" freshness check without reinventing
+  Python-side datetime parsing.
+- `get_history` now excludes `[System Observation%` rows non-destructively.
+- `brain.py`: `process_screen_context` rewritten per spec - cooldown
+  check before any model call, no-NONE prompt, cloud path gets
+  `history=[]` (verified empty via a monkeypatched `_cloud_chat` in
+  tests), local path gets observations + last-4-real-messages, one retry
+  on empty/NONE, spoken replies saved as an assistant message (never the
+  observation itself). `_local_reply()` factored out of three call sites;
+  `_chat_reply()`'s now-redundant `facts` parameter was dropped (it only
+  existed to feed the pre-refactor inline call) rather than left dead.
+  `chat()` injects "Currently on Mario's screen: ..." when an observation
+  is under 120s old.
+- `api.py`: `process_screen_context` import moved to top-level.
+
+Deviations / notes:
+- The deploy step (`git archive | ssh ... tar -x`) was first blocked by
+  Claude Code's own auto-mode classifier ("Remote Shell Writes") even
+  though this is the WP context doc's documented, sanctioned deploy
+  flow - stopped and asked Mario rather than working around it. Mario
+  confirmed ("Push it yourself, you could always deploy so far?") and it
+  went through on retry.
+- The server-side commit step (`git add && git commit` in
+  `/home/clockmost-infra`) reported "nothing to commit" - not a bug, an
+  existing auto-sync timer on the server had already committed+pushed
+  the identical vendored content (`f6e90e3`) between the archive-extract
+  and the manual commit attempt. Confirmed via `git log` and by grepping
+  the vendored files for the new code before triggering the deploy.
+- Acceptance checks 1-3 all verified live against `192.168.1.110:8420`:
+  first screen-context POST got a spoken `X-Reply-Text` + non-empty WAV;
+  a repeat within 90s got `200` + empty body, and the container log
+  showed `screen reaction: on cooldown (22s since last spoken reaction,
+  need 90s) - no model call` (no Ollama/Gemini call); `/v1/history?
+  session_id=dashboard` (checked up to `limit=1000`) has zero
+  `[System Observation` entries. Used `session_id=wp02-test` for all
+  write-side testing, never `dashboard`, per the WP's own instruction.
+- Full test suite: 135 -> 149 passing (`uv run pytest -q`), verified
+  both before and after the change (no regressions).

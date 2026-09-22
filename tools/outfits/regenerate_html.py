@@ -28,8 +28,8 @@ def main():
         }}
         .image-container {{
             background: #333;
-            width: 800px;
-            height: 800px;
+            width: 400px;
+            height: 600px;
             border-radius: 8px;
             overflow: hidden;
             display: flex;
@@ -37,16 +37,12 @@ def main():
             align-items: center;
         }}
         .image-container img {{
-            /* The source image is 1920x1080 with her in the center. 
-               We don't want to squish it into 800x800. 
-               We scale it up so she's big! */
-            width: 1920px;
-            height: 1080px;
-            min-width: 1920px;
-            min-height: 1080px;
-            object-fit: none; /* Keep original pixel size */
-            transform: scale(2.0) translateY(10%); /* Zoom 2x, shift down slightly if she is at the bottom center */
-            transform-origin: center center;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Fills the 400x600 box, zooming in */
+            object-position: center center; /* Focuses on the center */
+            /* If we need more zoom, we can use transform: scale(1.5) */
+            transform: scale(1.8) translateY(10%);
         }}
         .nav-btn {{
             background: #555;

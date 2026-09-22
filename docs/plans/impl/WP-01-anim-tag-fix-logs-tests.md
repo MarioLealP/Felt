@@ -98,3 +98,55 @@ UpdateFelt, unless you intend to commit through it).
 
 Changing which tags felt-core sends (weather clips come later in WP-18),
 mood logic, playback.
+
+## Notes from implementation (2026-09-22)
+
+Implemented as specced. Commits:
+- felt-animation: `b9a17df` — `library.resolve_known_tag()`, wired into
+  `_handle_reply` before `resolve_posture_tag`; file logging for both
+  felt-animation and felt-vision; `expressions.py` split out of
+  `server.py` so `_expression_for_tag`/`_EXPRESSION_KEYWORDS` (renamed
+  `expression_for_tag`) are testable without `.env`; `tests/` with 17
+  passing cases (`test_library.py`, `test_state.py` incl. the race
+  regression, `test_expressions.py`); `test_api.py` → `scripts/
+  manual_reply_smoke.py`; `pyproject.toml` gets `[tool.pytest.ini_options]`.
+- felt-vision: `eedba4d` — same file-logging pattern, plus a startup
+  `logger.info` line (needed for acceptance check 4 — without an
+  explicit log call at import time there was nothing to see in the file
+  even though it was created and working).
+- felt-character-assets: `86c071f` — `_play_tag` broadcasts
+  `{"finished": tag, "missing": true}` for both the "no entry in
+  tag_to_clips" and "entry exists but empty" cases; `overlay.py`'s
+  `_read_loop` logs a WARNING when `missing` is true. Rebuilt via direct
+  Godot export (not UpdateFelt.ps1).
+
+Deviations / notes:
+- A concurrent Antigravity/Gemini session was live-editing
+  `felt-character-assets/main.gd` at the same time (garment-swap +
+  screenshot-hook code, unrelated to this WP — confirmed with Mario
+  mid-session, "I forgot i had gemini churning in the background").
+  First attempt at committing the WP-01 hunk with `git commit -- <path>`
+  silently re-staged the *whole* working-tree file from disk (git's
+  pathspec-commit behavior, not `git add`'s), pulling in ~75 lines of
+  that unrelated in-progress code. Caught it in the follow-up `git show
+  --stat`, reset with `git reset --soft HEAD~1`, and re-split into two
+  commits: `86c071f` (just the two `_broadcast_to_relay` lines) and a
+  separate `52dcdf1 [gemini-wip] ...` commit carrying the garment/
+  screenshot code on its own, labeled so it's a clean `git revert`
+  target if that in-progress feature isn't wanted as-is (Mario, mid-
+  session: "Feel free to partial commit gemini stuff, clearly indicating
+  its gemini stuff... so you dont have to skirt around it every commit").
+  Lesson for future WPs touching a file Gemini/OpenHands might also be
+  editing: never `git commit -- <path>` when only part of that path's
+  diff is staged — it re-adds the whole working-tree version first.
+  `git commit` with no pathspec commits exactly the index.
+- Acceptance checks 1-4 all verified live: `uv run pytest -q` (17
+  passed), the weather-tag POST logged "dropping to the local
+  classifier" with no 30s timeout warning, a raw unknown tag sent to
+  :8765 logged the `missing` WARNING, and felt-vision.log got the new
+  startup line. Felt was left stopped afterward (Mario: fine to leave
+  her off between test runs).
+- `known_tags` at scan time (34 tags) has no `reaction/weather` or
+  `reaction/weather/*` — confirms the freeze this WP fixes was real and
+  not hypothetical; `emotion/*`, `gesture/*` etc. all present and
+  correctly picked up by `resolve_known_tag`'s ancestor walk.

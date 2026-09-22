@@ -28,8 +28,8 @@ def main():
         }}
         .image-container {{
             background: #333;
-            width: 400px;
-            height: 600px;
+            width: 600px;
+            height: 800px;
             border-radius: 8px;
             overflow: hidden;
             display: flex;
@@ -39,10 +39,8 @@ def main():
         .image-container img {{
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Fills the 400x600 box, zooming in */
-            object-position: center center; /* Focuses on the center */
-            /* If we need more zoom, we can use transform: scale(1.5) */
-            transform: scale(1.8) translateY(10%);
+            object-fit: cover;
+            object-position: center center;
         }}
         .nav-btn {{
             background: #555;

@@ -64,7 +64,7 @@ evidence-first reporting rules, and the prompt to paste. Delegated WPs end in
 | [WP-30](WP-25-31-life-features.md#wp-30) | Hobbies while Mario is AFK | WP-21, WP-17, WP-26 | M | ☐ |
 | [WP-31](WP-25-31-life-features.md#wp-31) | Calendar heads-up | WP-25 | S | ☐ |
 | [WP-32](WP-32-33-wardrobe-automation.md#wp-32) | Wardrobe Tier A: source accessories and clothing assets online (+ Booth shortlist for Mario) | none | M | ☐ |
-| [WP-33](WP-32-33-wardrobe-automation.md#wp-33) | ★ Wardrobe Tier A: a new tee every day (UV print areas, ≥ 60 tees, review gallery, daily pick) | none | M | ☐ |
+| [WP-33](WP-32-33-wardrobe-automation.md#wp-33) | ★ Wardrobe Tier A: a new tee every day (UV print areas, ≥ 60 tees, review gallery, daily pick) | none | M | 🔎 needs review |
 | [Tier C](MARIO-vroid-outfits.md) | **Mario's** VRoid outfit checklist (pajamas, hoodie, rain, winter, Halloween by mid-Oct, …) | none | ongoing | ☐ |
 | **Anytime** |||||
 | [WP-24](WP-24-hygiene.md) | Repo hygiene (AnimToVrmaConverter junk, dead code, felt-vision docs) | none | S | ☐ |

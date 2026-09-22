@@ -1,0 +1,22 @@
+[project]
+name = "outfits"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Benylin", email = "lealmariop@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.5.3",
+    "pillow>=12.3.0",
+    "pygltflib>=1.16.5",
+    "trimesh>=5.1.0",
+]
+
+[project.scripts]
+outfits = "outfits:main"
+
+[build-system]
+requires = ["uv_build>=0.12.17,<0.13.0"]
+build-backend = "uv_build"

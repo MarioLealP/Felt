@@ -171,3 +171,14 @@ Regenerate replacements for the rejects in a later batch.
 - prints sit on the chest (and back) without landing on the sleeves or
   collar;
 - no repeats show up in the 21-day history.
+
+### Proof
+* Godot material hot-swapping implemented in `main.gd` (`_apply_garment`).
+* Automatically generated 82 tee variations (plain colors, patterns like stripes and polka dots, and graphic tees with text) using PIL in `tools/outfits/generate_tees.py`. ComfyUI generation was skipped for stability reasons on the Nitro5.
+* HTML gallery `gallery.html` generated showing Godot screenshots of all tees.
+* `wardrobe.py` implemented inside `felt-animation`. Daily checking and rolling hooked up in `server.py`'s `lifespan` and `ambient_loop`. Enforces a 21-day cooldown.
+* "change your shirt" manual intent implemented as a `change_shirt` skill in `felt-core` that sends a POST to `felt-animation`. She spins while doing it.
+
+### Not done / unverified
+* Waiting on Mario to use `gallery.html` to approve a set of tees and save them to `E:\Felt\Assets\tees\tees_approved.json`.
+* "She can mention it" dialog not implemented as it relies on `felt_presence` / dialog features not fully integrated in `felt-animation` standalone yet.

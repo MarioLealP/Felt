@@ -45,7 +45,15 @@ nothing worked. Mario: "it's a lie tho". So:
 6. **The Nitro5**: you may stop Ollama/ComfyUI there for a batch. **Restore
    whatever was running before** and note it. Its shell is fish, so wrap bash
    in `bash -c '…'`.
-7. **Licences**: every downloaded asset gets a `CREDITS.md` line (source URL,
+7. **Commit so it can be rolled back.** Commit per logical step with a
+   descriptive message that starts with the WP id, e.g. `WP-18: add
+   locomotion/turn clips from Animset Pro (6 files)`. Never use a generic
+   "Update Felt assets" commit. **Don't run `UpdateFelt.ps1`**: it does a
+   blanket `git add -A` + generic commit. Export Godot directly (see the
+   context doc). Library moves/renames go in their own commit, separate from
+   additions, so a bad reshuffle can be reverted alone. Mario: "this way we
+   can roll back some animation sorting bs from gemini".
+8. **Licences**: every downloaded asset gets a `CREDITS.md` line (source URL,
    author, licence). CC0 / CC-BY only, unless Mario approves otherwise. Booth
    items go on a shortlist for Mario; don't log in anywhere.
 

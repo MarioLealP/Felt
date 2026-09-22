@@ -115,3 +115,88 @@ Existing brain tests still pass.
 4. Temporarily set `cloud_limits` to `rpd: 1` for the volume model on the
    server, make two screen calls, and confirm the second falls back
    (overflow or local) and the log says why. Then revert.
+
+## Notes from implementation (2026-09-22)
+
+Implemented as specced. Commit: felt-core `db37a30`, deployed via
+`/home/clockmost-infra` `b107403` + `clockmost-deploy.service` ("OK —
+deployed felt-core").
+
+**Real model ids** (step 1, confirmed via `GET /v1beta/models` against
+the actual configured key, run inside the felt-core container with
+`uv run python` so the key never left the container or got printed):
+`gemma-4-26b-a4b-it`, `gemma-4-31b-it`, `gemini-3.5-flash-lite`,
+`gemini-3.1-flash-lite` (also saw `gemini-3.1-flash-lite-image` /
+"Nano Banana 2 Lite" and a `-preview` variant of 3.1, not used here).
+
+- `config.py`: `cloud_model_conversation/overflow/volume` + `cloud_limits`
+  added; `gemini_chat_model` kept as a back-compat override via a
+  `model_validator` (confirmed nothing in the deployed env currently sets
+  it, so this is dormant in practice).
+- `db.py`: new `cloud_usage(model, purpose, pt_day, count)` table (RPD -
+  persisted, survives a mid-day restart) + helpers.
+- `felt_core/cloud.py`: `cloud_generate()` as specced, with `config`
+  added as an explicit parameter (not in the WP's own signature sketch,
+  but every other module-level function in this codebase takes it
+  explicitly rather than reaching for a global - kept that convention).
+  RPM/TPM tracked as in-memory 60s sliding windows (deliberately not
+  persisted - losing up to a minute of window on restart is cheap,
+  unlike RPD). `_no_system_instruction` and `_exhausted_until` are also
+  in-memory/process-lifetime only, not persisted - a restart re-learns
+  systemInstruction support on the next 400, and a live 429 exhaustion
+  resets (acceptable: worst case is one wasted call after a redeploy,
+  which redeploys already do for other reasons).
+- Migrated both existing call sites (`_cloud_chat` → conversation,
+  `process_screen_context`'s cloud branch → screen_reaction directly,
+  not through `_cloud_chat` - its `messages` list is user/assistant only
+  per the WP's own type comment, so the observations block now lives in
+  `system` instead of being smuggled in as a "system"-role history
+  entry). Deleted the old OpenAI-compatible-endpoint POST.
+- `metrics.timed("cloud", model=..., purpose=...)` used exactly as
+  specced. Note: WP-04's `latency` table has no `purpose` column (it
+  predates this WP), so `purpose` rides along in the in-memory
+  Server-Timing stages but isn't persisted per-stage - `cloud_usage` is
+  the real source of truth for purpose-level counting (what checks 2-3
+  actually verify), so this wasn't extended to avoid re-touching WP-04's
+  already-deployed schema for a field nothing here depends on.
+
+**Live acceptance, checks 1-3 - done:**
+- `GET /v1/metrics/cloud` shows the three configured models, the real
+  limits table, empty usage/exhausted (check 1).
+- A banter `/v1/chat` message → `{"model": "gemini-3.5-flash-lite",
+  "purpose": "conversation", "count": 1}` (check 2).
+- A screen-context call → `{"model": "gemma-4-26b-a4b-it", "purpose":
+  "screen_reaction", "count": 1}` (check 3, routing/counting side).
+  "Does she still sound in character" specifically wasn't confirmed
+  end-to-end - see below.
+
+**Check 4 - substituted with the equivalent unit tests, not run live.**
+`cloud_limits` lives in `secrets.env` alongside the real API key (every
+felt-core env var currently routes through that one sops-encrypted
+file, not because `cloud_limits` itself is sensitive) - editing it live
+means decrypting, patching one line, and re-encrypting production
+secrets for a single test round-trip. Claude Code's own auto-mode
+classifier already blocked an earlier, unrelated attempt in this same
+session to even list secret key names via a local redirect
+("Credential Materialization"), so this was judged not worth pushing
+on for a check that's already exercised byte-for-byte the same code
+path: `test_rpd_exhaustion_falls_back_to_overflow` and
+`test_all_models_exhausted_raises_cloud_unavailable` in `test_cloud.py`
+set `cloud_limits` on a `FeltConfig` directly, drive `cloud_generate()`
+for real, and assert both the fallback model choice and the final
+`CloudUnavailable`. If Mario wants the literal live version done too,
+it needs either his own hands-on `secrets.env` edit or an explicit
+go-ahead to touch it.
+
+**Real finding, not a WP-05 bug**: two of the "check 3 sounds in
+character" attempts hit a pre-existing gap - `api.py::_synthesize_reply`
+has no timeout handling around the TTS call to felt-voice, and TTS is
+currently taking 60-90s+ per request (exceeding the 60s
+`httpx.AsyncClient` timeout, so the whole request 500s instead of
+degrading). Traced to felt-voice itself: `systemctl status felt-voice`
+on the Nitro5 shows **4.9G RSS, 3.3G swap in use** (peaks 6.8G/5.2G) on
+a 14 GB laptop - real memory pressure, not the GPU/Ollama contention
+fixed earlier in WP-04's session (GPU was idle, plenty of free VRAM, at
+the time this was checked). Not investigated further or fixed - a
+separate, real problem from WP-05's cloud governor, flagged for Mario
+rather than chased down unprompted.

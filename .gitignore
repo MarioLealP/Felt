@@ -8,6 +8,7 @@
 /felt-character-assets/
 /felt-t2a-studio/
 /AnimToVrmaConverter/
+/felt-vision/
 
 # Convenience junctions into felt-character-assets, so the animation
 # library and the base model are visible right at E:\Felt instead of

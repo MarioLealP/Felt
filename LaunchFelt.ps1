@@ -32,15 +32,12 @@ Write-Host "Starting Felt Animation (also launches the overlay)..."
 Set-Location -Path "E:\Felt\felt-animation"
 Start-Process -FilePath ".venv\Scripts\python.exe" -ArgumentList "-m felt_animation" -WindowStyle Hidden
 
-# Not yet moved into E:\Felt (Gemini scaffolded it straight into the old
-# workspace location, no git remote configured either) - referenced at its
-# real current path for now rather than leaving it as a manually-run dev
-# server. Without this running, felt-tray's desktop watcher silently fails
-# every single trigger (connection refused) with nothing visible anywhere -
+# Without this running, felt-tray's desktop watcher silently fails every
+# single trigger (connection refused) with nothing visible anywhere -
 # confirmed live, 2026-09-22: this is why screen-reaction voice/animation
 # never happened, not a bug in the reaction logic itself.
 Write-Host "Starting Felt Vision..."
-Set-Location -Path "F:\workspace\Projects\felt-vision"
+Set-Location -Path "E:\Felt\felt-vision"
 Start-Process -FilePath ".venv\Scripts\felt-vision.exe" -WindowStyle Hidden
 
 Write-Host "Starting Felt Tray..."

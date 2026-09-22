@@ -58,6 +58,20 @@ and `felt-t2a-studio` (text prompt → `.vrma`, using a T2M-GPT server on the
 Nitro5 laptop) - both promote approved clips straight into
 `felt-character-assets`'s curated animation library.
 
+There's also a passive, non-conversational path: `felt-tray`'s desktop
+watcher (a Win32 `EVENT_SYSTEM_FOREGROUND` hook - fires on window switch,
+not continuous polling) grabs a screenshot, sends it to `felt-vision`
+(a thin FastAPI wrapper around the desktop's local Ollama `llava` model)
+for a plain-language description, and forwards that to felt-core's
+`POST /v1/context/screen`. felt-core decides whether it's worth reacting
+to out loud (interesting) or not (mundane, stays silent) and the reply -
+if any - flows back through felt-tray to felt-animation exactly like any
+other reply. `felt-vision` has to actually be running for any of this to
+work - it's not auto-restarting/supervised beyond being started by Launch
+Felt, so if it's ever killed directly, screen reactions silently stop
+until the next Launch Felt (confirmed live, 2026-09-22 - this was the
+whole reason reactions weren't happening at all for a while).
+
 ## Components
 
 | Repo | Role | Runs | Status |
@@ -70,6 +84,7 @@ Nitro5 laptop) - both promote approved clips straight into
 | [`felt-character-assets`](https://git.clockmost.com/Benylin/felt-character-assets) | The VRM avatar + `felt-godot-overlay` (the actual on-screen renderer) | this desktop | running |
 | [`felt-t2a-studio`](https://git.clockmost.com/Benylin/felt-t2a-studio) | Text-prompt-to-animation authoring tool | this desktop (+ Nitro5 for inference) | working |
 | [`AnimToVrmaConverter`](https://git.clockmost.com/Benylin/AnimToVrmaConverter) | Mixamo animation → `.vrma` conversion pipeline | this desktop (+ headless Unity) | working |
+| [`felt-vision`](https://git.clockmost.com/Benylin/felt-vision) | VLM middleware for passive desktop-reaction screenshots (Ollama `llava`) | this desktop | running |
 
 **Retired, from the pre-Windows-migration Linux setup, no longer part of
 this project:** `felt-desktop-agent` (D-Bus/KDE-Connect glue, Linux-only)
@@ -115,7 +130,8 @@ E:\Felt\
   felt-dashboard/            | not a submodule of this repo
   felt-character-assets/    |
   felt-t2a-studio/          |
-  AnimToVrmaConverter/      /
+  AnimToVrmaConverter/      |
+  felt-vision/              /
 ```
 
 `F:\workspace\Projects\<repo>` is a directory junction pointing at each of

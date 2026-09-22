@@ -82,3 +82,83 @@ hand-correlating log timestamps. Baseline measured by hand on 2026-09-22:
 3. Relaunch felt-tray, do one real voice turn (Mario presses the hotkey, or
    ask him to), and check `%TEMP%\felt-tray.log` for the `turn timing` line.
 4. Put the numbers from step 2 into this WP's notes as the new baseline.
+
+## Notes from implementation (2026-09-22)
+
+Code done, committed, deployed, and checks 1-2 verified live. **Check 3
+needs Mario** (see below) - not ticked in the README yet.
+
+Commits: felt-core `85a31c4` (deployed via `/home/clockmost-infra`
+`ea4f1a1` + `clockmost-deploy.service`, "OK — deployed felt-core"),
+felt-tray `9af902a` (not yet relaunched - see check 3).
+
+- `felt_core/metrics.py`: ContextVar-scoped `_RequestMetrics`
+  (request_id/endpoint/db_path/session_id/stages), `start_request`,
+  `timed()`, `record()`, `server_timing_header()`, `compute_stats()`
+  (linear-interpolation p50/p95, `by_route`/`by_skill` breakdowns).
+  `db.py` gained the `latency` table + `save_latency_row`/
+  `get_latency_rows`/`delete_old_latency_rows` (pruned >30 days on
+  startup, wrapped in try/except so a prune failure can't block startup).
+- `api.py`: a `@app.middleware("http")` on `/v1/*` only, creates the
+  request_id, times `total`, stamps `Server-Timing` (added to CORS
+  `expose_headers`), and `GET /v1/metrics/latency`. `stt`/`tts` wrapped
+  there; `tts` tagged with `chars=len(stripped_text)` (the actual TTS
+  input after WP-03's `strip_for_tts`, not the raw reply length).
+- `brain.py`: `router` wraps `decide_tool`; `privacy` wraps the WP-03
+  concurrent task via a small `_timed_privacy_check` helper (proves
+  `contextvars.copy_context()`, which `asyncio.create_task` uses, carries
+  the request's metrics context into that task correctly - verified both
+  by a unit test and live, see below); `skill` tagged `skill=<name>`;
+  `reply` tagged `route=cloud|local, model=...` at both `_chat_reply`'s
+  branches and the tool-result reply call; `screen_reaction` likewise in
+  `process_screen_context`.
+- felt-tray: `VoiceChatResult.server_timing` carries the header through;
+  `_format_server_timing()` parses it into the WP's example short form
+  (verified directly: fed the WP's own example header through it, got
+  back exactly `[router 3.8, reply(cloud) 0.6, tts 2.4]`); `_finish_voice_chat`
+  adds `hotkey_release_to_audio` (timestamped at the actual moment the
+  recorder stopped, before STT/upload even starts - "the number Mario
+  actually feels," not "request sent"); `_on_screen_context` gets the
+  same `upload_to_response`/`response_to_playback`/`server=[...]` line,
+  no hotkey timestamp (nothing to time from - it's not user-triggered).
+
+**Live baseline** (check 2, session `wp04-test`, `since_hours=1`,
+2026-09-22 ~21:38, n=3-4 depending on stage):
+
+| stage | p50 | p95 | max |
+|---|---|---|---|
+| privacy | 10.4s | 12.2s | 12.4s |
+| router | 10.9s | 12.7s | 12.9s |
+| skill (get_weather) | 2.2s | - | 2.2s |
+| skill (get_time) | 0.0s | - | 0.0s |
+| reply, local | 57.0s | 57.5s | 57.6s |
+| reply, cloud | 0.6s | - | 0.6s |
+| tts | 9.6s | 15.3s | 16.0s |
+| **total** | 42.7s | 84.1s | 87.2s |
+
+**This is dramatically worse than the WP's own hand-measured baseline**
+(router 3.8-4.9s, local phrasing 17.4s, total weather turn 33s) - router
+alone is now ~2.5x that, and local reply generation is ~3.3x. Whatever
+this WP's numbers are *for* (the next speed decision), that decision
+needs to start from "something changed since 2026-09-22's hand-measured
+baseline, on the Nitro5 side (Ollama load? a model swap for ComfyUI? a
+resource contention issue?)," not from the original 33s figure - this
+wasn't visible before because nobody was measuring, exactly the gap this
+WP closes. Flagging for Mario rather than investigating further - WP-04
+is instrumentation, not a fix, and root-causing Nitro5 slowness is a
+different WP's job.
+
+One self-referential quirk, not fixed (out of scope, harmless): a call to
+`/v1/metrics/latency` itself matches the `/v1/*` middleware and gets its
+own `total` row (no other stages, since that endpoint doesn't call
+`timed()`) - so back-to-back queries see `total`'s `n` creep up by one
+per previous query. Doesn't affect router/reply/tts/skill stats at all,
+only `total`'s own count.
+
+**Still needed - Mario**: check 3 (relaunch felt-tray with the WP-04
+build, do one real voice-hotkey turn, confirm `%TEMP%\felt-tray.log`
+shows a `turn timing: ...` line with `hotkey_release_to_audio` on it).
+felt-tray isn't rebuilt/relaunched yet - only committed and pushed. Say
+the word and I'll relaunch it (or if you'd rather do the hotkey press
+yourself on your own schedule, just ping me after and I'll check the
+log).

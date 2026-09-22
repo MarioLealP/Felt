@@ -34,7 +34,7 @@ evidence-first reporting rules, and the prompt to paste. Delegated WPs end in
 | [WP-04](WP-04-latency-metrics.md) | Latency metrics end to end | WP-03 | M | ✅ |
 | **Phase 2: the reaction pipeline** |||||
 | [WP-05](WP-05-cloud-models-governor.md) | felt-core: cloud model split (Gemma 4 / Flash Lite) + quota governor | WP-04 | M | ✅ |
-| [WP-06](WP-06-skill-replies-cloud.md) | felt-core: skill replies phrased in the cloud (result-gated), short spoken style, weather cache | WP-05 | M | ☐ |
+| [WP-06](WP-06-skill-replies-cloud.md) | felt-core: skill replies phrased in the cloud (result-gated), short spoken style, weather cache | WP-05 | M | ✅ |
 | [WP-07](WP-07-screen-capture-v2.md) | Screen capture v2: per-window capture + blocklist + Gemma vision reactions | WP-05 | L | ☐ |
 | [WP-08](WP-08-playback-sync-stop.md) | Playback moves to felt-animation: voice/lips/body in sync, stop | WP-01 | M | ☐ |
 | [WP-09](WP-09-bubble-ducking-hush.md) | Speech bubble, call ducking, "shut up" hush | WP-08 | M | ☐ |

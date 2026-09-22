@@ -107,3 +107,92 @@ notes.
    cloud.
 4. "Find my notes about <anything>" (`search_documents`) → local only, and
    the log proves no cloud call.
+
+## Notes from implementation (2026-09-22)
+
+Implemented as specced, with two real bugs found and fixed live along the
+way, plus one known unresolved classifier-reliability caveat. Commits:
+felt-core `ec5bfb0` (main implementation), `7cbd88a`/`4748161`/`23af414`
+(the Gemma thinking-token fix, iterated three times), `43f372d` (privacy
+prompt fix) - deployed via `/home/clockmost-infra` through `de5b4db` +
+`clockmost-deploy.service`.
+
+**Real bug 1 - Gemma 4's hidden "thinking" tokens.** The very first live
+weather-precompute run came back as a raw chain-of-thought transcript,
+not a spoken line. `gemma-4-26b-a4b-it` emits hidden reasoning content
+flagged `"thought": true` ahead of its real answer - `cloud.py`'s
+`_extract_text` was blindly grabbing `parts[0]`, which is that thinking
+part whenever one exists. Fixed to skip any `thought: true` part and
+return the first real one (test coverage in `test_cloud.py`). Separately,
+the WP's own 120-token `_SKILL_PHRASING_MAX_TOKENS` wasn't even close to
+enough room for the thinking overhead ahead of the real answer - measured
+against the actual production prompt (not a toy one): 473-1997 thinking
+tokens depending on prompt complexity, sometimes still truncating even at
+2000. Rather than chase an unbounded budget, added a second, more
+important fix: both `_phrase_skill_result` and the weather precompute now
+treat an **empty string from `cloud_generate` as a failure requiring the
+existing local fallback**, not a successful-but-empty reply (`cloud.py`'s
+`_extract_text` returns `""` on purpose when a response is all-thinking
+with no real answer beneath it). Landed on `_SKILL_PHRASING_MAX_TOKENS =
+1000` as a reasonable middle ground - generous enough that cloud phrasing
+often succeeds (confirmed live: calendar phrasing came back with real
+personality), cheap on Gemma's free-tier budget, and now safe either way
+since the empty case degrades gracefully instead of serving nonsense or
+silence.
+
+**Real bug 2 - a self-contradicting privacy-classifier prompt.** Adding
+this WP's own worked example ("your shelf plug is on" → SAFE) directly
+contradicted an existing PRIVATE-list clause ("home server/network/
+smart-home devices by name") - a named smart-home device and the home
+network's own identity were the same bullet. Split them: PRIVATE now
+covers only the network/server's own identity (hostname/IP/infra), and a
+named device's plain status is explicitly called out as SAFE. This did
+**not** fully resolve it, though (see the unresolved caveat below).
+
+**Unresolved, known limitation**: `is_safe_for_cloud` (`qwen2.5:1.5b`,
+now pinned to CPU per the WP-04/05 session's Nitro5 fix) is genuinely
+unreliable on this classification for short device-status phrases -
+confirmed via direct testing that it says PRIVATE for "The shelf is
+currently off" **and** for the literal worked-example text "your shelf
+plug is on" itself, both consistently across repeated calls, despite
+that exact text sitting in the prompt as a SAFE example. Asking the same
+model for its reasoning (temporarily relaxing the strict one-word output
+constraint) gets the *correct* "SAFE — a device status" answer, so the
+underlying judgment is in there somewhere, but the terse-output mode
+loses it. This is 1.5B-model instruction-following unreliability on a
+fairly nuanced ask, not a prompt-wording bug - fixing it properly likely
+needs a different/larger classifier model or a different mechanism
+entirely for this one case, not another prompt tweak. Not chased further
+here. **Not a safety bug**: the system fails closed exactly as designed
+(stays local when uncertain) - acceptance check 3 (`is the shelf plug
+on?`) therefore consistently takes the *local* phrasing path in practice
+right now rather than cloud, even though it should qualify for cloud per
+Mario's own stated rule. Functionally correct, just a missed
+optimization. Flagging for Mario rather than guessing at a fix.
+
+**Live acceptance, verified 2026-09-22 ~23:00-23:02:**
+1. First `wp06-test` weather call after a precompute cycle: **0.84s
+   total** (well under the ~2s target), log: "weather fast path: serving
+   the precomputed line, no skill/phrasing calls." (The precomputed line
+   itself is the raw tool output, not cloud-phrased, per bug 1 above -
+   still fast and correct, just not personality-flavored for weather
+   specifically right now.)
+2. "What's on my calendar today?" → phrased reply with real personality
+   ("a totally clear schedule sounds like a dream to me"),
+   `/v1/metrics/cloud` shows `skill_phrasing` on `gemma-4-26b-a4b-it`,
+   no local-fallback line in the log for that request.
+3. "Is the shelf plug on?" → gated, privacy check runs, comes back
+   PRIVATE (see the unresolved caveat), falls back to local - still a
+   good, in-character reply ("it's not gonna plug itself, is it?"), just
+   local instead of cloud.
+4. "Find my notes about the migration project" → `search_documents`
+   (local class), log shows only Ollama + `drive-rag` calls, zero
+   requests to `generativelanguage.googleapis.com`.
+
+Full test suite: 182 → 202 passing (`plugin_loader` skills.json manifest,
+the class→route matrix incl. facts-never-in-cloud and local-never-calls-
+cloud, `voice_line` preference, the weather fast path + staleness
+fallback, the TTS cache hit/miss, the weather cache TTL, and the Gemma
+thinking-part extraction). One single `test_metrics.py` timing-assertion
+flake seen once during a full-suite run, passed on immediate rerun -
+pre-existing WP-04 test, unrelated to this WP, not investigated further.

@@ -30,7 +30,7 @@ evidence-first reporting rules, and the prompt to paste. Delegated WPs end in
 | **Phase 1: fix the reaction path** |||||
 | [WP-01](WP-01-anim-tag-fix-logs-tests.md) | felt-animation: unknown-tag freeze fix, file logs, test suite | none | S | ✅ |
 | [WP-02](WP-02-core-screen-context-rework.md) | felt-core: observations out of chat history, privacy gap, always-spoken screen reactions | none | M | ✅ |
-| [WP-03](WP-03-core-quick-wins.md) | felt-core: image-skill guard, parallel router/privacy, speech-style output | WP-02 | S | ☐ |
+| [WP-03](WP-03-core-quick-wins.md) | felt-core: image-skill guard, parallel router/privacy, speech-style output | WP-02 | S | ✅ |
 | [WP-04](WP-04-latency-metrics.md) | Latency metrics end to end | WP-03 | M | ☐ |
 | **Phase 2: the reaction pipeline** |||||
 | [WP-05](WP-05-cloud-models-governor.md) | felt-core: cloud model split (Gemma 4 / Flash Lite) + quota governor | WP-04 | M | ☐ |

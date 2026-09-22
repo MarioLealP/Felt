@@ -87,3 +87,50 @@ Deploy, then with session `wp03-test`:
    `X-Reply-Text` (via `/v1/text-chat`) may contain a list, but the TTS input
    has no `-`/`*`/numbers-with-dots. Log the stripped text at DEBUG and
    check it.
+
+## Notes from implementation (2026-09-22)
+
+Implemented as specced. Commit: felt-core `8431900`, deployed via
+`/home/clockmost-infra` `0bb5c37` + `clockmost-deploy.service` ("OK —
+deployed felt-core").
+
+- `_guard_generate_image` + `_SKILL_GUARDS` table in `brain.py`, checked
+  in `chat()` right after `decide_tool` returns, before the
+  skill-vs-no-skill branch (so an overridden call correctly falls into
+  the no-skill path and the concurrently-running privacy task gets
+  awaited rather than cancelled).
+- `chat()` now creates the privacy-check task alongside `decide_tool`;
+  `_chat_reply` takes the precomputed `safe: bool | None` instead of
+  computing it itself. Fail-closed wrapped in `try/except Exception:
+  safe = False` around `await privacy_task` in `chat()` itself, in
+  addition to `is_safe_for_cloud`'s own internal catch - belt-and-
+  suspenders in case the task raises directly rather than through that
+  function's own try/except.
+- `_ollama_chat` gained a `max_tokens` kwarg -> `options.num_predict`;
+  `_REPLY_MAX_TOKENS = 160` used by `_local_reply` (all its callers are
+  reply generation) and the tool-result reply call in `chat()`. Personality
+  prompt and the tool-result prompt both got the "spoken aloud" framing.
+  `felt_core/speech.py::strip_for_tts` wired into `api._synthesize_reply`,
+  TTS input only - `X-Reply-Text` keeps the unstripped original.
+
+Deviations / notes:
+- The server-side deploy commit step (`git add && git commit` in
+  `/home/clockmost-infra`) needed to be run manually this time - the
+  auto-sync timer hadn't picked up the change yet at the moment I ran it
+  (unlike WP-02, where it beat me to it). Both are valid depending on
+  timing; the context doc's "you must push yourself" instruction holds.
+- Acceptance check 3's live `/v1/text-chat` call happened to get a reply
+  with no markdown in it at all (the personality prompt's own
+  "no markdown/lists" instruction working as intended upstream) - nothing
+  to observably strip from that particular reply. Verified `strip_for_tts`
+  directly instead, exec'd against the actual deployed container
+  (`docker compose exec felt-core python -c "..."`) with a realistic
+  markdown+list+URL+emoji sample - confirmed it strips correctly against
+  the real production code, not just the local unit tests.
+- Full test suite: 149 -> 167 passing. One test
+  (`test_skill_path_cancels_the_privacy_task`) was flaky on the first
+  write - cancelling a freshly-created task before its coroutine has run
+  its first step throws `CancelledError` in before that task's own
+  `try/except` ever executes. Fixed by giving `decide_tool`'s fake a real
+  `await asyncio.sleep(0)` so the concurrently-created privacy task
+  actually gets scheduled first.

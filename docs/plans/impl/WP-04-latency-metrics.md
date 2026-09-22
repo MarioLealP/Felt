@@ -155,10 +155,39 @@ own `total` row (no other stages, since that endpoint doesn't call
 per previous query. Doesn't affect router/reply/tts/skill stats at all,
 only `total`'s own count.
 
-**Still needed - Mario**: check 3 (relaunch felt-tray with the WP-04
-build, do one real voice-hotkey turn, confirm `%TEMP%\felt-tray.log`
-shows a `turn timing: ...` line with `hotkey_release_to_audio` on it).
-felt-tray isn't rebuilt/relaunched yet - only committed and pushed. Say
-the word and I'll relaunch it (or if you'd rather do the hotkey press
-yourself on your own schedule, just ping me after and I'll check the
-log).
+**Check 3 - done.** Relaunched Felt, Mario did a real voice-hotkey turn.
+`%TEMP%\felt-tray.log`:
+```
+turn timing: total_client=3.8s server=[stt 0.9, tts 2.9] upload_to_response=3.8s response_to_playback=0.00s hotkey_release_to_audio=3.8s
+```
+(An empty/silent transcription that turn - only `stt`/`tts` show, no
+`router`/`reply`, since `api.py`'s "I didn't catch that" fallback skips
+`chat()` entirely for an empty transcript. Still a real end-to-end proof
+of the log line and `hotkey_release_to_audio` working, which is what this
+check is actually verifying.)
+
+**Detour that came out of this**: the first two voice-turn attempts
+timed out client-side (felt-tray's 60s httpx timeout) because felt-core
+was taking 60-87s per turn at that moment - far worse than this WP's own
+first-pass baseline table above. Traced to the Nitro5: `felt-comfyui.service`
+had been idle-loaded on the GPU for 1+ day (found via `nvidia-smi`), and
+separately Ollama was evicting `qwen2.5:1.5b` (router/privacy) and
+`llama3.1:8b` (chat) to make room for each other on *every single
+request*, since neither was fitting alongside the other with ComfyUI also
+present. Fixed (Mario, live: "Go check on it" / "no reason to not have
+both around at same time if possible") by stopping the idle ComfyUI
+service and setting `OLLAMA_MAX_LOADED_MODELS=2` + `OLLAMA_KEEP_ALIVE=30m`
+in Ollama's systemd override - turn times dropped to 17-23s afterward.
+Full writeup in `runbooks/clockmost-nitro5-ai-node.md`. Not a WP-04 bug -
+a real, previously-invisible infra problem that WP-04's own instrumentation
+is exactly what surfaced it.
+
+**Updated baseline** (post-fix, a few live `/v1/text-chat` calls,
+2026-09-22 ~22:00): total turns in the **17-23s** range (privacy 2-12s,
+router 2-12s depending on which model needed reloading, skill <1s,
+reply-local 5-8s, tts 8-12s) - a large improvement on the 42-87s numbers
+captured before the Nitro5 fix, but still above the original 2026-09-22
+hand-measured 33s figure for privacy/router specifically (2-12s is a wide,
+not-yet-fully-stable range - `OLLAMA_KEEP_ALIVE=30m` should mean both
+models stay resident across a real conversation's turns in practice, just
+not proven stable over a long session yet).

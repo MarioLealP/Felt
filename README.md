@@ -90,9 +90,14 @@ Desktop shortcuts (created 2026-09-21):
 - **Convert Animation** - drag a Mixamo `.anim`/`.unitypackage` file onto
   it to convert straight to `.vrma` (`AnimToVrmaConverter/anim2vrma.bat`).
 - **Felt Folder** - opens `E:\Felt` in Explorer.
+- **Start Nitro5** (added 2026-09-22) - starts `felt-voice` (STT/TTS) and
+  `ollama` on the Nitro5 laptop if either isn't already running. Never
+  touches ComfyUI - that's still Mario's manual hand-swap with Ollama for
+  the Nitro5's 6GB VRAM budget, and this script only ever starts services,
+  never stops or restarts anything.
 
-From a terminal, the same two scripts: `E:\Felt\LaunchFelt.ps1` /
-`E:\Felt\UpdateFelt.ps1`.
+From a terminal, the underlying scripts: `E:\Felt\LaunchFelt.ps1` /
+`E:\Felt\UpdateFelt.ps1` / `E:\Felt\StartNitro5.ps1`.
 
 ## Repo layout
 

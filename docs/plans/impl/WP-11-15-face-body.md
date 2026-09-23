@@ -287,6 +287,55 @@ hook as `_clamp_feet_to_floor`)**:
 **Accept**: she follows the cursor naturally, glances at Mario when he stops
 moving, and never snaps or breaks clips.
 
+### Notes from implementation (2026-09-23)
+
+Built the whole WP: main.gd's additive head/neck/eye rotation (same after-
+AnimationPlayer technique WP-13's nod pulse established), saccades, blink-
+on-large-jump, and the `{"gaze": {"mode", "x", "y"}}` relay message; plus
+felt-animation's small piece - `overlay.gaze()` and the "thinking sends an
+up-left point" wiring in `request_started`/`_handle_reply`.
+
+**Bone names confirmed live before writing anything against them** - dumped
+the real skeleton's full bone list from a running instance rather than
+guessing from the WP text's `neck`/`head`/`leftEye`/`rightEye` naming
+(VRM-spec names). The real names on this skeleton turned out to be
+PascalCase with no prefix (`Neck`, `Head`, `LeftEye`, `RightEye`), matching
+`_clamp_feet_to_floor`'s already-working `LeftFoot`/`RightFoot` convention,
+not the spec names - would have silently no-op'd every gaze rotation if
+guessed wrong, the same class of bug the WP-09 bubble scare turned out not
+to be but easily could have been.
+
+**Deliberately narrower than the WP's own text in one place**: "on a
+screen reaction → point at the reacted window's rect centre" needs
+felt-tray to pass real window-rect coordinates through `reply_ready`, and
+felt-tray isn't in this WP's own repo header (`felt-character-assets` + "a
+little felt-animation"). Built the `point` mode itself (verified live,
+works correctly for the in-scope "thinking" case), but not the specific
+caller that would feed it a screen-reaction rect - a real, fairly small
+follow-up if Mario wants it, not required by this WP as scoped.
+
+**"While speaking" needed no explicit message at all** - main.gd already
+tracks whether she's actively lipsyncing (`_lipsync_start_time >= 0.0`)
+from WP-08, so gaze reads that directly each frame and overrides to camera
+locally, with zero extra network traffic and zero risk of felt-animation
+forgetting to send a follow-up. Only the two cases main.gd genuinely can't
+infer on its own (thinking, and the out-of-scope screen-reaction point) go
+through the explicit message.
+
+**Live-verified**: a headless load caught one real static-typing bug
+(fixed before it shipped - an untyped `:=` on a bone-lookup return value,
+same class of issue WP-12 also hit once). A real running process cycled
+through all four modes (`cursor`/`camera`/`point`/`none`) with zero
+crashes. Sent `point` mode at opposite viewport edges (x=0.05 vs x=0.95)
+and compared screenshots - the two head turns are clear mirror images of
+each other, confirming the yaw computation actually responds to input and
+is directionally *consistent* (a genuine, checkable fact from a static
+image). **Not verified from a screenshot, and can't be**: whether "left"
+in the code actually matches "left" on Mario's real screen from his own
+cursor, and whether the motion looks natural in real time rather than
+mechanical - both are exactly the WP's own Accept criterion, and need him
+watching it live, moving his own mouse.
+
 ---
 
 ## WP-15

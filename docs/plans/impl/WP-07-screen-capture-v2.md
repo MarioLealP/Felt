@@ -133,3 +133,97 @@ Reacting to what Mario is doing is Felt's #1 job. Today:
 4. `/v1/metrics/cloud` shows `screen_reaction` counts on the Gemma model.
 5. Ask Mario to glance at the debug JPEGs once. That's the privacy sign-off.
    Then unset `FELT_CAPTURE_DEBUG_DIR`.
+
+## Notes from implementation (2026-09-23)
+
+Implemented as specced, both sides. Commits: felt-tray `d6def22`, felt-core
+`6fb79d3` (+ `d3a2768` for an unrelated concurrent Gemini commit swept up
+along the way, see below) deployed via `/home/clockmost-infra` `aeb6956`
++ `clockmost-deploy.service` ("OK — deployed felt-core").
+
+**Real Win32 validation before writing capture.py**: ran a live ctypes
+enumeration + a real `windows_capture` single-window grab against this
+actual desktop before committing to the design. Confirmed: `EnumWindows` +
+`DwmGetWindowAttribute` (cloaked/extended-frame-bounds) +
+`QueryFullProcessImageNameW` correctly identifies real windows (Discord,
+Firefox, Spotify, WindowsTerminal, FeltOverlay, all with correct
+process/pid/rect); `windows_capture`'s `window_hwnd` capture produces a
+clean, correctly-cropped image of exactly that window (verified against
+Firefox showing a real page, and Spotify - both test captures were
+deleted immediately after confirming, per the same discipline the
+capture pipeline itself is meant to enforce).
+
+**WhatsApp/Phone Link/Telegram identification (WP's own required step)**:
+confirmed live via `Get-Process` + `Get-AppxPackage`, 2026-09-22 - both
+WhatsApp Desktop and Phone Link were already running on this machine.
+**Contradicts the WP's own assumption**: neither is hosted via
+`ApplicationFrameHost.exe` - both spawn their own direct process
+(`WhatsApp.Root.exe`, `PhoneExperienceHost.exe`). The
+`ApplicationFrameHost` child-window-traversal logic the WP describes
+turned out to be unnecessary for these two apps' current versions (it's
+a pattern from older-style UWP apps; the Settings app on this machine
+uses it, confirming the mechanism is real, just not needed here).
+Telegram isn't installed on this machine at all (no Store package, no
+classic desktop install) - `telegram.exe` is in the blocklist as a
+forward-looking default; Telegram Web is already covered by the browser
+blocklist regardless.
+
+**Deviation from the WP's exact function signature**: `cloud_generate`
+already required an explicit `config` parameter (a WP-05 decision, not
+in that WP's own signature sketch either) - `react_to_screen` follows
+that same established convention.
+
+**Live acceptance, verified 2026-09-23 ~09:47-09:49 (session
+`dashboard`, ~4 minute window, `FELT_SCREEN_SAMPLE_S` temporarily set to
+20s to compress the test - reverted to the 45s default afterward)**:
+1. Discord and Firefox were open and visible the ENTIRE test window
+   alongside an allowed app (WindowsTerminal) - every one of the 7 saved
+   debug JPEGs is `windowsterminal_exe`, never Discord or Firefox. The
+   exact "everything blocked -> skip, nothing sent" case is also directly
+   unit-tested (`test_all_blocked_returns_none`), not separately
+   reproduced live (would have meant minimizing Mario's actual open
+   windows to force it).
+2. An allowed window (WindowsTerminal, running this very session) got a
+   real, relevant, in-character reply: "Looks like things are getting a
+   bit technical in here, huh?" (emotion=amused) for one capture, "Looks
+   like things are moving along in the background. Keep it up!"
+   (emotion=amused) for another - both genuinely responsive to what was
+   actually on screen. Debug JPEG confirmed a clean, correctly-cropped
+   capture of just that window (verified visually, then left in place
+   under `FELT_CAPTURE_DEBUG_DIR` for Mario's own check 5 sign-off).
+3. Periodic samples fired every ~20-40s (dedup/timing jitter) for the
+   full window; exactly 2 real spoken reactions happened in ~4 minutes
+   (09:47:19 and 09:49:12 - 113s apart, correctly over the 90s cooldown),
+   every capture in between returned `reply=''` (cooldown correctly
+   suppressing the model call server-side, not the client withholding
+   the send).
+4. `/v1/metrics/cloud` usage: `{"model": "gemma-4-26b-a4b-it", "purpose":
+   "screen_reaction", "count": 2}` - matches the 2 real spoken reactions
+   exactly.
+5. **Needs Mario**: `F:\Temp\felt-capture-debug\` has 7 real JPEGs from
+   this test run, ready for his sign-off glance. `FELT_CAPTURE_DEBUG_DIR`
+   is still set in `felt-tray/.env` - **someone needs to unset it after
+   he's looked**, per the WP's own explicit step. Felt was left stopped
+   after testing (his own stated preference this session).
+
+**Real, unrelated hiccup along the way**: right after `uv add
+windows-capture` (which pulled in `opencv-python`), the very next
+`imagehash.phash()` call failed with `ImportError: DLL load failed ...
+An Application Control policy has blocked this file` (scipy's
+`cython_lapack`, a pre-existing transitive dependency of `imagehash`,
+not anything newly added). Self-resolved on the very next Python
+process start - consistent with a one-time Windows Defender/Smart App
+Control reputation check on a freshly-touched `.venv`, not a real,
+persistent blocker. Not investigated further since it didn't recur;
+worth remembering if it resurfaces after a future `uv add` in this repo.
+
+**Concurrent Gemini work, same pattern as earlier this session**:
+`plugins/skills.json` and `plugins/tags.json` had picked up a
+`change_shirt` entry from a concurrent Antigravity/Gemini session
+between when this WP's `skills.json` was written and committed, plus a
+whole new (not yet wired up - no `skill.py`) `plugins/change_shirt/`
+scaffold. The scaffold + tags.json entry went into their own `[gemini-wip]`
+commit (`d3a2768`); the one-line `skills.json` addition rode along in
+this WP's own commit with a note, rather than fighting to hunk-split a
+single low-risk JSON entry out of a file this WP already owns - per
+Mario's own standing guidance on handling this pattern.

@@ -336,6 +336,60 @@ cursor, and whether the motion looks natural in real time rather than
 mechanical - both are exactly the WP's own Accept criterion, and need him
 watching it live, moving his own mouse.
 
+### Update (2026-09-23, live with Mario): head/neck ships, eyes disabled
+
+Head/neck gaze tracking held up under real live use - after fixing the
+runaway-rotation and inverted-pitch bugs below, no further complaints
+about it. **Eye rotation did not.** Three live bugs in sequence, each
+looking fixed at the time:
+
+1. **Runaway spin, cursor-tracking invisible under it.** Root cause:
+   `get_bone_pose_rotation()` was read every frame as if it were always a
+   fresh AnimationPlayer-driven baseline and multiplied by a new additive
+   (`current * additive`). It isn't, at least for the idle clips - once a
+   track stops changing (or the bone has no track at all), nothing
+   rewrites it, so "current" on frame N was actually our own output from
+   frame N-1. A bounded per-frame offset became unbounded compounding.
+   Fixed with a shared `_apply_additive_once` helper that tracks exactly
+   what each layer (gaze, and the WP-13 nod pulse - identical bug, just
+   less visible as a brief self-decaying pulse) applied last frame and
+   divides it back out before reapplying.
+2. **Vertical inverted.** The Head bone's local RIGHT axis pitches the
+   opposite way from the naive "up is positive" assumption on this
+   skeleton. Negated at the source.
+3. **Eyes pointing forward regardless of head rotation.** LeftEye/
+   RightEye are children of Head - applying their own world-target
+   rotation as an independent additive double-counted whatever neck+head
+   had already turned. Fixed by dividing out the neck+head contribution
+   first.
+
+Then, checking again live: **one eye under the bottom eyelid, the other
+normal, inverting on blink** (the inversion was very likely just a side
+effect of the same bug - a wrong/extreme eye angle is itself a large
+gaze jump, which the existing blink-on-jump logic fires on). Dumped the
+real bone rest bases live rather than guessing again: Head/Neck rest is
+identity, but LeftEye/RightEye rest is a genuine 90-degree rotation,
+*identical* for both eyes - ruling out a mirrored-rig convention, my
+first guess. The actual bug: `_apply_additive_once` composed
+`baseline * additive` (post-multiply), which is harmless when rest is
+identity (Head/Neck) but wrong when it isn't (eyes) - it treats the
+fixed axis labels as relative to the bone's own rotated rest frame
+instead of the reference frame Mario's cursor actually moves in. Fixed
+to `additive * baseline` (pre-multiply).
+
+Checked again live: **pupils gone entirely.** Two eye-specific fixes in
+a row, each reasoned through carefully, each wrong or incomplete in a
+new way once actually seen. Per Mario's own standing preference (stop a
+live debugging exchange that isn't converging rather than keep offering
+one more fix), **eye rotation is disabled** - `_apply_eye_gaze` is no
+longer called; `LeftEye`/`RightEye` are explicitly reset to their rest
+rotation every frame instead (not just left alone, since whatever the
+last live test left them at was mid-broken). Head/neck tracking alone is
+confirmed working and is what's shipped. Re-enabling eyes needs real
+empirical A/B testing of the composition order - screenshot both options
+side by side before trusting either - not another round of reasoning it
+out and trying live.
+
 ---
 
 ## WP-15

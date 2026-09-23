@@ -130,6 +130,62 @@ Today only the `ALL` presets (via a keyword map), blink and visemes are used.
 while idle, expressions visibly change during speech without breaking the
 lips, and nothing looks twitchy. Tune the frequencies with him.
 
+### Notes from implementation (2026-09-23)
+
+Built essentially the whole WP: `face_poses.json` (all 14 named poses from
+the table above), `faces.py` (region classification from shape-name
+prefix, pose->regions splitting, emotion/tag->pose mapping),
+`face_life.py` (micro-expression picking with no immediate repeats, RMS-
+envelope peak detection over the reply WAV for speech accents), and
+main.gd's region compositor (brows/eyes/mouth/teeth, independent easing
+speeds, the mouth-channel Up/Down-only-≤0.5 filter, blink multiplied
+against whatever eye-close shape the compositor already has active).
+133 felt-animation tests passing (31 new).
+
+**Two real design bugs found and fixed during implementation, before
+either ever shipped** (caught by re-reading my own design against the
+actual message flow, not live-discovered this time):
+1. `_set_face_regions` originally reset ALL FOUR regions on every
+   incoming message, including ones the message didn't mention. A brief
+   brow-raise accent (`{"regions": {"brows": {...}}}`) would have wiped
+   the reply's own eyes/mouth pose back to empty the instant it arrived.
+   Fixed to only touch regions actually present in the message.
+2. The hold timer was originally one global deadline. The same brow-raise
+   accent's own short hold (0.25s) would have reset that global timer,
+   so 0.25s later ALL regions - including the reply's own multi-second
+   pose hold on eyes/mouth - would have eased back to resting mid-reply.
+   Fixed to per-region hold timers (`_face_region_hold_until_ms`, a
+   dict keyed by region, not a single float).
+
+**Scoped narrower than the WP's own text in one place, deliberately**:
+felt-core doesn't send an `emotion` field on chat/skill replies (only
+WP-07's screen reactions have real emotion classification, and even that
+doesn't currently reach felt-animation - felt-tray's `_deliver_reply`
+never forwards `result.emotion` to `/reply_ready`). Rather than extend
+felt-core (a third repo, not in this WP's own header) or felt-tray (ditto)
+just for this, used the WP's own explicitly-offered fallback: map from the
+resolved animation tag's keywords instead, same spirit as the old
+`expressions.py` this replaces. A real emotion passthrough - especially
+for screen reactions, where felt-core already computes one and it's
+currently just discarded - is a genuine, fairly small follow-up, not
+something this WP required.
+
+**Not done - needs a live Godot instance, which isn't running right now**
+(a background-pressure safety reap killed the one from earlier in this
+session, along with the felt-animation server testing it; per its own
+instructions, not relaunching either on my own right now): the region
+compositor was only verified via a headless parse/load check (no runtime
+errors, including catching a real static-typing bug before it shipped -
+see main.gd's own commit) - never actually seen rendering, never seen
+receiving a real `{"face": ...}` message from a live felt-animation
+`_handle_reply` call. The WP's entire Accept criterion ("Mario sees her
+face moving... nothing looks twitchy... tune the frequencies with him")
+is his own live, side-by-side judgment call regardless - this just isn't
+even at the point of being watchable yet. Next step once a Godot instance
+is back up: send a few real `{"face": {"regions": ...}}` messages by hand
+and confirm nothing crashes or looks obviously wrong before asking Mario
+to actually judge it.
+
 ---
 
 ## WP-13

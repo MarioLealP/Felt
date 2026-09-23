@@ -390,6 +390,14 @@ empirical A/B testing of the composition order - screenshot both options
 side by side before trusting either - not another round of reasoning it
 out and trying live.
 
+**FLAGGED (2026-09-23): doesn't work.** Mario checked head/neck tracking
+live himself (the WP's own Accept criterion, which a screenshot can't
+verify) and it doesn't hold up - "doesnt work." No further detail given
+yet on what specifically is wrong (direction, smoothness, responsiveness,
+something else). Not investigated further per his "flag it and go on" -
+circling back later rather than debugging blind without knowing which
+part failed. WP-14 stays unchecked in the status table.
+
 ---
 
 ## WP-15

@@ -30,6 +30,26 @@ by the Compatibility renderer and would smear transparent edges anyway.
 
 **Accept**: Mario confirms edges look smooth, with no halo.
 
+### Notes from implementation (2026-09-23)
+
+`msaa_3d` set from 0 to 2 (4x) in `project.godot` - one line. Verified via
+the directly-run Godot workaround already in use this session for WP-09/10
+(no export needed - MSAA is a runtime rendering setting the engine reads
+regardless of how the project was launched, not something baked into the
+export step): GPU 3D engine utilization measured (via
+`Get-Counter '\GPU Engine(*engtype_3D)\Utilization Percentage'`, 3 samples
+each) went from ~56% at msaa_3d=0 to ~63% at msaa_3d=2 for the same idle
+scene - a real but modest cost. A screenshot crop around her hair/shoulder
+silhouette shows clean, smooth edges with no obvious dark halo/fringe
+against the light desktop background actually behind the transparent
+window at check time.
+
+**Not checked - the WP explicitly asks for it**: a DARK wallpaper
+specifically (only the current, light one was available without changing
+Mario's actual desktop background, which felt like an intrusive thing to
+do unasked). Left unticked pending that check and his own final call on
+whether the edges genuinely look right to him.
+
 ---
 
 ## WP-12

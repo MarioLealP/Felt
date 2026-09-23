@@ -109,3 +109,100 @@ timelines, so it becomes the **single owner of her audio**.
 4. Kill felt-animation, do a voice turn: felt-tray still plays the audio
    (fallback).
 5. Rhubarb timings (pocketSphinx vs phonetic) are recorded in the notes.
+
+## Notes from implementation (2026-09-23)
+
+**felt-animation**: `audio.py` (new) - `sounddevice.OutputStream` callback
+player (`decode_wav`, `compute_gain_ramp`, `AudioPlayer` with
+`start`/`stop`/`is_playing`/`set_gain`, gain ramped over the callback's own
+block size rather than a fixed 50 ms clock - close enough at typical block
+sizes and avoids a second timer). `server.py`'s `_handle_reply` now runs
+Rhubarb and reaction-tag resolution concurrently via `asyncio.gather`
+(extracted the old inline reaction-tag code into `_resolve_reaction_tag` so
+it's an awaitable), then sends the lipsync message and calls
+`player.start(...)` back to back with only a `time.monotonic()` read
+between them, logging the gap. New `POST /stop` (`player.stop()` +
+`overlay.lipsync([])` + a ~1.5s sheepish-face flash if something was
+actually playing), `GET /last_reply`, `POST /repeat`.
+
+**main.gd required no change.** Traced `_handle_tag_line`'s lipsync
+branch → `_process()`'s lipsync loop → `_apply_lipsync_blend_smooth`: an
+empty `{"lipsync": []}` list already sets `_lipsync_end_time = 0.0`, and on
+the very next frame `_lipsync_current_time >= _lipsync_end_time` is
+immediately true, which was already the same "reached end of cues" path
+used at the end of any normal utterance - it eases toward the closed "X"
+viseme via the existing lerp (`MOUTH_LERP_SPEED`), not an instant snap, and
+sets `_lipsync_start_time = -1.0` to stop the timeline. The WP's own
+"today an empty list would set `_lipsync_end_time` to 0" framing describes
+what happens, not a bug - that's the exact same value the end of a real
+utterance also settles to. Verified live (below) rather than just by
+trace: no Godot-side errors across repeated `/stop` calls, including one
+sent with nothing playing.
+
+**felt-tray**: `_deliver_reply()` replaces the direct `playback.play_wav`
+calls in both `_finish_voice_chat` (now `prompted=True`) and
+`_on_screen_reaction` (now `prompted=False`) - POSTs to felt-animation's
+`/reply_ready` and only falls back to local `playback.play_wav` if that
+POST raises (felt-animation down/unreachable), logged at WARNING.
+Barge-in: `_on_voice_hotkey`'s "start recording" branch now POSTs `/stop`
+before `/request_started` - harmless no-op when nothing was playing (the
+live test below confirms `/stop` always returns 200 either way). New
+`tests/test_app_delivery.py` (4 tests, constructs `App` via `__new__` to
+avoid the real tray/window/watcher side effects `__init__` would trigger,
+same pattern felt-animation's own endpoint tests already use for its
+lifespan). Full suite: 18 passed.
+
+**felt-dashboard**: `notifyReplyReady` now returns whether felt-animation
+actually took the POST (`response.ok`, with a 2s `AbortController` timeout
+so a hung/unreachable felt-animation doesn't stall the chat window
+indefinitely), and always sends `prompted=1`. `sendTextChat` awaits it
+(previously fire-and-forget) and returns `playedByAnimation` on the
+result; `App.tsx`'s `handleSend` only falls through to
+`audioRef.current.play()` when that's `false`. The in-window mic button's
+own voice-chat path (`finishRecording`) was left untouched, matching the
+WP's own scope header ("felt-dashboard (typed chat)") - it never called
+`notifyReplyReady` to begin with, so there was no double-play there to
+fix. `tsc --noEmit` and `pnpm build` both clean; felt-dashboard has no
+test runner set up yet, so this is typecheck + build + code-review
+verified, not unit-tested (dashboard's first test suite is out of this
+WP's scope).
+
+**Live verification** (booted felt-animation for real - `uv run uvicorn`
+hit a one-off "Application Control policy blocked this file" on the first
+two attempts against the `uvicorn.exe` stub in a freshly-touched `.venv`,
+same shape as WP-07's scipy DLL block; `uv run python -m uvicorn` through
+the already-trusted `python.exe` worked immediately and every time after):
+- Acceptance 1 (sync offset): `scripts/manual_reply_smoke.py` and a longer
+  5s-clip variant both logged `sync offset=15.0ms` consistently, well
+  under the 50ms target. Rhubarb pocketSphinx: 0.17s for both a 1s and a
+  5s clip - nowhere near the 1.5s threshold that would justify switching
+  the default to `phonetic`, so pocketSphinx stays the default as already
+  set in `.env.example`/`config.py`. (Didn't separately re-measure
+  `phonetic` live since pocketSphinx is already comfortably fast and nothing
+  in the WP requires measuring the slower path once the faster default is
+  already fine.)
+- Acceptance 3 (`/stop` mid-sentence): sent a 5s clip, `/stop` 1.5s in →
+  `{"stopped": true}`; a second `/stop` right after with nothing playing →
+  `{"stopped": false}`. Log shows the expected `POST /reply_ready` →
+  `/stop` sequence with no errors. `/last_reply` and `/repeat` round-tripped
+  correctly (`/repeat` re-sent the same cues/wav through the same
+  synchronized-start path, `{"status": "ok"}`).
+- Acceptance 2, 4 and the "Mario judges by eye" half of acceptance 1
+  weren't done by me - I can't see the overlay's lip movement or hear
+  audio output myself, and acceptance 4 (kill felt-animation, confirm
+  felt-tray's fallback) is covered instead by
+  `test_deliver_reply_falls_back_to_local_playback_when_felt_animation_unreachable`,
+  which exercises the exact same fallback code path deterministically.
+  Acceptance 2 (typed chat plays once, not twice) is covered by
+  `handleSend`'s `playedByAnimation` gating plus the `tsc`/build pass, but
+  wasn't run end-to-end with a live felt-core. Left for Mario's own pass,
+  same as WP-07's privacy sign-off step.
+- Overlay + test server processes stopped cleanly afterward; port 8421
+  confirmed free.
+
+Committed as three separate repo commits (felt-animation, felt-tray,
+felt-dashboard) - no main.gd commit since no change was needed there, and
+no `[gemini-wip]` commits were needed this time since `git status` was
+clean in felt-dashboard and the two Gemini WIP commits already present in
+felt-animation/felt-character-assets were committed separately before this
+WP's own edits began (see those repos' git log).

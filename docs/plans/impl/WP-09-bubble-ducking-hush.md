@@ -125,6 +125,18 @@ correctly end to end (message sent at the right synchronized moment, held
 for the right duration, hush-aware) - this looks like a single
 positioning bug, not a structural one.
 
+**Update (2026-09-23, during WP-12 testing): the bubble is now rendering
+correctly** - a screenshot taken mid-reply shows it positioned properly
+above her head, tail and all, following a real `{"bubble": {...}}`
+message from a live `_handle_reply`. Not root-caused (never got to
+actually diffing `find_bone("Head")` against the real bone list), and
+only confirmed via one screenshot so far, not a full live session with
+Mario watching - but it's a real, positive sign the original bug may have
+been specific to whatever was running at the time (an older/different
+overlay instance), not a standing bug in the current source. Worth a
+proper live re-check with Mario before fully closing this out, but no
+longer believed broken.
+
 **Not done - needs Mario directly:**
 - **Acceptance 2** (call-ducking calibration): `FELT_CALL_PEAK_THRESHOLD`
   defaults to 0.02 (the WP's own starting guess) and `FELT_DUCK_DB` to 9 -

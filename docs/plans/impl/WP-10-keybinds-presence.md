@@ -98,3 +98,95 @@
    the logs); **H** again → she walks back.
 4. **M** repeatedly → she relocates, never teleports.
 5. The AltGr check is done and recorded in the notes.
+
+## Notes from implementation (2026-09-23)
+
+**Rebuild blocked mid-WP by Windows Smart App Control** (Mario's own
+call): re-exporting `FeltOverlay.exe` after the main.gd changes got the
+freshly-built binary blocked outright (`OSError: [WinError 4551] An
+Application Control policy has blocked this file` - confirmed via
+`Microsoft-Windows-CodeIntegrity/Operational` event log, ids 3118/3077:
+"did not meet the Enterprise signing level requirements", i.e. an
+unsigned local build, not a reputation-lookup delay like the couple of
+one-off blocks earlier in the day that cleared themselves on retry - this
+one didn't, and as a bespoke never-distributed binary it may never get a
+crowd-sourced reputation to catch up on). Mario declined turning Smart
+App Control off (it's one-way - no re-enabling without a clean Windows
+reinstall) and asked instead: don't re-export during iteration, run
+things directly, do the real exe build once everything else is done. So:
+- **The exported `FeltOverlay.exe` on disk right now is the blocked
+  WP-10 build** - there's no older cleared copy to fall back to, the
+  export overwrites in place. It needs one more real export (which will
+  hit Smart App Control again - expected, not a regression) once Mario's
+  ready for the full live pass.
+- For the rest of this WP's implementation and live testing, the Godot
+  project was run directly through the vendored editor binary
+  (`Godot.exe --path felt-godot-overlay`, no `--headless`) instead of the
+  export - same `main.gd`, same TCP relay on 8765, felt-animation can't
+  tell the difference. This is how every live check below was actually
+  done.
+- **Real bug this exposed and fixed along the way**: `OverlayClient.launch()`
+  had no error handling around `subprocess.Popen` - the blocked-exe
+  `OSError` was propagating straight through `server.py`'s FastAPI
+  `lifespan` and taking the *entire app* down on startup, not just
+  failing to spawn the overlay. Fixed to degrade the same way a missing
+  exe already did (log and continue) - this was a pre-existing gap
+  unrelated to WP-10's own scope, just one that only became visible once
+  a launch actually started failing.
+
+**Live-verified via HTTP + the directly-run Godot project** (real running
+felt-animation server, real presence state machine, real walk/wave/
+visible-toggle):
+- `hide` → `leaving` → `hidden`, `show` → `arriving` → `visible`: full
+  round trip, `GET /status`'s `presence` field tracked every transition.
+- `move` and `come` both moved her and returned to `visible` afterward.
+- `brb` → 5 min; a second `brb` call climbed to 15 min (`GET /status`'s
+  `away_until` advanced correctly); eventually settled into `away`, then
+  `show` brought her back to `visible` cleanly.
+- **Real bug found and fixed live**: pressing `brb` twice in quick
+  succession, before the first walk-off animation had finished, fired a
+  *second* concurrent `_walk_offscreen()` task - `PresenceState.
+  request_hide`/`request_brb` now return `"already_leaving"` (a state
+  distinct from both `"walk_off"` and `"already_off"`) when a walk is
+  already in flight, so the ladder still climbs but the walk-off
+  animation itself only ever fires once. Re-verified live after the fix
+  with the exact same rapid-double-press sequence - settled into `away`
+  exactly once, no doubled wave/walk.
+
+**AltGr check - done, but inconclusive for the layout that actually
+matters.** Queried the *foreground window's* real keyboard layout (not
+just this background process's own default, which would have been
+misleading) via `GetKeyboardLayout`/`ToUnicodeEx`: none of H/B/M/C/L/R/S/X
+produce a character under Ctrl+Alt on whatever layout was active at check
+time. But the layout that was actually active was **English (United
+Kingdom)**, language id `0x0809` - not Portuguese (`0x0816`), despite
+CLAUDE.md's locale note. Either Mario's real typing layout genuinely is
+EN-GB day to day (plausible - regional/date formatting and keyboard
+layout are independent settings), or the foreground window at that exact
+moment wasn't reflecting his usual one. Either way, **this specific check
+should be re-run (or just eyeballed) while Mario is actually on his
+normal Portuguese layout, if that's ever actually active**, before
+fully trusting it - flagged rather than asserted as done, same as the
+WP-09 bubble bug's own "circle back" treatment.
+
+**Not done - genuinely needs Mario, no way around it:**
+- Every acceptance check above requires a physical keyboard and his own
+  eyes/judgment (does the key actually fire under his hands, does the
+  tray status line read right to him, does she look like she's not
+  teleporting). None of this is fakeable from here.
+- The `look`/`repeat`/`stop`/`clean` hotkeys and all eight tray menu
+  items are wired and unit-tested but not exercised through the real
+  global-hotkey path (`keyboard.add_hotkey`) at all - only their
+  underlying handler functions were called directly in tests and via
+  direct HTTP calls in the live check above.
+- The final real `FeltOverlay.exe` re-export and a full pass against it
+  (not the editor-direct workaround) - deferred per Mario's own call
+  above, to be done once he says the rest is ready.
+
+Committed as five separate repo commits (felt-animation x2 - the
+overlay.launch() fix split out from the presence work itself since it's
+a standalone bug fix, not a WP-10 feature - felt-tray, felt-core,
+felt-character-assets already committed for main.gd's visible/offscreen-
+move support before the rebuild was attempted). No `[gemini-wip]`
+commits needed - `git status` was clean in all four repos before this
+WP's own edits began.

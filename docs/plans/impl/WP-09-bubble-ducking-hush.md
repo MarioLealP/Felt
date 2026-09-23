@@ -99,3 +99,91 @@ if needed." So:
 3. Saying "shut up" via the voice hotkey: she stops, says her short line, and
    the next screen reaction within 10 min is bubble-only. "You can talk
    again" restores speech. `GET /status` reflects all of it.
+
+## Notes from implementation (2026-09-23)
+
+**Not done - needs Mario directly:**
+- **Acceptance 2** (call-ducking calibration): `FELT_CALL_PEAK_THRESHOLD`
+  defaults to 0.02 (the WP's own starting guess) and `FELT_DUCK_DB` to 9 -
+  neither has been measured against a real Discord call with someone else
+  actually talking, since that needs Mario present on one. `call_monitor.py`'s
+  own docstring flags this. Once there's a real call to test against: watch
+  `felt-animation.log` at DEBUG for `call talking=%s (peak=%.4f)` lines
+  while a friend talks vs. silence, and set the threshold between the two
+  observed peak ranges.
+- The eye/ear halves of acceptance 1 and 3 (bubble tracking her head
+  visually while she walks, actually hearing the duck with no clicks,
+  judging the sheepish face) - same category as WP-08's own "Mario judges
+  by eye" items, not something I can verify myself.
+
+**What was built and verified without him:**
+
+*felt-animation* - `overlay.bubble()`/`clear_bubble()` send the relay
+message from `_handle_reply` at the same synchronized point as
+lipsync/audio (WP-08's own "one synchronized start"), for both prompted
+and unprompted replies. `call_monitor.py`: `TalkingDetector` (threshold +
+1.0s hang time) and `duck_gain` are pure/unit-tested; the actual pycaw
+polling thread isn't (needs real Windows audio sessions) - verified instead
+by reading pycaw's actual installed source (`.venv/Lib/site-packages/pycaw/
+utils.py`) to confirm the exact incantation the WP asked to verify:
+`session._ctl.QueryInterface(IAudioMeterInformation).GetPeakValue()`,
+`session.Process.name()` for the process filter. Found and fixed a real
+interaction bug while building this: `AudioPlayer.start()` used to reset
+gain to 1.0 on every new utterance, which would have snapped a call-ducked
+voice back to full volume for ~50ms at the start of each reply during an
+ongoing call until the next poll tick corrected it - gain now persists
+across `start()` calls instead (test_gain_persists_across_a_new_start_for_call_ducking).
+`hush.py`'s extend/cap/expire is clock-injected and fully unit-tested
+(including the 60-minute cap actually engaging on repeated extension
+calls). `_handle_reply`: `speak = prompted or not hush.active` - verified
+both live (see below) and via `test_handle_reply_sync.py`'s three new
+hush-path tests.
+
+*felt-character-assets* - the bubble CanvasLayer/PanelContainer/Label/tail,
+positioned every frame from the Head bone's projected screen position (via
+`_main_cam.unproject_position`), alpha-faded (0.15s) rather than a state
+machine. Verified two ways: a headless Godot load (`--quit-after 2`) that
+ran cleanly through `_build_bubble_ui()` and all the way to "Tag listener
+started" with no parse/runtime errors, and a live run against a real
+felt-animation server actually sending bubble+lipsync message pairs
+(including during hush) with the real overlay process staying responsive
+throughout (checked via `Get-Process`, no crash). No visual confirmation
+that the bubble actually tracks her head correctly on screen or reads well
+- that's Mario's own look.
+
+*felt-core* - `felt_presence` skill (shut_up/unhush intents ->
+`UIAction(kind="presence", ...)`), `_presence_fast_path` regex in brain.py
+(checked before `decide_tool` runs at all, so "shut up" never waits on or
+risks a misroute from the router LLM), plus a router worked example as a
+fallback for other phrasings. Along the way, found the `SkillResult.ui_action
+-> X-UI-Action` header plumbing (pre-existing, used by no skill until this
+one) had zero test coverage at all - added `test_ui_action_plumbing.py` to
+close that gap generically, not just for this one skill.
+
+*felt-tray* - `_handle_ui_action`, called from both `_finish_voice_chat`
+and `_on_screen_reaction`, POSTs to felt-animation's `/hush`/`/unhush` on a
+`kind: "presence"` result.
+
+**Live end-to-end check** (felt-animation booted for real, same
+`uv run python -m uvicorn` workaround as WP-08 for the occasional
+Application-Control-blocked `uvicorn.exe` stub): sent a prompted reply
+(spoke + bubbled), hushed for 10 min, sent an unprompted reply during hush
+(logged `hushed - bubble/body only, no audio (prompted=False)`, no
+`player.start` call, mouth stayed at rest), sent a prompted reply during
+the same hush (spoke normally, `sync offset=16.0ms`), unhushed, then fired
+nine back-to-back `/hush` calls to confirm the 60-minute cap actually
+engages (the first six extended by a clean 10 minutes each; the 7th-9th
+calls landed only seconds apart, exactly where the cap formula predicts).
+`GET /status` reflected `call_talking`/`gain`/`hush_until`/`playing`
+correctly throughout. Overlay process (`FeltOverlay.exe`) stayed alive and
+responsive (`Get-Process` `Responding: True`) after all of it. Cleaned up
+(stopped the test server + overlay, confirmed port 8421 free) afterward,
+same discipline as WP-08.
+
+Committed as four separate repo commits (felt-animation, felt-character-
+assets, felt-core, felt-tray). No concurrent Gemini/Antigravity WIP was
+found in any of the four repos when checked before starting (all `git
+status` clean) - the `[gemini-wip]`-separation pattern from earlier WPs
+wasn't needed this time. `tools/outfits/` in the umbrella repo has
+unrelated uncommitted wardrobe-feature changes (not mine, not touched) -
+left alone, only `docs/plans/impl/` staged for this commit.

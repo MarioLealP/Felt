@@ -75,6 +75,50 @@ classification.
 song?" and she answers correctly. Occasionally she remarks on a new track or
 mouths along to a chorus. With music off she stops bobbing.
 
+### Notes from implementation (2026-09-23)
+
+**Part 1 (beat detection + head-bob) built, committed, partially verified live:**
+
+- `aubio` has no prebuilt wheel for Windows/Python 3.12 and its source build
+  needs an MSVC toolchain not installed on this machine. Rather than install
+  full Visual C++ Build Tools for one nice-to-have feature, wrote a from-
+  scratch numpy-only onset/tempo tracker instead (`felt_animation/beat.py`):
+  RMS-windowed onset detection, inter-onset-interval clustering, a
+  `TempoLock` state machine matching the spec's "BPM within ±4% for ≥5s"
+  literally. 22 unit tests recover known BPM (120/128/140) from synthetic
+  click tracks, clean and jittered.
+- `sounddevice` (already a dependency) has no WASAPI loopback support in the
+  build available here (`WasapiSettings(loopback=True)` raises `TypeError`
+  on this machine). Switched to `pyaudiowpatch` for capture
+  (`felt_animation/beat_capture.py`). Verified against real audio (non-zero
+  peak amplitude).
+- Head-bob wired as a third additive layer on Head in main.gd (alongside the
+  WP-13 nod-pulse and WP-14 gaze), reusing the established
+  `_apply_additive_once` composition helper and the explicit-stop pattern
+  (`beat.active=false` zeroes the layer rather than being inferred from
+  messages no longer arriving). Godot headless syntax check clean.
+- Mood-gated `dance` ambient weight and `/status` exposing
+  `music_locked`/`music_bpm` also done.
+- **Live tempo-lock convergence does not work yet.** Tested against both a
+  synthetic click track (two variants, 120 BPM) and ~2 minutes of real
+  Spotify audio via the live loopback capture. On the synthetic click track,
+  estimates found harmonically-plausible values but kept jumping between
+  plateaus rather than holding one long enough to cross the 5s lock
+  threshold. On real music the estimates were considerably worse — no
+  plateau at all, bouncing across roughly 54-184 BPM (octave/fraction-
+  related values of each other) tick to tick over the full window, never
+  once approaching a lock. This is a real gap between the unit-test
+  environment (clean synthetic onset timestamp arrays) and live audio
+  (polyphonic real music has several competing periodicities - kick, snare,
+  vocal transients - that a single-band RMS onset detector can't
+  distinguish, unlike `aubio`'s spectral-flux based tracker). Not chasing
+  this further live for now (see `mario-defer-live-debugging` memory) -
+  likely needs either a spectral-flux onset function instead of RMS, or
+  band-limiting to a bass/kick range before onset picking. Left as a known
+  limitation; the bob mechanism itself (main.gd side) has not yet been
+  visually confirmed either, since it depends on a lock ever engaging.
+- Part 2 (Spotify now-playing) and Part 3 (LRCLIB lyrics) not started.
+
 ---
 
 ## WP-17

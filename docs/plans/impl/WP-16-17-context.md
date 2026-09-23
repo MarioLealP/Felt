@@ -117,7 +117,57 @@ mouths along to a chorus. With music off she stops bobbing.
   band-limiting to a bass/kick range before onset picking. Left as a known
   limitation; the bob mechanism itself (main.gd side) has not yet been
   visually confirmed either, since it depends on a lock ever engaging.
-- Part 2 (Spotify now-playing) and Part 3 (LRCLIB lyrics) not started.
+**Part 2 (Spotify now-playing + taste memory) - built, deployed, live-verified:**
+
+- `spotify_client.get_currently_playing` (10s-cached), a `now_playing` skill
+  ("what's this song?", `google_ok`), and `GET /v1/music/now` for felt-tray's
+  poll. `music_taste_loop` classifies each finished listen as a skip (<30% of
+  duration) or full play and persists it; `music_taste.summarize_taste` folds
+  that history into a "Mario often skips X / plays Y through" prompt note on
+  both the local and cloud chat paths (music is cloud-ok per Mario's own
+  google_ok stance, unlike facts).
+- **Live-verified against the real deployed server**: `/v1/music/now`
+  correctly tracked a real track change between two checks; "what song is
+  this?" routed through the real router to `now_playing`, hit the real
+  Spotify API, and came back as real phrased/spoken audio; clean container
+  logs throughout.
+
+**Part 3 (LRCLIB lyrics) - built, deployed, partially live-verified:**
+
+- `lyrics_client.py`: LRC parser, chorus detection (most-repeated line, 3+
+  occurrences), current-line-by-position lookup, and `get_lyrics` against
+  LRCLIB (public, keyless - Spotify's own API has no lyrics endpoint),
+  permanently disk-cached per track id including negative results.
+  `GET /v1/music/lyrics` exposes it; `now_playing` best-effort quotes the
+  current lyric line when one exists.
+- **Mouthing along**: felt-animation's `lipsync.synthetic_mouth_along_cues`
+  builds a plausible, non-audio-derived mouth timeline (subdued-weight
+  visemes only) in the same shape Rhubarb's real cues use, so main.gd plays
+  it with zero new code there - it already eases back to closed once the
+  duration's up. `POST /mouth_along` plays it, gated only by hush. **Scope
+  cut**: "eyes half-closed" not implemented - no verified eye-closure
+  blend-shape primitive exists yet (WP-14's gaze controls where she looks,
+  not eyelids).
+- **The trigger**: closes Part 2's own open loop (felt-core has no
+  continuous playback-position awareness) - felt-tray's new
+  `_music_poll_loop` (15s, same cadence the plan specifies) both fires the
+  unprompted new-track remark (via `send_screen_context`, so it's still
+  felt-core's own initiative/cooldown decision, not a guaranteed remark) and
+  rolls a flat per-poll chance to mouth along when inside a detected chorus
+  window, capped once per track.
+- **Live-verified**: `/v1/music/lyrics` responds correctly deployed; the
+  new-track-remark path is live (felt-tray's poll hits `/v1/music/now` every
+  15s in the real running process). **Not live-verified**: the actual
+  chorus/mouth-along firing end-to-end (LRCLIB returning real synced lyrics
+  for a real currently-playing track, landing inside its chorus window,
+  winning the probability roll) - Spotify wasn't playing at the point this
+  was checked. The `/mouth_along` endpoint itself WAS live-verified directly
+  (moved the real connected overlay's mouth; correctly no-ops while hushed).
+
+**Verified**: 286 felt-core tests (up from 237 pre-WP-16), 219 felt-animation
+tests, 105 felt-tray tests, all passing. Deployed to the real server twice
+(Part 2, then Part 3) via the documented archive/vendor/push/systemctl flow,
+both clean deploys with a passing health check.
 
 ---
 

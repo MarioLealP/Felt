@@ -451,3 +451,119 @@ states/times, table selection with the seeded RNG and repeat-avoidance.
 **Accept**: at different times of day and moods (force the state via a debug
 endpoint `POST /mood/debug`), reaction lines audibly change tone, and the
 resting face and ambient choices shift.
+
+### Notes from implementation (2026-09-23)
+
+**mood.py**: `MoodState` (clock-injectable like presence.py/hush.py - a
+monotonic `now_fn` for elapsed-time drift math, a separate wall-clock
+`clock_fn` for hour/date) holds the five-axis vector and a `tick()` that
+applies all three drifts (energy toward an hour-keyed target curve on a
+20-min time constant; boredom rising 0->1 over ~45 idle minutes;
+annoyance decaying on a 30-min time constant) plus the once-per-day
+partial reset (annoyance wiped, boredom eased, happiness pulled toward a
+baseline; affection deliberately left untouched - it's the slow
+relationship axis, not a daily transient). Persisted to
+`%APPDATA%\Felt\mood.json` via plain load/save functions (same shape as
+wardrobe.py's own), written on every mood-changing event, `POST
+/mood/debug`, and every 30s by a new `mood_tick_loop`. **Deliberate scope
+cut**: elapsed time for drift is the process's own monotonic clock, not a
+persisted wall-clock timestamp - a restart does NOT fast-forward
+boredom/annoyance across however long felt-animation was closed. "She was
+bored while the app wasn't running" isn't a real feeling to model, and the
+daily reset already covers the overnight case without it.
+
+**"Long AFK +boredom"**: no AFK detector exists anywhere in the codebase
+yet (RX-3 lists `GetLastInputInfo` as a later signal, not built). Not
+faked - boredom's own drift ("rises with no events... for a while") already
+covers "nothing has happened in a while" without needing a dedicated
+AFK signal; real AFK detection is a natural input to feed it later, not a
+prerequisite for the drift itself to work.
+
+**tone.py**: `build_tone_line(mood, hour, streak)` - RX-5's four time-band
+baseline lines, plus mood-threshold modifiers (annoyed/sleepy/bored/happy,
+checked in that order since annoyed is the strongest override per the
+WP's own text), plus streak escalation. **Streak is read off consecutive
+sad/annoyed vs. happy/excited reaction emotions**, not an invented "death
+detector" - there's no game-event/death signal anywhere in the system, so
+this is the honest signal that actually exists (felt-core's X-Emotion
+values), matching the WP's own "sympathy -> teasing -> 'want me to look
+away?'" escalation shape.
+
+**The tone passthrough (felt-tray/felt-dashboard -> felt-core)**: added
+`GET /tone` to felt-animation. felt-tray's Python fetches it (best-effort,
+1s timeout, None on any failure - never blocks or fails a turn) before
+`/v1/voice-chat` (app.py) and before `/v1/react/screen` and its
+felt-vision-fallback `/v1/context/screen` (watcher.py). felt-dashboard's
+TS does the same before `/v1/voice-chat` and `/v1/text-chat` (its own
+in-window mic/typed-chat paths, which never go through felt-tray's
+Python at all - missed on a first pass if only felt-tray were touched).
+felt-core threads `tone: str | None` through `chat()` /
+`process_screen_context()` / `react_to_screen()` down to every
+`_PERSONALITY_PROMPT` use site (a new `_personality_prompt(tone)` helper
+replaces the bare constant everywhere), for both the cloud and local
+reply paths. `/v1/context/screen` wasn't named in the WP's own endpoint
+list (only react/screen, voice-chat, text-chat were) but got the same
+treatment anyway since it's the exact same "screen reaction" functionally
+(felt-vision's older per-frame fallback path) - leaving it out would have
+meant the tone line silently disappearing the moment `/v1/react/screen`
+hit a cloud 503, which felt like an oversight rather than a real scope
+line.
+
+**Reaction table**: implemented narrower than the WP's own `{face, tag?,
+prop?, speak?: bool}` shape - `reactions.json` entries are `{pose, weight,
+mood_boost?}` only. No `tag`/`prop`/`speak` fields: felt-animation already
+has a separate, working mechanism for which body-tag plays and whether a
+reply speaks (`_resolve_reaction_tag`/`hush.active` in server.py) -
+duplicating that inside the reaction table would have meant two competing
+systems deciding the same thing. What the table actually adds on top,
+which didn't exist before: mood-weighted, repeat-avoiding *pose* selection
+(`reaction_table.pick_reaction`, same no-immediate-repeat spirit as
+face_life.py's `pick_micro_expression`). Two events wired, both real: the
+WP's `idle_micro` (replaces face_life_loop's flat random pick when the
+table has entries, falls back to the old picker otherwise) and a unified
+`reply:<emotion>` (covers both `screen_reaction(emotion)` and
+`reply(emotion)` from the WP's text - felt-animation only ever learns an
+emotion one way, via `/reply_ready`'s new optional `emotion` field, which
+felt-tray now forwards from felt-core's X-Emotion header for screen
+reactions specifically; plain chat/skill replies still have none, same as
+before this WP, and fall back to WP-12's existing tag-keyword pose
+mapping). `music_*`/`game_*`/`window_*`/`afk_*` are exactly what the WP's
+own text says are later WPs' job, not missing scope here.
+
+**Ambient loop mood scaling**: `_scale_ambient_weights` multiplies the
+existing hour-of-day weight dicts (unchanged) - boredom boosts `walk`/
+`ambient_action`, low energy (<0.35) boosts `sleepy`/`sit_down`/
+`stay_sitting` - rather than replacing them, so a bored 2am still leans
+sleepier than a bored 2pm.
+
+**"Resting face follows mood" - interpretation, not a new system**: there
+is no standalone "resting face" anywhere in the codebase to hook (WP-12's
+per-region hold compositor just eases back to nothing/whatever the base
+clip shows once a hold expires - there was never an explicit neutral pose
+applied). Building a second, separate "resting pose" mechanism risked
+fighting the hold-timer compositor for the same regions. Interpreted this
+bullet as: the mood-weighted `idle_micro` picks above (which fire every
+5-20s between real reactions) ARE what governs her face most of the time
+- boredom/annoyance already bias which micro-expression shows, which in
+practice is "the resting face following mood." Flagged here explicitly
+rather than left silent, in case Mario disagrees with that read once he
+sees it live.
+
+**Verified**: 189 new/changed tests pass across the three touched repos
+(felt-animation 184, felt-tray 86, felt-core 244 - net new: 41 mood/tone/
+reaction-table unit tests, 5 ambient-scaling tests, 6 felt-tray
+api_client/delivery tests, 7 felt-core tone-threading tests).
+felt-dashboard's `tsc --noEmit` is clean. **Live-verified against the real
+running felt-animation process** (not just unit tests): `GET /tone`
+reflects the real current time band; `POST /mood/debug` forces mood and
+the very next `/tone` call reflects every mood-modifier line (annoyed +
+sleepy + bored all appeared together correctly); mood persists to
+`%APPDATA%\Felt\mood.json` across the debug call; three real `/reply_ready`
+calls with `emotion=sad` produced the exact "3rd (or more) in a row" streak
+line and correctly nudged happiness (+0.03 x 3) and boredom (-0.10 x 3) via
+`on_reaction_spoken`, both confirmed by reading mood back through
+`/tone` before and after. **Not verified live**: the actual felt-core ->
+Gemini/Ollama -> TTS round trip with a real tone line audibly changing a
+spoken reply's wording - that needs a configured Gemini key and Mario
+listening, exactly the kind of thing that's this WP's own Accept
+criterion and out of reach for a headless check.

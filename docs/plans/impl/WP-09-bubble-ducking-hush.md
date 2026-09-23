@@ -102,6 +102,29 @@ if needed." So:
 
 ## Notes from implementation (2026-09-23)
 
+**Known broken, confirmed live (2026-09-23) - the speech bubble does not
+actually appear.** Mario watched a real turn (audio + lip-sync both
+confirmed working and looking right) and saw no bubble at all. A follow-up
+isolated test (sending a bare `{"bubble": {...}}` relay message directly,
+then capturing a screenshot via the existing `{"screenshot": ...}` debug
+message) confirmed it on the character herself - visible, audible, no
+bubble anywhere near her. Not yet root-caused; flagged here to circle back
+to rather than guessed at further mid-session. Leading suspicion going in:
+`_get_head_screen_pos()`'s `target_skel.find_bone("Head")` may not
+actually be a valid bone name on this skeleton (inferred by analogy to
+`_clamp_feet_to_floor`'s working `"LeftFoot"`/`"RightFoot"` names, never
+directly confirmed) - if it returns -1, `_update_bubble` makes the panel
+visible (alpha ramps up) but returns before ever setting `.position`,
+which would leave it sitting at Godot's default `(0, 0)` - the extreme
+top-left corner of a 3440px-wide screen, easy to miss. Worth checking
+first: dump `target_skel.get_bone_name(i)` for every bone index and diff
+against `"Head"`, or just add a one-line `push_warning` when
+`find_bone("Head") == -1` so a real run makes the failure obvious in the
+log instead of silently mispositioning. Bubble is otherwise wired
+correctly end to end (message sent at the right synchronized moment, held
+for the right duration, hush-aware) - this looks like a single
+positioning bug, not a structural one.
+
 **Not done - needs Mario directly:**
 - **Acceptance 2** (call-ducking calibration): `FELT_CALL_PEAK_THRESHOLD`
   defaults to 0.02 (the WP's own starting guess) and `FELT_DUCK_DB` to 9 -

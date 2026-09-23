@@ -214,6 +214,44 @@ talking. A `reaction/listening` clip exists and is never used.
 **Accept**: during a voice message she looks like she's listening and nods at
 pauses; thinking starts only after release.
 
+### Notes from implementation (2026-09-23)
+
+Built the whole WP: `/listening_started`/`/listening_stopped` (reusing
+`state.py`'s existing begin_thinking/end_thinking_and_wait machinery -
+listening is just another tag to loop, same mechanism thinking already
+uses, not a new one), felt-tray's `BackchannelDetector` (speech-then-pause
+timing, pure/clock-injected, wired into `Recorder`'s own mic callback so
+no separate capture pass is needed), and main.gd's nod pulse (additive
+Head-bone pitch dip, applied after the AnimationPlayer via the same
+process_frame hook `_clamp_feet_to_floor` already uses).
+
+**Deliberately used the procedural pulse, not `gesture/nodding`, for
+every nod** - the WP offers both as options ("gesture/nodding at low
+intensity if available, else a procedural pulse"), but `gesture/nodding`
+is a full body-animation clip, which would need the SAME activity lock
+the listening loop is already holding for its entire duration
+(`state.begin_thinking`'s own `async with self._activity_lock`) - a nod
+fired mid-listening would just queue up behind the lock and play late
+(or never, if listening ends first), not actually nod while Mario's
+genuinely mid-pause. The procedural pulse sidesteps this entirely since
+it's an additive rotation, not something that needs the lock at all.
+
+**`FELT_BACKCHANNEL_RMS_THRESHOLD` (default 500) is an unverified
+starting guess** - same situation as WP-09's call-ducking threshold,
+needs a real session with Mario talking to tune against his actual mic
+gain.
+
+**Live-verified**: `/listening_started` → a screenshot showed a real,
+visibly distinct animated pose (not idle) - confirms the listening loop
+actually plays a real clip, not a silent no-op. `/nod` and
+`/listening_stopped` both completed with no errors anywhere in the log
+across several calls. **Not verified**: the actual voice-hotkey press/
+release flow end to end (felt-tray's own hotkey handlers were only unit-
+tested, not exercised through a real keypress), whether the nod pulse
+actually LOOKS like a nod rather than a glitch, and whether the
+backchannel threshold ever correctly fires on Mario's real voice - all
+three need a live session with him.
+
 ---
 
 ## WP-14

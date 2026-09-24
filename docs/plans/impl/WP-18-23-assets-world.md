@@ -88,9 +88,91 @@ sliding.
 faces the camera. The new clips play without retarget glitches. `CREDITS.md`
 exists.
 
----
+### Notes from implementation (2026-09-24) — blocked, real root cause found
 
-## WP-19
+**Part A attempted, blocked on a project-level VRMA import bug (not a per-clip
+retargeting issue):**
+
+- Copied all 36 tag folders' worth of clips (38 files - `locomotion/walk/stop`
+  and `locomotion/run/stop` each get two variants) from
+  `E:\Felt\AnimToVrmaConverter\MovementAnimsetPro_*.vrma` into
+  `felt-character-assets/felt-godot-overlay/animations/library/<tag>/`,
+  exactly per the WP's own mapping table. Every source file the table names
+  exists and was copied correctly - verified filename-by-filename before
+  copying.
+- **Live-testing them surfaced something bigger than "check each clip, drop
+  the broken ones":** the running FeltOverlay.exe is an EXPORTED build - its
+  `res://` resources are baked in at export time, so it can never see newly
+  added loose `.vrma` files no matter how many times felt-animation (or the
+  exe itself) restarts. Confirmed by checking `export_presets.cfg` (no
+  include/exclude filters - the whole project is baked into the exe, no
+  loose-file asset folder alongside it) and `build/windows/` (no `.pck`, no
+  loose animations dir). This is a durable fact about how this project's
+  asset pipeline works that's worth flagging for any future WP that adds new
+  animation/asset files: **testing new assets needs the live Godot editor
+  binary** (`E:\Felt\felt-character-assets\tools\godot\Godot.exe --path
+  felt-godot-overlay`), same as the standing rule for testing new main.gd
+  *code* - it wasn't previously written down that this applies to new
+  *assets* too, not just script changes.
+- Switched to running the live editor binary directly. It immediately
+  surfaced the real problem: **every one of the 36 new clips fails to
+  import**, with `ERROR: [VRM][ERROR][vrm_extension.gd] Failed to find
+  required VRM keys in json`, and consequently `No loader found for
+  resource: ... (expected type: unknown)` at runtime (no `.import` file ever
+  gets generated because the import step itself fails).
+- **Root cause, traced to the actual line**: `addons/vrm/importer/v1/
+  vrm_animation_export.gd:282`'s `add_vrm_nodes_to_skin_v0()` looks for
+  `extensions.VRM.humanoid` (the legacy VRM 0.x avatar-description key) in
+  every `.vrma` file, regardless of which VRM spec version the file actually
+  uses. But **every `.vrma` in this project - the 36 new ones AND the
+  already-working ones alike - only declares `extensions.VRMC_vrm_animation`**
+  (confirmed byte-for-byte: `extensionsUsed":["VRMC_vrm_animation"]` in both
+  a new file and `gesture/wave/goodbye.vrma`, an existing working clip; the
+  legacy `"VRM":{` key is absent from both). By this code's own logic, the
+  already-working clips should ALSO fail this exact check today - the
+  working evidence is that they don't fail in practice, which means they're
+  not actually being re-validated through this code path at all; they're
+  running off `.import` cache files generated at some earlier point (as this
+  addon's own comments reference "Godot 4.6 bug" workarounds, hinting the
+  addon itself has changed since those were generated). **This is a bug in
+  the project's current VRM-animation import path, not a per-clip
+  retargeting problem** - it would block ANY brand-new `.vrma` file added to
+  this project right now, not just this batch, and it isn't something a
+  "drop the broken ones" pass can work around, since (per the evidence)
+  literally all of them are broken.
+- Did not attempt to fix `add_vrm_nodes_to_skin_v0`/the addon itself - this
+  is custom-modified third-party addon code (not something built this
+  session) that Mario has context on and should weigh in on the right fix
+  for (patch the v0 path to also accept `VRMC_vrm_animation`'s own
+  `humanoid.humanBones` shape? force new imports through a different
+  importer? something else?), rather than a blind fix from someone without
+  that history.
+- Left the copied files in place (`git status` will show them as new,
+  untracked) - they're correct, harmless, and become immediately usable
+  once the import bug is fixed; deleting them and redoing the copy later
+  would be pure waste.
+
+**Part C (walking rewrite) not started**: it explicitly depends on the new
+turn/walk-start/walk-stop clips from Part A ("the walk sequence becomes turn
+(the new turn clips) → walk/start → loop normal_walk..."), which are exactly
+the clips blocked above. Writing the main.gd movement code without any way
+to verify it against the clips it's meant to sequence felt like a worse use
+of time than waiting until Part A's import bug is resolved - same reasoning
+this session has applied elsewhere (WP-14's eye rotation, WP-16's beat-lock)
+to not ship unverifiable behavior as "done."
+
+**Part B (external downloads) not started**: same import-pipeline bug would
+block it too - any freshly downloaded/converted VRMA content would hit the
+identical wall. No point starting a bigger asset-sourcing effort before the
+underlying import path actually works for a single new file.
+
+**Screenshot testing tooling**: found and used the existing
+`{"screenshot": "<name>"}` relay message (main.gd's `_schedule_screenshot`,
+saves to `E:/Felt/scratch/<name>.png`) to drive a scripted per-tag capture
+pass. Left the 36 captured PNGs in `E:/Felt/scratch/` (all show the same
+un-crouched/un-turned idle pose across every new tag, now understood to be
+because none of them ever actually loaded - not evidence of a retargeting
+problem on their own, now that the real cause is known).
 
 ### Sound batch: non-verbal vocalisations + filler lines, in *her* voice
 **Repos**: new tooling under `E:\Felt\tools\sounds\` (umbrella),

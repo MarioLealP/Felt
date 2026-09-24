@@ -200,3 +200,81 @@ it works; otherwise record the finding.
 **Accept**: launching and closing a listed game, going AFK for 10+ min, mashing
 clicks, and a lively call each produce a visible reaction. The logs show the
 events. No keystroke content anywhere (review the hook code with Mario).
+
+### Notes from implementation (2026-09-24)
+
+**Built, live-verified, mostly working:**
+
+- New `felt_animation/signals/` package: `games.py`, `afk.py`, `mash.py`,
+  `gpu.py`, `call_energy.py` - one clock-injectable pure tracker class per
+  signal (same style as `presence.PresenceState`/`call_monitor.TalkingDetector`)
+  plus the real OS-touching sampling function each wraps. 30 new pure-logic
+  tests, all against synthetic samples per the WP's own Tests section.
+- `server.py`'s `signals_loop` (5s: games/AFK/GPU) + `mash_loop`/
+  `call_energy_loop` (1s each) feed a shared `_fire_signal_reaction` helper -
+  a mood-weighted face pose (`reactions.json`'s new `game_start`/`game_stop`/
+  `mash`/`gpu_hot`/`call_lively`/`afk_end`/`call_join_guess` entries, same
+  mechanism as `idle_micro`/`reply:<emotion>`) plus a body clip for the few
+  events with a real matching one in the library
+  (`afk_end`→`greeting`, `call_lively`→`emotion/laughing`,
+  `call_join_guess`→`gesture/wave`).
+- `games.toml` seeded with only `endfield.exe` (confirmed real, seen live
+  during a WP-16 test) - the rest of what Mario actually plays needs to come
+  from him, per the WP's own "seed it by asking Mario," not a guessed list.
+- **Live-verified with a real process**: temporarily added `notepad.exe` to
+  the watchlist, launched and closed it for real - `game_start(notepad.exe)`
+  and `game_stop(notepad.exe, 15s)` both fired correctly with a real
+  duration, `/status` tracked `games_running` accurately throughout. Reverted
+  back to the committed watchlist afterward.
+- **Live-verified for real**: `call_lively` fired end-to-end during an actual
+  live call (real peak samples → smoothing → sustained-threshold → face pose
+  + `emotion/laughing` clip), no synthetic data involved.
+- `idle_seconds()` (AFK) and `running_game_exes()` (games) both confirmed
+  working against real OS state (`ctypes.GetLastInputInfo`, real `psutil`
+  process enumeration).
+
+**Deliberate scope cuts, flagged rather than silently done:**
+
+- **Speech**: every signal is non-verbal only, even where the WP's table
+  suggests a line (`game_stop`'s "finally done?", `afk_end`'s "a spoken line
+  if it was a long absence"). felt-animation has no local TTS - every real
+  spoken reply on this whole project flows the other direction (felt-core
+  generates text+audio, then POSTs it here); making felt-animation originate
+  speech for these two would mean either reversing that call direction for
+  the first time anywhere in the project, or a set of pre-recorded canned
+  lines. Neither felt like a decision to make silently inside an otherwise
+  self-contained WP - the non-verbal half (pose + the greeting/laughing/wave
+  clips) still fires for both.
+- **`afk_start`**: fires and logs, but produces no reaction at all - the
+  WP's own text defers its reaction ("bored → book/nap") to WP-21's props
+  system, which doesn't exist yet, same as WP-15's own "no AFK detector
+  exists yet" note (which now has a real signal to feed, if wanted later).
+- **`gpu_hot`**: GPU heat detection is fully built (LibreHardwareMonitor
+  installed via choco through the scoped elevation dispatcher, `read_gpu_temp_c`
+  queries its WMI provider, `GpuHeatTracker`'s threshold logic tested) but
+  **not live-verified** - LibreHardwareMonitor only exposes its WMI provider
+  while running WITH ADMINISTRATOR RIGHTS, and there's no way to get it
+  running elevated without a real interactive UAC click (the elevation
+  dispatcher's allowlisted `Register-ScheduledTask` uses `LogonType S4U` with
+  no `RunLevel Highest`, so a task registered through it would still run
+  unprivileged). **This needs Mario**: launch
+  `C:\ProgramData\chocolatey\lib\librehardwaremonitor\tools\LibreHardwareMonitor.exe`
+  once, approve the UAC prompt, and in its Options menu enable "Run on
+  Windows Startup" + "Minimize to tray" so it's there every session. Once
+  that's done `/status`'s `gpu_temp_c` field should start reporting a real
+  number instead of `null`.
+- **The keyboard/mouse hook** (`mash.py`'s `EventCounter`): built with counts-
+  only as a hard invariant (never stores which key/button, see the module's
+  own docstring), and the pynput listener itself was live-verified to start/
+  stop cleanly. Per the WP's own Accept criterion, this file specifically
+  still needs an explicit read-through with Mario before being considered
+  fully signed off - not something an automated test can substitute for.
+
+**Verified**: 292 felt-animation tests passing (255 before this WP + 37 new:
+30 signal-detector tests + a handful folded into the count above). Not yet
+pushed through a full end-to-end AFK (would need a real 10-minute idle wait)
+or mash (would need real sustained clicking) live test - both are covered by
+unit tests against the exact same decision logic real samples flow through,
+same confidence level WP-16's tempo-lock tests had before its live gap
+showed up, so flagged as "logic verified, live end-to-end not yet watched"
+rather than claimed as fully proven.

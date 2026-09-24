@@ -88,10 +88,28 @@ sliding.
 faces the camera. The new clips play without retarget glitches. `CREDITS.md`
 exists.
 
-### Notes from implementation (2026-09-24) — blocked, real root cause found
+### Notes from implementation (2026-09-24) — resolved via `Update Felt.bat`
 
-**Part A attempted, blocked on a project-level VRMA import bug (not a per-clip
-retargeting issue):**
+**Update**: Mario pointed at `E:\Felt\Update Felt.bat` (`UpdateFelt.ps1`) -
+the project's own real `--export-release` pipeline, distinct from the ad-hoc
+`--editor --quit-after N` headless pass used below to diagnose this. Running
+it did a full clean import + export and **the "Failed to find required VRM
+keys" error did not recur at all** - all 36 new clips came through cleanly
+(`Storing File: .../*.vrma.import` for every one of them, zero VRM errors in
+the export log). Live-verified after the export: sent `climb/1m` and
+`locomotion/turn/left90` directly over the relay socket and screenshotted -
+both show clearly correct, distinct poses (a 90° side turn; a forward-leaning,
+knees-bent reach with her back to the camera for the climb) - conclusively
+different from a flat idle stand, unlike every earlier attempt. The root
+cause below was correctly diagnosed as a real gap in the ad-hoc headless
+import path; it turned out the project's own proper export flow doesn't hit
+it (likely because a full `--export-release` does a genuinely clean
+reimport pass the partial runs below didn't). **Not fully re-verified
+per-clip** - only spot-checked 2 of 36 after the fix; the rest are presumed
+good given the mechanism is now confirmed working, but a Mario visual pass
+before leaning on all of them (e.g. in WP-18C) is still the safer bet.
+
+**Original diagnosis (superseded above, kept for the record):**
 
 - Copied all 36 tag folders' worth of clips (38 files - `locomotion/walk/stop`
   and `locomotion/run/stop` each get two variants) from
@@ -152,19 +170,13 @@ retargeting issue):**
   once the import bug is fixed; deleting them and redoing the copy later
   would be pure waste.
 
-**Part C (walking rewrite) not started**: it explicitly depends on the new
-turn/walk-start/walk-stop clips from Part A ("the walk sequence becomes turn
-(the new turn clips) → walk/start → loop normal_walk..."), which are exactly
-the clips blocked above. Writing the main.gd movement code without any way
-to verify it against the clips it's meant to sequence felt like a worse use
-of time than waiting until Part A's import bug is resolved - same reasoning
-this session has applied elsewhere (WP-14's eye rotation, WP-16's beat-lock)
-to not ship unverifiable behavior as "done."
+**Part C (walking rewrite)**: unblocked now that Part A's clips confirm
+working - see the WP-18C section below for what got built.
 
-**Part B (external downloads) not started**: same import-pipeline bug would
-block it too - any freshly downloaded/converted VRMA content would hit the
-identical wall. No point starting a bigger asset-sourcing effort before the
-underlying import path actually works for a single new file.
+**Part B (external downloads) not started this session**: no longer blocked
+by the import bug, but still a bigger, separate asset-sourcing effort
+(downloading/converting third-party packs, licensing/CREDITS.md tracking) -
+not started, left for a dedicated pass.
 
 **Screenshot testing tooling**: found and used the existing
 `{"screenshot": "<name>"}` relay message (main.gd's `_schedule_screenshot`,

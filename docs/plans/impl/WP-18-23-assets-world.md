@@ -185,7 +185,8 @@ before leaning on all of them (e.g. in WP-18C) is still the safer bet.
   arrival, broadcasting `{"arrived": true}` for real.
 - `overlay.wait_for_arrived` mirrors `play_and_wait`'s real-completion-
   signal pattern (not a guessed duration); `move()` gained a `running` flag.
-- **Two real bugs found and fixed live**, both in main.gd:
+- **Four real bugs found and fixed live** (Mario caught the third one in
+  real time: "she is facing away from me"):
   1. The walk cycle clip and idle were fighting each other's blend on every
      single repeat - `_on_animation_finished`'s auto-revert-to-idle fired
      the instant a cycle clip finished (local, zero latency) before
@@ -201,15 +202,44 @@ before leaning on all of them (e.g. in WP-18C) is still the safer bet.
      machine ran from `_process()`, with no guarantee it ran after the
      AnimationPlayer's own update that frame - the *exact* ordering bug
      `_clamp_feet_to_floor`/nod/gaze/beat-bob already had to work around
-     (see `_ready()`'s own comments). Fixed the same way: moved to
-     `get_tree().process_frame`.
+     (see `_ready()`'s own comments). First fix attempt: moved to
+     `get_tree().process_frame`, same as those. **Looked fixed in testing,
+     wasn't** - see #3.
+  3. Mario reported her facing away live, after #2's fix. Traced it further:
+     `locomotion/walk/start` and `locomotion/walk/stop` (two of Part A's
+     newly retargeted MovementAnimsetPro clips) turned out to play facing
+     ~180 away from the camera **on their own**, confirmed by sending each
+     in isolation with zero rotation code involved - a bad retarget in the
+     source clips themselves (exactly the "drop broken ones" case Part A's
+     own text warned about), not a logic bug. Even `locomotion/walk/
+     normal_walk` (pre-existing, previously assumed fine, never actually
+     exercised long enough for anyone to notice before this WP's constant-
+     speed rewrite) showed the same symptom in isolation. felt-animation
+     stopped playing the two broken transition clips; separately, and more
+     fundamentally, main.gd now runs the whole walk system on a
+     `_character_pivot` wrapper node above `character` that no animation
+     clip's own root track can ever touch - the walk system owns world
+     position/facing outright now, rather than sharing `character`'s own
+     transform with whatever a clip's retarget happens to bake into it.
+     This is the fix that actually held up under repeat testing, not #2's
+     ordering fix alone (which only fixed *when* a value won a given frame,
+     not a clip re-asserting a *different* value later).
+  4. Found while stress-testing #3's fix (rapid back-to-back walk triggers
+     overlapping with a `call_lively` signal reaction): a **transient**
+     mesh-fragmentation glitch (limbs/hair briefly reading as detached,
+     same visual signature as #1) that self-resolved within a few seconds
+     without getting stuck. Lower priority than the other three - not
+     reported by Mario, only found by deliberately hammering it harder than
+     normal use would - flagged here rather than silently left, not
+     chased further this session.
 - **Live-verified against the real exported build** (via `Update Felt.bat` -
   the ad-hoc headless `--editor --quit-after N` import path used earlier in
   this WP does NOT reflect what actually ships, learned the hard way): a
   real walk-to-cursor turns, walks with a visibly cycling stride (screenshots
   showed genuinely different mid-stride leg positions across frames, not a
-  static pose), arrives, and turns back to face the camera - matching the
-  WP's own Accept criterion, screenshotted at each stage.
+  static pose), arrives, and turns back to face the camera reliably across
+  repeated triggers - matching the WP's own Accept criterion, screenshotted
+  at each stage including the pivot-node fix specifically.
 - **Not verified**: run-speed specifically (never triggered a `running=True`
   walk live this session - the 0.3-probability run branch in the ambient
   loop just didn't happen to fire during testing), and the "styled walks

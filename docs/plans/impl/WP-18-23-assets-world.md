@@ -170,8 +170,50 @@ before leaning on all of them (e.g. in WP-18C) is still the safer bet.
   once the import bug is fixed; deleting them and redoing the copy later
   would be pure waste.
 
-**Part C (walking rewrite)**: unblocked now that Part A's clips confirm
-working - see the WP-18C section below for what got built.
+**Part C (walking that looks like walking) - built, live-verified:**
+
+- `BehaviorState.walk_to` (felt-animation) replaces the old fixed "2-4
+  repeats" (`_build_walk_tags`, WP-10) - start clip -> loop the cycle clip
+  until main.gd's real `{"arrived": true}` notice -> stop clip, holding the
+  activity lock throughout. All 5 places that used to build a fixed-repeat
+  walk sequence (ambient wander, presence walk-off/walk-on, shoo, come-here)
+  now share this one path via a `_walk_to` helper.
+- main.gd: `move_toward` at a constant `WALK_SPEED_MPS`/`RUN_SPEED_MPS`
+  (1.3/2.6 m/s, the WP's own numbers) replaces the exponential lerp, plus a
+  turn-out/step/turn-back state machine - a 70 partial turn toward the
+  travel direction over 0.25s before stepping, back to 0 (facing camera) on
+  arrival, broadcasting `{"arrived": true}` for real.
+- `overlay.wait_for_arrived` mirrors `play_and_wait`'s real-completion-
+  signal pattern (not a guessed duration); `move()` gained a `running` flag.
+- **Two real bugs found and fixed live**, both in main.gd:
+  1. The walk cycle clip and idle were fighting each other's blend on every
+     single repeat - `_on_animation_finished`'s auto-revert-to-idle fired
+     the instant a cycle clip finished (local, zero latency) before
+     felt-animation's next loop iteration could re-send the same tag over
+     the network, so idle and the walk clip kept interrupting each other's
+     0.3s blend before either ever finished transitioning - visibly
+     corrupting the pose (limbs/hair reading as detached from a coherent
+     body). Fixed by giving `locomotion` tags the same auto-revert
+     exemption `idle` already had, since felt-animation always sends a real
+     follow-up tag during an active walk anyway.
+  2. The turn-back-to-camera rotation was being silently overwritten by the
+     walk cycle clip's own root rotation track, because the walk state
+     machine ran from `_process()`, with no guarantee it ran after the
+     AnimationPlayer's own update that frame - the *exact* ordering bug
+     `_clamp_feet_to_floor`/nod/gaze/beat-bob already had to work around
+     (see `_ready()`'s own comments). Fixed the same way: moved to
+     `get_tree().process_frame`.
+- **Live-verified against the real exported build** (via `Update Felt.bat` -
+  the ad-hoc headless `--editor --quit-after N` import path used earlier in
+  this WP does NOT reflect what actually ships, learned the hard way): a
+  real walk-to-cursor turns, walks with a visibly cycling stride (screenshots
+  showed genuinely different mid-stride leg positions across frames, not a
+  static pose), arrives, and turns back to face the camera - matching the
+  WP's own Accept criterion, screenshotted at each stage.
+- **Not verified**: run-speed specifically (never triggered a `running=True`
+  walk live this session - the 0.3-probability run branch in the ambient
+  loop just didn't happen to fire during testing), and the "styled walks
+  follow mood" bullet (no styled walk variants exist yet - that's Part B).
 
 **Part B (external downloads) not started this session**: no longer blocked
 by the import bug, but still a bigger, separate asset-sourcing effort

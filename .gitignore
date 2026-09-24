@@ -19,3 +19,12 @@
 
 # Machine-local (which Godot.exe to use for exports) - never portable/shared
 /godot_path.txt
+
+# Scratch output (overlay {"screenshot"} captures, debug renders) - never tracked
+/scratch/
+
+# Third-party binaries downloaded for experiments (llama.cpp builds etc.)
+/tools/llamacpp/
+
+# WP-19 sound candidates awaiting Mario's pick (keepers under Sounds/<kind>/ are tracked)
+/Sounds/candidates/

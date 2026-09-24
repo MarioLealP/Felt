@@ -258,6 +258,10 @@ un-crouched/un-turned idle pose across every new tag, now understood to be
 because none of them ever actually loaded - not evidence of a retargeting
 problem on their own, now that the real cause is known).
 
+---
+
+## WP-19
+
 ### Sound batch: non-verbal vocalisations + filler lines, in *her* voice
 **Repos**: new tooling under `E:\Felt\tools\sounds\` (umbrella),
 felt-voice on the Nitro5 (read-only use of its RVC code), felt-animation

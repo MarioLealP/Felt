@@ -1,156 +1,303 @@
-from PIL import Image, ImageDraw, ImageFont, ImageChops
+"""Generate tee graphic prints via ComfyUI on the Nitro5, then composite
+them onto the base tee texture using the UV-mapped print areas.
+
+This replaces the bad PIL-only generation that produced garbage stripes/dots.
+"""
 import json
 import os
-import glob
+import time
+import urllib.request
+import uuid
+import shutil
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont, ImageChops
 
-def remove_white(img):
+COMFYUI_URL = "http://192.168.1.104:8188"
+TEES_DIR = Path("E:/Felt/Assets/tees")
+TOOLS_DIR = Path("E:/Felt/tools/outfits")
+BASE_TEE = TOOLS_DIR / "base_tee.png"
+UV_JSON = TOOLS_DIR / "tee_uv.json"
+GRAPHICS_DIR = TOOLS_DIR / "graphics"
+
+# ── ComfyUI API helpers ──────────────────────────────────────────────
+
+def queue_prompt(workflow: dict) -> str:
+    """Submit a workflow to ComfyUI API, return the prompt_id."""
+    p = json.dumps({"prompt": workflow}).encode("utf-8")
+    req = urllib.request.Request(
+        f"{COMFYUI_URL}/prompt",
+        data=p,
+        headers={"Content-Type": "application/json"},
+    )
+    resp = urllib.request.urlopen(req, timeout=30)
+    return json.loads(resp.read())["prompt_id"]
+
+
+def wait_for_prompt(prompt_id: str, timeout: int = 120) -> dict:
+    """Poll until the prompt finishes. Return the output info."""
+    start = time.time()
+    while time.time() - start < timeout:
+        resp = urllib.request.urlopen(f"{COMFYUI_URL}/history/{prompt_id}", timeout=10)
+        history = json.loads(resp.read())
+        if prompt_id in history:
+            return history[prompt_id]
+        time.sleep(2)
+    raise TimeoutError(f"ComfyUI prompt {prompt_id} didn't finish in {timeout}s")
+
+
+def download_image(filename: str, subfolder: str, out_path: Path):
+    """Download a generated image from ComfyUI."""
+    url = f"{COMFYUI_URL}/view?filename={filename}&subfolder={subfolder}&type=output"
+    urllib.request.urlretrieve(url, str(out_path))
+
+
+def make_workflow(prompt: str, negative: str = "", width: int = 1024, height: int = 1024, seed: int = 0) -> dict:
+    """Build an SDXL txt2img workflow dict for ComfyUI API."""
+    if seed == 0:
+        seed = int.from_bytes(os.urandom(4), "big")
+    return {
+        "1": {
+            "class_type": "CheckpointLoaderSimple",
+            "inputs": {"ckpt_name": "animagine-xl-4.0.safetensors"},
+        },
+        "2": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {
+                "text": prompt,
+                "clip": ["1", 1],
+            },
+        },
+        "3": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {
+                "text": negative or "photo, realistic, blurry, text, watermark, logo, worst quality, low quality",
+                "clip": ["1", 1],
+            },
+        },
+        "4": {
+            "class_type": "EmptyLatentImage",
+            "inputs": {"width": width, "height": height, "batch_size": 1},
+        },
+        "5": {
+            "class_type": "KSampler",
+            "inputs": {
+                "model": ["1", 0],
+                "positive": ["2", 0],
+                "negative": ["3", 0],
+                "latent_image": ["4", 0],
+                "seed": seed,
+                "steps": 25,
+                "cfg": 7.0,
+                "sampler_name": "euler_ancestral",
+                "scheduler": "normal",
+                "denoise": 1.0,
+            },
+        },
+        "6": {
+            "class_type": "VAEDecode",
+            "inputs": {"samples": ["5", 0], "vae": ["1", 2]},
+        },
+        "7": {
+            "class_type": "SaveImage",
+            "inputs": {"images": ["6", 0], "filename_prefix": "tee_print"},
+        },
+    }
+
+
+# ── Graphic print prompts ────────────────────────────────────────────
+
+PRINT_PROMPTS = [
+    ("cat", "flat vector t-shirt print, cute anime cat sitting, chibi, minimal, 2 colours, solid white background, centered, no text, simple"),
+    ("ghost", "flat vector t-shirt print, cute kawaii ghost, halloween, minimal, simple shape, solid white background, centered, no text"),
+    ("pumpkin", "flat vector t-shirt print, cute jack-o-lantern pumpkin, halloween, minimal, solid white background, centered, no text"),
+    ("snowflake", "flat vector t-shirt print, geometric snowflake, winter, minimal, solid white background, centered, no text"),
+    ("star", "flat vector t-shirt print, cute shooting star with trail, minimal, solid white background, centered, no text"),
+    ("heart", "flat vector t-shirt print, cute pixel heart, 8bit retro style, minimal, solid white background, centered, no text"),
+    ("moon", "flat vector t-shirt print, crescent moon with small stars, night sky, minimal, solid white background, centered, no text"),
+    ("sakura", "flat vector t-shirt print, cherry blossom branch, japanese style, minimal, pink, solid white background, centered, no text"),
+    ("endfield_emblem", "flat vector t-shirt print, technical geometric sci-fi military emblem, hexagonal, Arknights Endfield aesthetic, minimal, solid white background, centered, no text"),
+    ("endfield_circuit", "flat vector t-shirt print, abstract circuit board pattern forming a diamond shape, sci-fi, minimal, solid white background, centered, no text"),
+    ("coffee", "flat vector t-shirt print, cute coffee cup with steam, kawaii face, minimal, solid white background, centered, no text"),
+    ("gamepad", "flat vector t-shirt print, retro game controller, pixel art style, minimal, solid white background, centered, no text"),
+]
+
+
+def generate_graphics():
+    """Generate graphic prints via ComfyUI."""
+    GRAPHICS_DIR.mkdir(exist_ok=True)
+    
+    for name, prompt in PRINT_PROMPTS:
+        out = GRAPHICS_DIR / f"{name}.png"
+        if out.exists():
+            print(f"  skip {name} (already exists)")
+            continue
+        
+        print(f"  generating {name}...")
+        workflow = make_workflow(prompt, width=1024, height=1024)
+        try:
+            pid = queue_prompt(workflow)
+            result = wait_for_prompt(pid, timeout=180)
+            
+            # Find the output image
+            outputs = result.get("outputs", {})
+            for node_id, node_out in outputs.items():
+                if "images" in node_out:
+                    img_info = node_out["images"][0]
+                    download_image(img_info["filename"], img_info.get("subfolder", ""), out)
+                    print(f"    saved {out}")
+                    break
+        except Exception as e:
+            print(f"    FAILED: {e}")
+
+
+# ── Compositing ──────────────────────────────────────────────────────
+
+def remove_background(img: Image.Image, threshold: int = 230) -> Image.Image:
+    """Make near-white pixels transparent."""
     img = img.convert("RGBA")
-    data = img.getdata()
-    new_data = []
-    for item in data:
-        # If it's mostly white, make it transparent
-        if item[0] > 220 and item[1] > 220 and item[2] > 220:
-            new_data.append((255, 255, 255, 0))
-        else:
-            new_data.append(item)
-    img.putdata(new_data)
+    pixels = img.load()
+    w, h = img.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = pixels[x, y]
+            if r > threshold and g > threshold and b > threshold:
+                pixels[x, y] = (255, 255, 255, 0)
     return img
 
-def create_tee(base_img, color, pattern=None, text=None, text_color=(0,0,0,255), front_rect=None, graphic_path=None):
-    width, height = base_img.size
-    
-    color_img = Image.new("RGBA", (width, height), color)
-    result = ImageChops.multiply(base_img, color_img)
-    
-    draw = ImageDraw.Draw(result)
-    
-    if pattern == "stripes":
-        stripe_color = (255, 255, 255, 100) if color[0] < 100 else (0, 0, 0, 80)
-        for y in range(0, height, 40):
-            if (y // 40) % 2 == 0:
-                draw.rectangle([0, y, width, y+20], fill=stripe_color)
-    elif pattern == "polka":
-        dot_color = (255, 255, 255, 120) if color[0] < 100 else (0, 0, 0, 80)
-        for y in range(0, height, 60):
-            for x in range(0, width, 60):
-                offset = 30 if (y // 60) % 2 == 1 else 0
-                draw.ellipse([x+offset, y, x+offset+15, y+15], fill=dot_color)
-                
-    if graphic_path and front_rect:
-        u_min = front_rect["u_min"] * width
-        u_max = front_rect["u_max"] * width
-        v_min_gl = (1.0 - front_rect["v_max"]) * height
-        v_max_gl = (1.0 - front_rect["v_min"]) * height
-        
-        cx = int((u_min + u_max) / 2)
-        cy = int((v_min_gl + v_max_gl) / 2)
-        
-        # Load graphic
-        g = Image.open(graphic_path).convert("RGBA")
-        g = remove_white(g)
-        
-        # Scale graphic to fit the chest width (with padding)
-        target_w = int((u_max - u_min) * 0.7)
-        ratio = target_w / g.width
-        target_h = int(g.height * ratio)
-        g = g.resize((target_w, target_h), Image.Resampling.LANCZOS)
-        
-        # If the tee is very dark, the multiply blending won't show black lines.
-        # We can just paste it directly using alpha composite, so colors remain.
-        # Actually, if we want it to look like fabric, multiply is good, but for dark shirts we need lighter graphics.
-        # To keep it simple, we just alpha_composite it on top. 
-        # But to keep the fabric shading, we could multiply the shading layer... 
-        # Let's just paste it for now, it's a huge step up.
-        result.alpha_composite(g, (cx - target_w//2, cy - target_h//2))
 
-    if text and front_rect and not graphic_path:
-        u_min = front_rect["u_min"] * width
-        u_max = front_rect["u_max"] * width
-        v_min_gl = (1.0 - front_rect["v_max"]) * height
-        v_max_gl = (1.0 - front_rect["v_min"]) * height
-        cx = (u_min + u_max) / 2
-        cy = (v_min_gl + v_max_gl) / 2
-        try:
-            font = ImageFont.truetype("arialbd.ttf", 80)
-        except:
-            font = ImageFont.load_default()
-        bbox = draw.textbbox((0, 0), text, font=font)
-        tw = bbox[2] - bbox[0]
-        th = bbox[3] - bbox[1]
-        draw.text((cx - tw/2, cy - th/2), text, font=font, fill=text_color)
-        
+def composite_graphic(base: Image.Image, graphic_path: Path, front_rect: dict) -> Image.Image:
+    """Paste a graphic onto the front chest area of the tee texture."""
+    result = base.copy()
+    w, h = result.size
+    
+    g = Image.open(graphic_path).convert("RGBA")
+    g = remove_background(g)
+    
+    # UV rect → pixel rect
+    u_min = front_rect["u_min"] * w
+    u_max = front_rect["u_max"] * w
+    v_min = (1.0 - front_rect["v_max"]) * h
+    v_max = (1.0 - front_rect["v_min"]) * h
+    
+    cx = int((u_min + u_max) / 2)
+    cy = int((v_min + v_max) / 2)
+    
+    # Scale graphic to 70% of the chest width
+    target_w = int((u_max - u_min) * 0.7)
+    ratio = target_w / g.width
+    target_h = int(g.height * ratio)
+    g = g.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    
+    # Alpha-composite onto the tee
+    result.alpha_composite(g, (cx - target_w // 2, cy - target_h // 2))
     return result
 
+
+def recolor_base(base: Image.Image, color: tuple) -> Image.Image:
+    """Multiply-blend the base white tee with a colour."""
+    color_layer = Image.new("RGBA", base.size, color)
+    return ImageChops.multiply(base, color_layer)
+
+
+# ── Main generation ──────────────────────────────────────────────────
+
+BASE_COLORS = {
+    "white": (255, 255, 255, 255),
+    "heather_grey": (190, 190, 190, 255),
+    "black": (50, 50, 50, 255),
+    "navy": (35, 45, 80, 255),
+    "sage_green": (150, 180, 150, 255),
+    "soft_pink": (255, 185, 200, 255),
+    "pastel_blue": (185, 220, 255, 255),
+    "pastel_yellow": (255, 240, 155, 255),
+}
+
+TEXT_PRINTS = [
+    ("felt", "felt.", (0, 0, 0, 200)),
+    ("404", "404 sleep\nnot found", (200, 50, 50, 255)),
+    ("gg", "gg", (255, 255, 255, 200)),
+    ("brb", "brb", (100, 100, 100, 200)),
+]
+
+
+def make_text_tee(base: Image.Image, text: str, text_color: tuple, front_rect: dict) -> Image.Image:
+    """Render text onto the chest area."""
+    result = base.copy()
+    draw = ImageDraw.Draw(result)
+    w, h = result.size
+    
+    u_min = front_rect["u_min"] * w
+    u_max = front_rect["u_max"] * w
+    v_min = (1.0 - front_rect["v_max"]) * h
+    v_max = (1.0 - front_rect["v_min"]) * h
+    cx = (u_min + u_max) / 2
+    cy = (v_min + v_max) / 2
+    
+    # Auto-invert text on dark shirts
+    bg_sample = result.getpixel((int(cx), int(cy)))
+    if bg_sample[0] < 100 and bg_sample[1] < 100 and bg_sample[2] < 100:
+        text_color = (255, 255, 255, 200)
+    
+    try:
+        font = ImageFont.truetype("arialbd.ttf", 72)
+    except OSError:
+        font = ImageFont.load_default()
+    
+    bbox = draw.textbbox((0, 0), text, font=font)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    draw.text((cx - tw / 2, cy - th / 2), text, font=font, fill=text_color)
+    return result
+
+
 def main():
-    base_path = "E:/Felt/tools/outfits/base_tee.png"
-    if not os.path.exists(base_path):
-        return
-        
-    base_img = Image.open(base_path).convert("RGBA")
+    # Step 1: Generate graphics via ComfyUI
+    print("=== Generating graphic prints via ComfyUI on Nitro5 ===")
+    generate_graphics()
     
-    with open("E:/Felt/tools/outfits/tee_uv.json", "r") as f:
-        uv_data = json.load(f)
-        
-    front_rect = uv_data.get("rect_z_pos")
+    # Step 2: Load base texture and UV data
+    base = Image.open(BASE_TEE).convert("RGBA")
+    with open(UV_JSON) as f:
+        uv = json.load(f)
+    front_rect = uv["rect_z_pos"]
     
-    out_dir = "E:/Felt/Assets/tees"
-    
-    # Delete old terrible tees
-    for f in glob.glob(f"{out_dir}/*.png"):
-        os.remove(f)
-    
-    base_colors = {
-        "white": (255, 255, 255, 255),
-        "heather_grey": (180, 180, 180, 255),
-        "sage_green": (150, 180, 150, 255),
-        "soft_pink": (255, 180, 200, 255),
-        "pastel_blue": (180, 220, 255, 255),
-        "pastel_yellow": (255, 240, 150, 255),
-        "navy": (40, 50, 80, 255),
-    }
-    
-    graphics = {
-        "cat": "E:/Felt/tools/outfits/graphics/cat.jpg",
-        "endfield": "E:/Felt/tools/outfits/graphics/endfield.jpg",
-        "ghost": "E:/Felt/tools/outfits/graphics/ghost.jpg"
-    }
-    
-    patterns = [None, "stripes", "polka"]
+    # Clean old tees
+    for old in TEES_DIR.glob("*.png"):
+        old.unlink()
+    TEES_DIR.mkdir(exist_ok=True)
     
     count = 0
-    # Generate Graphic Tees
-    for cname, color in base_colors.items():
-        for gname, gpath in graphics.items():
-            name = f"{cname}_graphic_{gname}"
-            img = create_tee(base_img, color, graphic_path=gpath, front_rect=front_rect)
-            img.save(f"{out_dir}/{name}.png")
+    
+    # Step 3: Graphic tees — every color × every graphic
+    available_graphics = sorted(GRAPHICS_DIR.glob("*.png"))
+    print(f"\n=== Compositing {len(available_graphics)} graphics × {len(BASE_COLORS)} colours ===")
+    for cname, color in BASE_COLORS.items():
+        colored = recolor_base(base, color)
+        for gpath in available_graphics:
+            gname = gpath.stem
+            out = TEES_DIR / f"{cname}_{gname}.png"
+            img = composite_graphic(colored, gpath, front_rect)
+            img.save(out)
             count += 1
-            
-    # Generate Patterned Tees
-    for cname, color in base_colors.items():
-        for pat in ["stripes", "polka"]:
-            name = f"{cname}_{pat}"
-            img = create_tee(base_img, color, pattern=pat)
-            img.save(f"{out_dir}/{name}.png")
+    
+    # Step 4: Plain colour tees (just the recolour, no print)
+    print(f"\n=== Plain colour tees ===")
+    for cname, color in BASE_COLORS.items():
+        colored = recolor_base(base, color)
+        colored.save(TEES_DIR / f"{cname}_plain.png")
+        count += 1
+    
+    # Step 5: Text tees
+    print(f"\n=== Text tees ===")
+    for cname, color in BASE_COLORS.items():
+        colored = recolor_base(base, color)
+        for tname, text, tcol in TEXT_PRINTS:
+            out = TEES_DIR / f"{cname}_txt_{tname}.png"
+            img = make_text_tee(colored, text, tcol, front_rect)
+            img.save(out)
             count += 1
-            
-    # Generate Cool Text Tees
-    texts = [
-        ("404", (200,50,50,255)),
-        ("ENDFIELD", (40,40,40,255)),
-        ("LOCAL", (50,100,150,255))
-    ]
-    for cname, color in base_colors.items():
-        for txt, txt_col in texts:
-            # white text on dark shirts
-            if color[0] < 100:
-                txt_col = (255, 255, 255, 255)
-            name = f"{cname}_txt_{txt}"
-            img = create_tee(base_img, color, text=txt, text_color=txt_col, front_rect=front_rect)
-            img.save(f"{out_dir}/{name}.png")
-            count += 1
-            
-    print(f"Generated {count} amazing tees in {out_dir}")
+    
+    print(f"\n=== Done: {count} tees in {TEES_DIR} ===")
+
 
 if __name__ == "__main__":
     main()

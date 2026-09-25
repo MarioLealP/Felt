@@ -35,9 +35,15 @@ implementation" section.
   by deterministic rules (cooldowns, dedupe, budgets). While call audio is
   active, her voice is **ducked** (quieter), never held back. A "shut up" /
   hush that *Mario* triggers is fine.
-- **One voice.** Every sound she makes is Piper TTS re-voiced through the
-  Kasane Teto RVC model (felt-voice on the Nitro5). No other TTS voices or
-  speech-to-speech models, and no Gemini Live API.
+- **One voice.** Every sound she makes ends in the Kasane Teto RVC model
+  (felt-voice on the Nitro5). Since 2026-09-25 the base TTS is
+  Chatterbox-Turbo, with Piper as the automatic fallback. RVC runs on the
+  GPU. Whatever the base model, the output must end in the Teto voice: no
+  other voices, and no Gemini Live API.
+- **No uncurated non-verbals live.** felt-voice strips every paralinguistic
+  tag (`[laugh]`, `[sigh]`, …). `FELT_VOICE_ALLOW_TAGS` is only for offline
+  batches that Mario curates by ear. Laugh and chuckle are banned outright
+  ("horrendous", 2026-09-25).
 - **Screen-capture blocklist** (enforced by process/window *before* any
   pixels are grabbed, never by prompting a model): **Discord, all web
   browsers, File Explorer, WhatsApp, Telegram, Phone Link**, plus KeePassXC and
@@ -81,7 +87,7 @@ implementation" section.
 | Godot overlay (the avatar) | `E:\Felt\felt-character-assets\felt-godot-overlay\` (`main.gd`), exported to `build\windows\FeltOverlay.exe`. |
 | Animation library | `E:\Felt\Animations` (junction). Folder path = tag, e.g. `emotion/happy/*.vrma`. |
 | felt-voice (STT + TTS + RVC) | Nitro5 laptop `ssh clockmost-nitro5` (192.168.1.104), `felt-voice.service`. |
-| Ollama for felt-core | Nitro5 `:11434` (router/privacy `qwen2.5:1.5b`, local chat `llama3.1:8b`). |
+| Ollama for felt-core | Nitro5 `:11434` (router/privacy `qwen2.5:1.5b`, local chat `qwen2.5:3b` at `num_ctx` 4096 since 2026-09-25, downsized so the 6 GB GPU fits the voice stack; the router runs on CPU). |
 | Ollama for desktop pieces | desktop `127.0.0.1:11434`. |
 
 **Message flow today**: hotkey → felt-tray records → `POST felt-core

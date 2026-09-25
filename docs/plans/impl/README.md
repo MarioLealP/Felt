@@ -25,6 +25,8 @@ evidence-first reporting rules, and the prompt to paste. Delegated WPs end in
 
 ## Status
 
+Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
+
 | WP | Title | Depends on | Size | Status |
 |---|---|---|---|---|
 | **Phase 1: fix the reaction path** |||||
@@ -35,22 +37,22 @@ evidence-first reporting rules, and the prompt to paste. Delegated WPs end in
 | **Phase 2: the reaction pipeline** |||||
 | [WP-05](WP-05-cloud-models-governor.md) | felt-core: cloud model split (Gemma 4 / Flash Lite) + quota governor | WP-04 | M | ✅ |
 | [WP-06](WP-06-skill-replies-cloud.md) | felt-core: skill replies phrased in the cloud (result-gated), short spoken style, weather cache | WP-05 | M | ✅ |
-| [WP-07](WP-07-screen-capture-v2.md) | Screen capture v2: per-window capture + blocklist + Gemma vision reactions | WP-05 | L | ☐ |
-| [WP-08](WP-08-playback-sync-stop.md) | Playback moves to felt-animation: voice/lips/body in sync, stop | WP-01 | M | ✅ |
-| [WP-09](WP-09-bubble-ducking-hush.md) | Speech bubble, call ducking, "shut up" hush | WP-08 | M | ☐ |
-| [WP-10](WP-10-keybinds-presence.md) | Control keybinds + presence (hide / BRB / move / look / repeat / stop) | WP-09 | M | ☐ |
+| [WP-07](WP-07-screen-capture-v2.md) | Screen capture v2: per-window capture + blocklist + Gemma vision reactions | WP-05 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-08](WP-08-playback-sync-stop.md) | Playback moves to felt-animation: voice/lips/body in sync, stop | WP-01 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-09](WP-09-bubble-ducking-hush.md) | Speech bubble, call ducking, "shut up" hush | WP-08 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-10](WP-10-keybinds-presence.md) | Control keybinds + presence (hide / BRB / move / look / repeat / stop) | WP-09 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
 | **Phase 3: face and body** |||||
-| [WP-11](WP-11-15-face-body.md#wp-11) | MSAA anti-aliasing | none | S | ☐ |
-| [WP-12](WP-11-15-face-body.md#wp-12) | Face compositor + procedural face life | WP-08 | L | ☐ |
-| [WP-13](WP-11-15-face-body.md#wp-13) | Listening pose + backchannel nods | WP-08 | S | ☐ |
-| [WP-14](WP-11-15-face-body.md#wp-14) | Gaze: head/eyes follow cursor, look at camera | WP-12 | M | ☐ |
-| [WP-15](WP-11-15-face-body.md#wp-15) | Mood × time-of-day system + reaction table + tone line | WP-07, WP-12 | L | ☐ |
+| [WP-11](WP-11-15-face-body.md#wp-11) | MSAA anti-aliasing | none | S | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-12](WP-11-15-face-body.md#wp-12) | Face compositor + procedural face life | WP-08 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-13](WP-11-15-face-body.md#wp-13) | Listening pose + backchannel nods | WP-08 | S | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-14](WP-11-15-face-body.md#wp-14) | Gaze: head/eyes follow cursor, look at camera | WP-12 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-15](WP-11-15-face-body.md#wp-15) | Mood × time-of-day system + reaction table + tone line | WP-07, WP-12 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
 | **Phase 4: context awareness** |||||
-| [WP-16](WP-16-17-context.md#wp-16) | Music: beat sync, Spotify now-playing, LRCLIB lyrics | WP-15 | L | ☐ |
-| [WP-17](WP-16-17-context.md#wp-17) | Signals: game start/stop, AFK, GPU heat, rage-click rate, call energy | WP-15 | M | ☐ |
+| [WP-16](WP-16-17-context.md#wp-16) | Music: beat sync, Spotify now-playing, LRCLIB lyrics | WP-15 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-17](WP-16-17-context.md#wp-17) | Signals: game start/stop, AFK, GPU heat, rage-click rate, call energy | WP-15 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
 | **Phase 5: assets and the desktop world** |||||
-| [WP-18](WP-18-23-assets-world.md#wp-18) | Animation assets: Animset Pro triage + downloads + walking fix | WP-01 | M | ☐ |
-| [WP-19](WP-18-23-assets-world.md#wp-19) | Sound batch: Orpheus non-verbals → RVC → Mario picks | none | M | ☐ |
+| [WP-18](WP-18-23-assets-world.md#wp-18) | Animation assets: Animset Pro triage + downloads + walking fix | WP-01 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-19](WP-18-23-assets-world.md#wp-19) | Sound batch: Orpheus non-verbals → RVC → Mario picks | none | M | ⏳ in progress (off track; restart from step 1, see AUDIT) |
 | [WP-20](WP-18-23-assets-world.md#wp-20) | AnimationTree layering | WP-14, WP-18 | L | ☐ |
 | [WP-21](WP-18-23-assets-world.md#wp-21) | Props system, chest, dissolve FX, clean-house key | WP-20 | L | ☐ |
 | [WP-22](WP-18-23-assets-world.md#wp-22) | Follow-window overlay + multi-monitor + supersampling | WP-20 | L | ☐ |

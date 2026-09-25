@@ -28,3 +28,6 @@
 
 # WP-19 sound candidates awaiting Mario's pick (keepers under Sounds/<kind>/ are tracked)
 /Sounds/candidates/
+
+# Voice A/B listening rounds (test renders, not keepers)
+/Sounds/ab-test/

@@ -308,6 +308,233 @@ Nitro5).
 **Accept**: Mario approved a keeper set; yawns, giggles and sighs play in sync
 with their clips in her voice; the filler fires on slow requests.
 
+### Notes from implementation (2026-09-25, restart from step 1)
+
+Restarted from step 1 after the audit. Decisions made since the spec
+(these override it): the primary non-verbal generator is **full
+Chatterbox** (Mario: "run the giggle, chuckle etc through the full non
+turbo"), with Orpheus as a secondary for comparison. Chatterbox-Turbo tags
+are out ("horrendous"). Every candidate ends in the live RVC Teto model,
+revoiced two ways.
+
+**Stopped at Mario's curation. No keepers have been picked.** Open
+`E:\Felt\Sounds\candidates\curate.html` in local Firefox, then run
+`uv run python E:\Felt\tools\sounds\apply_keepers.py <decisions.json>`.
+
+What was done:
+
+- **Generators.**
+  - Full Chatterbox ran on the Nitro5 in `~/felt-voice-next`, as a
+    separate process with the `bench_full.py` low-VRAM split. Sounds were
+    written phonetically, 4 spellings per kind × exaggeration 0.7/0.9,
+    cfg_weight 0.5/0.3 alternating, a distinct seed per take, and T3
+    capped at 150 speech tokens. Takes that trimmed to outside 0.25–3.0 s
+    were retried with a new seed.
+  - Orpheus 3B (`hf.co/unsloth/orpheus-3b-0.1-ft-GGUF:Q4_K_M`) ran
+    through the Nitro5's existing Ollama (CUDA) in raw mode, with the SNAC
+    24 kHz decoder on CPU. **Why the Nitro5 and not the desktop:** Ollama
+    with CUDA was already there, and the pull plus the raw prompt worked
+    on the first try (~92 tok/s). The desktop Vulkan llama.cpp in
+    `tools/llamacpp/` wasn't needed and wasn't touched.
+    - Prompt: `<custom_token_3><|begin_of_text|>{voice}: {text}<|eot_id|><custom_token_4><custom_token_5><custom_token_1>`,
+      stop at `<custom_token_2>`.
+    - Voices tara, leah and zoe; native tags `<laugh> <chuckle> <sigh>
+      <yawn> <gasp> <groan>`.
+    - Orpheus has no `<giggle>` tag, so giggle and hehe use "hehehe
+      <chuckle>"-style prompts. hm, mm-hm and ooh use plain text.
+    - Up to 4 takes per kind within 0.25–3.0 s (4.0 s for yawns, which
+      run long).
+- **RVC.** `nitro/revoice_ab.py` writes to a new folder and never
+  overwrites its input (the old `~/felt-voice/revoice_batch.py` is
+  untouched and unused).
+  - A = the live `rvc.py` params: rmvpe+, index 0.66, protect 0.33.
+  - For B I tried three breath-preserving variants, all with protect
+    0.5: rmvpe+ at index 0.33, crepe at index 0.33, and crepe at index 0.
+  - **B = crepe, index 0.33, protect 0.5.** It turned the fewest sounds
+    into words by Whisper (table below). Index 0 was worse than 0.33. The
+    rmvpe+ B and crepe index-0 files stay on the Nitro5 only
+    (`~/felt-voice-next/wp19/out/rvc/*_rvcB.wav`, `*_rvcBc0.wav`); they're
+    not on the page.
+- **Fillers and presence** were regenerated through the live `/v1/tts`
+  (Turbo → RVC, plain POSTs, nothing changed on the service).
+  `presence` is now its own kind: `back_*`, `zip_it_*`, `rude_*`. The 15
+  old Piper-voice fillers were moved (not deleted) to
+  `E:\Felt\Sounds\candidates\_old_piper\`. "hmm" got 6 takes instead of
+  3, because Turbo plus RVC keeps turning a bare "Hmm" into a word.
+- **Curation page.** `build_curation_page.py` was rewritten.
+  - Per kind, each take is one row with its source, prompt text and
+    generator settings, plus an RVC A player and an RVC B player side by
+    side. Each player has Keep/Reject, its Whisper transcript (an orange
+    "words" flag when Whisper heard real words), and what Whisper heard
+    before RVC.
+  - "Download decisions.json" keeps the `{"kind/file.wav": "keep"|"reject"}`
+    format, so `apply_keepers.py` is unchanged.
+  - Decisions persist in localStorage. `_`-prefixed folders are skipped.
+- **Step-5 code fixes (felt-animation):**
+  - `17a3ab1`: sound effects play on a separate `sfx_player`. An effect
+    is skipped while reply speech plays, and speech/repeat stops any
+    effect first, so a tagged reply's clip sound can no longer cut off
+    her sentence. Call ducking drives both players. The hush gain (0.3)
+    is applied per effect, so the speech gain is never touched.
+  - `31f2247`:
+    - The presence kind: "back!" on `_walk_onscreen(greet=True)` (the
+      away timer), "zip it" on `/hush` (played just before the hush
+      starts, so the acknowledgement is at normal volume), and "rude!"
+      not wired (WP-23).
+    - `pick_filler_path` reads `filler/` only and also ignores stray
+      `back_/zip_it_/rude_` files there.
+    - `sounds.json` values can be a list of kinds.
+  - `1f6d9b8` + `2d821c6`: `sounds.json` is tracked.
+    - `emotion/laughing` → laugh or giggle at random, among the kinds
+      that have keepers.
+    - `sleepy/yawn` → yawn, `emotion/sighing` → sigh, `air/land_hard` →
+      ugh, `emotion/surprised` and `reaction/turn_surprised` → gasp.
+    - `FELT_SOUNDS_DIR` is in `.env.example`.
+    - `2d821c6` fixes invalid JSON escaping in the first commit's comment.
+    - Pushed.
+- **Scripts** are all in `E:\Felt\tools\sounds\` (Nitro5 ones under
+  `nitro\`; copies run from `~/felt-voice-next/wp19/`):
+  - `chatterbox_nonverbals.py`
+  - `orpheus_gen.py` (non-verbals + the speech timing test)
+  - `revoice_ab.py`
+  - `gen_fillers.py`
+  - `stt_check.py`
+  - `assemble_candidates.py`
+  - `wp19_audio.py` (trim + RVC settings)
+- **Round-3 speech A/B (Turbo vs Orpheus), skipped per Mario's rule.**
+  3 warm lines took 11.6–12.7 s each for 7.8–8.1 s of audio, against
+  Turbo's 2.4–3.2 s for the same lines. Details are in Proof.
+
+### Proof
+
+**Files** (`E:\Felt\Sounds\candidates\`, counted after copying):
+
+- 284 candidates: giggle 22, laugh 24, chuckle 24, hehe 24, sigh 24,
+  yawn 22, gasp 24, hm 24, mm-hm 24, ooh 24, ugh 24, filler 15,
+  presence 9.
+- `_old_piper\` holds 15 files.
+- `manifest.json` covers all 284 ("0 without metadata").
+
+| kind | Chatterbox takes | Orpheus takes | files (×2 RVC) |
+|---|---|---|---|
+| giggle | 8 | 3 | 22 |
+| laugh, chuckle, hehe, sigh, gasp, hm, mm-hm, ooh, ugh | 8 each | 4 each | 24 each |
+| yawn | 8 | 3 | 22 |
+| **total** | **88** | **42** | **260** + 15 filler + 9 presence |
+
+**Commands and raw output:**
+
+```
+# full Chatterbox (Nitro5; qwen2.5:3b unloaded, ComfyUI stopped)
+uv run --no-sync python wp19/chatterbox_nonverbals.py wp19/out/raw_cb giggle
+{"generated": 8, "rejected": 0, "gen_median_s": 1.17, "total_s": 31.9, "torch_max_allocated_mib": 1670}
+uv run --no-sync python wp19/chatterbox_nonverbals.py wp19/out/raw_cb laugh chuckle hehe sigh yawn gasp hm mm-hm ooh ugh
+  reject hehe_cb09_s4 attempt 0 (0.16s)
+{"generated": 81, "rejected": 1, "gen_median_s": 1.15, "total_s": 109.5, "torch_max_allocated_mib": 1668}
+
+# Orpheus non-verbals
+uv run --no-sync python wp19/orpheus_gen.py nonverbals wp19/out/raw_orph
+laugh_orph_1: leah '<laugh>' 0.52s (113 tok in 1.21s)   ... total 139.1s
+(yawn rerun with the 4 s limit) yawn_orph_1: tara '<yawn>' 2.82s (232 tok in 2.51s) ... total 31.0s
+find wp19/out/raw_orph -name '*.wav' | wc -l  -> 42 ; raw_cb -> 88
+
+# RVC, 130 raw takes x 4 settings
+uv run --no-sync python wp19/revoice_ab.py wp19/out/rvc A,B,Bc wp19/out/raw_cb wp19/out/raw_orph
+{"files_in": 130, "settings": ["A", "B", "Bc"], "median_s_per_file": {"A": 0.976, "B": 0.985, "Bc": 1.447}, "total_s": 453.7}
+{"files_in": 130, "settings": ["Bc0"], "median_s_per_file": {"Bc0": 1.283}, "total_s": 170.6}
+
+# fillers via the live /v1/tts
+filler/hmm_1: 'Hmm.' HTTP 200 ... 1.3-1.7 s each; 24 x "HTTP 200"
+```
+
+**Whisper spot check** (live `/v1/stt`, base.en). The count is takes where
+the transcript contains real words, by `stt_check.py`'s heuristic:
+
+| | raw (before RVC) | A (live) | B rmvpe+ | **B crepe (used)** | crepe idx 0 |
+|---|---|---|---|---|---|
+| Chatterbox, all 88 | 46 | 70 | 66 | 65 | 66 |
+| Orpheus, all 42 | **6** | 30 | 27 | **21** | 27 |
+| laugh/giggle/chuckle/hehe, Chatterbox 32 | 17 | 29 | 27 | 23 | 25 |
+| laugh/giggle/chuckle/hehe, Orpheus 15 | 3 | 13 | 12 | 9 | 11 |
+
+Raw examples:
+
+- Orpheus `hehe_orph_2`: raw "Heh heh heh heh", A/B/crepe all "See you
+  later!". This is the known "laugh → See ya!" failure.
+- `chuckle_orph_2`: raw "Heh heh heh", A "The best", crepe "Heh heh heh".
+- Chatterbox `giggle_cb09_s2` "hehehe!": raw "Bye bye.", so full
+  Chatterbox already speaks words before RVC.
+
+Filler/presence examples: "let me see", "one sec", "ooh okay" and "zip
+it" all transcribe correctly. The hmm takes came back as "and", "heh",
+"2", "Okay". "Rude" came back as "Road"/"Root", and "back" as
+"That"/"But."/"back." Whisper is unreliable on one-word clips, so these
+need Mario's ear.
+
+**Orpheus speech timing** (`orpheus_gen.py lines wp19/out/r3 tara O1 3`,
+warm; live felt-voice resident, qwen2.5:3b unloaded, ComfyUI stopped):
+
+```
+01 {'audio_s': 8.11, 'llm_s': 7.31, 'snac_s': 3.5, 'synth_s': 10.81, 'rvc_s': 1.9, 'total_s': 12.71, 'ttfa_s': 0.65, 'tokens': 666, 'tok_per_s': 92.0}
+02 {'audio_s': 7.77, 'llm_s': 7.02, 'snac_s': 3.24, 'synth_s': 10.26, 'rvc_s': 1.33, 'total_s': 11.59, 'ttfa_s': 0.48, 'tokens': 638, 'tok_per_s': 91.4}
+03 {'audio_s': 8.02, 'llm_s': 7.28, 'snac_s': 3.31, 'synth_s': 10.58, 'rvc_s': 1.09, 'total_s': 11.68, 'ttfa_s': 0.47, 'tokens': 659, 'tok_per_s': 91.2}
+vram_before 2488 peak 5850   (ollama ps: 2.8 GB, 17%/83% CPU/GPU)
+```
+
+- Turbo for the same lines: 3.15 / 2.54 / 2.79 s.
+- Streaming time-to-first-audio is 0.5–0.65 s, but RVC Teto isn't
+  streaming, and ~92 tok/s barely beats real time (~84 tok/s).
+- It can't sit next to qwen2.5:3b and the live felt-voice either: the
+  card was at 5850/6144 MiB without the chat model.
+
+**felt-animation:**
+
+```
+uv run pytest -q   -> 352 passed after 17a3ab1; 363 passed in 2.72s after 31f2247/2d821c6
+git push           -> 203dfd9..2d821c6  main -> main
+```
+
+**Nitro5 restored** (before the batch: felt-voice 2410 MiB + ComfyUI 110 +
+qwen2.5:3b 2200 = 4740 MiB):
+
+```
+qwen2.5:1.5b  1.2 GB  100% CPU  4096 ;  qwen2.5:3b  2.2 GB  100% GPU  4096
+felt-comfyui active; felt-voice active (same PID 9816, never restarted); ollama active
+0 stray wp19 processes; card 4734 MiB
+tts HTTP 200 134444 B 1.774287s
+```
+
+### Not done / unverified
+
+- **Keepers not picked**: that's Mario, by ear on the page. Nothing is
+  in `E:\Felt\Sounds\<kind>\` yet, so no sound plays live.
+- **Not heard in sync with clips.** The step-5 fixes are verified by unit
+  tests only. The running felt-animation (started 22:27) still has the
+  old code. It picks up the fixes on its next restart, and there's
+  nothing to hear until keepers exist.
+- **Breath preservation is judged by Whisper only**, not by ear. B
+  (crepe) is the best of the variants tried, but it still turns roughly
+  half the laughs into words. Chatterbox often produces words before RVC
+  even runs.
+- Orpheus has no giggle tag (the giggle and hehe takes are approximations).
+  Only 3 Orpheus yawns and 3 Orpheus giggles passed the length filter.
+- Round-3 speech A/B: skipped (too slow, see above). Only 3 lines were
+  timed, and no page section was built.
+- "Play a filler immediately for known-slow skills" is still not built
+  (a pre-existing gap: felt-animation has no signal for which skill
+  runs).
+- "zip it" plays on any `/hush`, including the keybind. That's a design
+  choice, not reviewed by Mario.
+- **Left on the Nitro5:**
+  - The Orpheus GGUF stays pulled in Ollama (2.1 GB).
+  - `snac` 1.2.1 is installed into `~/felt-voice-next/.venv` with
+    `uv pip --no-deps`. It's not in that project's `pyproject.toml`, so a
+    `uv sync` there would remove it.
+  - The raw takes and unused RVC variants are in
+    `~/felt-voice-next/wp19/out/`.
+- `Sounds/ab-test/` in the umbrella is still untracked. It's from the
+  voice A/B work, not WP-19, and was left as is.
+
 ---
 
 ## WP-20

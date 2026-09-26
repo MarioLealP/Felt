@@ -25,6 +25,8 @@ evidence-first reporting rules, and the prompt to paste. Delegated WPs end in
 
 ## Status
 
+**Order (Mario, 2026-09-26): follow the WP numbers.** The one exception is WP-34 (packaging), which goes last because it bundles everything.
+
 Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 
 | WP | Title | Depends on | Size | Status |
@@ -54,7 +56,6 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-18](WP-18-23-assets-world.md#wp-18) | Animation assets: Animset Pro triage + downloads + walking fix | WP-01 | M | ✅ (Mario live-reviewed 09-26; leftovers in POLISH-BACKLOG.md) |
 | [WP-19](WP-18-23-assets-world.md#wp-19) | Sound batch: Orpheus non-verbals → RVC → Mario picks | none | M | 🟡 WIP: accepted for now (38 keepers live, sync OK 09-26). Revisit with a deep dive on alternatives once every other WP is done |
 | [WP-20](WP-18-23-assets-world.md#wp-20) | AnimationTree layering | WP-14, WP-18 | L | 🔎 needs review (built 09-26, see notes) |
-| [WP-35](WP-35-animation-studio.md) | Animation Studio: contained window to browse/play/scrub every clip, build base+upper combos, inspect feet/root motion, mark clips keep/broken (runs right after WP-20) | WP-20 | M–L | ☐ |
 | [WP-21](WP-18-23-assets-world.md#wp-21) | Props system, chest, dissolve FX, clean-house key | WP-20 | L | ☐ |
 | [WP-22](WP-18-23-assets-world.md#wp-22) | Follow-window overlay + multi-monitor + supersampling | WP-20 | L | ☐ |
 | [WP-23](WP-18-23-assets-world.md#wp-23) | Desktop world: platforms, ledges, falls, riding windows | WP-22, WP-21 | L | ☐ |
@@ -68,6 +69,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-31](WP-25-31-life-features.md#wp-31) | Calendar heads-up | WP-25 | S | ☐ |
 | [WP-32](WP-32-33-wardrobe-automation.md#wp-32) | Wardrobe Tier A: source accessories and clothing assets online (+ Booth shortlist for Mario) | none | M | ☐ |
 | [WP-33](WP-32-33-wardrobe-automation.md#wp-33) | ★ Wardrobe Tier A: a new tee every day (UV print areas, ≥ 60 tees, review gallery, daily pick) | none | M | 🔎 needs review |
+| [WP-35](WP-35-animation-studio.md) | Animation Studio: contained window to browse/play/scrub every clip, build base+upper combos, inspect feet/root motion, mark clips keep/broken | WP-20 | M–L | ☐ |
 | [Tier C](MARIO-vroid-outfits.md) | **Mario's** VRoid outfit checklist (pajamas, hoodie, rain, winter, Halloween by mid-Oct, …) | none | ongoing | ☐ |
 | **Phase 7: packaging (last, after everything else is ticked)** |||||
 | [WP-34](WP-34-packaging.md) | One clean install per device: desktop = single tray app supervising everything (no console/PowerShell/scheduled tasks, Ollama folded in); Nitro5 = one install + model manifest; server bootstrap; `FRESH-INSTALL.md` | all WPs | XL | ☐ (first decision: Smart App Control / code signing) |

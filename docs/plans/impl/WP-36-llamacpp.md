@@ -558,3 +558,25 @@ own slot.
 - The privacy classifier's 15 s timeout is uncomfortably close to a cold
   call (13.0 s measured). After this WP, cold calls are handled by the
   warm-up rather than by the timeout.
+
+## Additions from the llama-canvas spike (2026-09-26)
+
+Source: `F:\workspace\needs-to-spike-llama-canvas-vault\SPIKE-FINDINGS.md`,
+a llama.cpp-first knowledge vault. It independently arrived at this same
+design: router mode, `--models-max`, presets, and dropping Ollama. Fold
+these in when WP-36 runs:
+
+1. **Speculative decoding with no draft model:** `spec-type=ngram-mod` on
+   the `chat-3b` preset. A free generation speed-up; measure it against
+   the baseline before keeping it. (S, low risk.)
+2. **Don't set flags that are already defaults** (`jinja`, `flash-attn`,
+   …) in the preset. Check each one against the pinned build's defaults
+   and keep only what changes behaviour. (S, cleanliness.)
+3. **Self-compile llama.cpp for the Nitro5** (hardware-tuned CUDA build)
+   as a deliberate step *after* the prebuilt setup is stable and measured.
+   The vault reports 10–44% gains; prove it with before/after tokens/s.
+   (M.)
+
+Documented but not needed now:
+- KV-cache quantisation (`cache-type-k/v=q8_0`) as a later RAM/VRAM lever;
+- explicit batch/ubatch tuning, since no CPU contention has been measured.

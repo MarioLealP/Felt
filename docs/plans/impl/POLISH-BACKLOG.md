@@ -27,5 +27,15 @@ item says what's still off and where to start.
   - Things to check: whether 4° is too tight, and whether to drive the eyes
     from the VRM's own lookAt range (`lookAt.rangeMapVerticalUp`) instead
     of a hand-picked cap.
+- **Props are a bit janky** (2026-09-26, WP-21): Mario, "really cool work
+  tho, bit on the jank side but solid progress… mark as done but mark to be
+  polished way later".
+  - Known rough spots:
+    - grip offsets per prop;
+    - the chair's seat contact is hidden by the armrests;
+    - the throw-into-chest isn't screenshotted, and the carry-back tidy
+      variant hasn't been run;
+    - kicked props only move sideways;
+    - the umbrella is carried closed, by the crook.
 - **WP-19 sounds deep dive**: see README. Covers laugh/giggle sources, a
   breath-preserving converter, and `ooh`/`mm-hm` mappings.

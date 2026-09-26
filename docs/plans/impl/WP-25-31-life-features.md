@@ -118,6 +118,8 @@ DEBUG).
 
 ## WP-27
 
+
+> **Decided 2026-09-26 (Mario, during WP-21):** sunny weather → put her in the **summer outfit for a while** (instead of sunglasses, which were dropped as "very off"). Pick which outfit VRM counts as summer with Mario.
 ### Wardrobe: outfits by time, weather, season and mood  ★ Mario's priority
 **Repos**: felt-character-assets (main.gd, models), felt-animation
 (decisions), felt-core (weather hook, deploy). **Size**: L. **Depends on**:

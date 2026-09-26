@@ -1124,6 +1124,248 @@ everything.
 - clutter persists across restarts;
 - `Ctrl+Alt+X` clears it all.
 
+### Notes from implementation (2026-09-26)
+
+**Assets** (`felt-godot-overlay/props/models/`, credits in
+`props/CREDITS.md`, 16 GLBs, 46–1239 tris each). All CC0 except three
+CC-BY 3.0 items, which are credited:
+- Kenney (CC0): chest (Pirate Kit), fancy chair = `loungeChair` armchair,
+  pillow, desk lamp, potted plant (Furniture Kit), mug, snack bag (Food
+  Kit), blanket = bedroll (Survival Kit).
+- poly.pizza CC0: phone, open book, water bottle (Quaternius); headphones,
+  closed umbrella (CreativeTrio).
+- poly.pizza CC-BY 3.0: sunglasses (jeremy), controller (Ginsta), beanbag
+  (J-Toastie).
+- The water bottle is a 16th item: Mario said `drink_water` is "opening a
+  water bottle and taking a sip", so that clip gets the bottle. The mug sip
+  plays only that clip's sipping segment (8.0–15.2 s, left hand).
+- The files are already glTF binaries. Kenney's external `colormap.png` is
+  embedded by `props/embed_glb_textures.py`, with no geometry change.
+  Nothing needed Booth, so there's no shortlist.
+- **Look**: `props/felt_prop.gdshader` uses MToon's directional-light maths
+  with her values (ShadeToony 0.7, ShadeShift -0.1, a tight rim) under the
+  same 3-light rig, plus the dissolve. The MToon shader itself can't
+  discard per pixel for the dissolve.
+
+**Architecture.** felt-animation decides and main.gd only executes.
+- **Manifest**: `felt-animation/props.json` is the one source. It holds:
+  - the catalogue, sent as `{"prop_catalogue"}` on connect: model, size,
+    rotate, stretch, grip per bone, physics, lid;
+  - clip → prop, events → props, and the step sequences (tag + a timed cue,
+    chest open/close);
+  - the chair's sit clips and `hand_dx` (where she stands for each action).
+- **Held**: a `BoneAttachment3D` per bone plus an `unscale` child. Grips are
+  authored in the rest frame: -x = toward the fingertips, -y = palm side,
+  +z = front. A missing left-hand grip mirrors the right.
+- **Placed**: `RigidBody3D` on a floor (y = 0) with walls at the frame edges.
+  - Frozen at rest.
+  - After a kick or drop it simulates in the z = 0 plane (axis-locked), then
+    reports `{"prop_moved"}`.
+  - The visual depth sits on a `depth` child.
+- **Three physics bugs found and fixed live**:
+  - axis locks on a frozen body clamp the node's own transform (held grips
+    came out rotated, z zeroed);
+  - a frozen kinematic body's state sync drags a moving or tweened node
+    (0.35 m behind the hand mid-pickup, the mug put down on its side). Bodies
+    now leave the physics world while held or tweened;
+  - a CollisionShape3D under a plain child node never registers (a kicked
+    book fell to y = -1944).
+- **Sequences** (`props.py` PropDirector). The base lock is held for the
+  whole sequence; the upper lock only around full-body clips, base before
+  upper.
+  - `obtain` order: already held → one on the floor (walk, `prop/pickup_*`,
+    attach at 0.8 s) → near the chest (fetch) → big or far (> 3 m): conjure.
+  - **Fetch**: walk to the chest → lid open → `prop/pickup_right` (the hand
+    reaches into the chest; the item spawns there at 0.8 s with a 0.3 s
+    dissolve) → lid closed. I skipped `crouch/enter`: it ends crouched with
+    the hand at her side (0.40 m, not in the chest), and `prop/chest_open`
+    lifts a lid at 0.73 m. Both were measured with `probe_bones`.
+  - **Conjure**: `ambient/look_around` (`lookaround_face`) →
+    `gesture/pointing` → dissolve-in (0.8 s + puff) at 0.7 s. Big items are
+    placed beside her, not behind her.
+  - **Put down**: at a spot picked by the clutter rules, `prop/pickup_right`
+    → place.
+  - **Tidy**: `prop/pickup_left` → either `prop/throw_left` into the chest
+    from 1.4 m (`ThrowAway_LH` tosses toward world -x, the chest's side), or
+    carry it back and stash it.
+  - **Kick**: `prop/kick` (right foot) with the push at 0.8 s.
+- **Clutter rules** (tested):
+  - cap 6: over it, the oldest become tidy candidates, and the ambient loop
+    weights tidy at 40;
+  - items older than 3 h are candidates (weight 8);
+  - spots near her (≤ 1.6 m) and spaced out, with the focused window's
+    centre ×0.2 (a weight);
+  - annoyance ≥ 0.45 adds kick (10).
+- **Persistence**: `%APPDATA%\Felt\props.json` holds the placed items.
+  Restored on every overlay (re)connect: catalogue → chest → clutter, with
+  fx none.
+- **Clip mapping (spec name → real tag)**:
+  - `drink_water` → `ambient` clip `drink_water` (water bottle; the mug uses
+    its sip segment);
+  - `check_phone` → `ambient` clip `check_phone` (phone);
+  - `listening_to_music` → `reaction/listening` (headphones, conjured onto
+    her head);
+  - `ambient/snack` → snack bag (left hand);
+  - `ambient/phone_call` → phone.
+- **Events**:
+  - `music_start` → headphones on; `music_stop` → off and down;
+  - `game_start` → controller;
+  - `weather:rain` → umbrella; `weather:sun` → sunglasses;
+  - `time:morning` → mug sip; `time:evening` → lamp;
+    `time:late_night` → blanket + pillow;
+  - the reaction table's `prop` field → `reaction:<item>` (the book).
+- **The chair** (reusable for WP-23's ledge sit). Only the UAL set shares
+  one hip height. Hips joint and z are relative to her pivot:
+
+  | Clip | Hips joint (m) | Hips z (m) |
+  |---|---|---|
+  | `ual1_sitting_enter` (end) | 0.51 | +0.25 |
+  | `ual1_sitting_idle_loop` | 0.515 | +0.247 |
+  | `ual1_sitting_exit` (start) | 0.51 | +0.25 |
+  | `idle_sit_1` | 0.575 | -0.035 |
+  | `idle_sit_3` | 0.607 | -0.034 |
+  | `idle_sit_2` | 0.639 | +0.22 |
+  | `idle_sit` | 0.66 | +0.01 |
+  | `sit/chair_*` (start/loop/end) | 0.574 | +0.417 |
+  | `female_act_sit_on_chair` (end) | 0.46 | +0.34 |
+
+  - The sit uses only the UAL clips, sent with the new `clip` field.
+  - Seat top = 0.425 m, 9 cm under the hip joint: Kenney seat level
+    0.23/0.46 × size 0.85.
+  - The chair sits at z +0.26, depth ×0.5, so the seat front stays behind
+    her calves.
+  - Any walk while seated stands her up first.
+- **Clean house**: felt-tray's key (Mario's `ctrl+shift+X`, unchanged) →
+  `POST /props/clear` → every placed and held prop except the chest gets
+  `despawn fx=dissolve` at once. If she was on the chair, she stands up.
+- **felt-core**: new `GET /v1/weather/now`, which returns
+  `{condition: rain|sun|snow|storm|null, animation_tag, age_s}` from the
+  WP-06 precompute. It was committed but **not deployed** (see below).
+- **Relay (additive, documented in felt-character-assets/README.md)**:
+  - `prop` actions from the spec: spawn / despawn / attach / detach / place;
+  - additional `prop` actions and fields: `push`, `throw`, `instant`, `yaw`,
+    `fx_s`, `puff`;
+  - `chest`, `prop_catalogue`;
+  - `tag` + `clip` / `start`;
+  - debug: `props_probe`, `debug_view_yaw`, and `pos` in `probe_bones`;
+  - out: `prop_moved`.
+
+### Proof
+
+Crops are in `E:\Felt\scratch\wp21\shots\`; the review set is in
+`E:\Felt\scratch\wp21\review\` (10 files). Drivers: `e2e.py` (posts
+`/props/debug` as text/plain, like the test page, while bursting),
+`strip.py` and `revealseq.py`.
+- **Build**: `Godot_console.exe --headless --export-release "Windows
+  Desktop" build/windows/FeltOverlay.exe` → exit 0, pck 378,113,584 B, no
+  ERROR lines (`scratch\wp21\export10.log`). Overlay log:
+  `WP-21 props: catalogue of 16 items`.
+- **Sits on a real chair** (`sitB_strip.png`, `seatB.png`):
+  - the chair dissolves in behind her, then `ual1_sitting_enter` →
+    `ual1_sitting_idle_loop`;
+  - probe: `clip=ual1_sitting_idle_loop Hips=(-0.003,0.515,0.247)`; chair
+    `pos=(0.000,0.000,0.260) aabb=[-0.453,0.0,0.071, 0.905,0.85,0.379]`;
+  - front view: thighs on the cushion, calves in front of the seat. Side
+    views (`debug_view_yaw` ±90): thighs level at the seat front, feet on
+    the floor.
+  - Log: `props: conjured chair (chair-8) ...`, then
+    `props: sitting on chair-8`.
+- **Sips from a real mug** (`sip_strip.png`, `sip2_end.png`):
+  - mug at her mouth in the left hand at 11.0–13.5 s, then put down upright
+    on the floor;
+  - second run: `props: picked up mug-9` (the floor mug is reused, not a new
+    one) → sip → `put mug-9 down at x=0.83`.
+- **Fetches from the chest, nothing pops** (`fetchB_take0.png` at
+  0.08 s/frame, `fetchB_strip.png`):
+  - lid open (3.6 s), hand in the chest (3.70–3.94 s), the book dissolving
+    in with the glowing edge (4.01–4.10 s), fully there by 4.18 s, she comes
+    up holding it, lid closed;
+  - log: `props: fetched book (book-12) from the chest`.
+- **Conjures a big item with the dissolve** (`conj_reveal.png`): potted
+  plant pixel count per 0.12 s frame:
+  0 → 232 → 537 → 921 → 1228 → 1257 → 1185 → 1123 (4.57–5.54 s), i.e. a
+  progressive reveal over ~0.85 s with the sparkle puff. Beanbag and chair
+  conjures look the same.
+- **Clutter persists across restarts** (`restored_full.png`):
+  - after killing felt-animation + the overlay and restarting:
+    `props: sent catalogue (16 items), chest, 2 placed`;
+  - the overlay probe showed `chair-8 pos=(0.000,0.000,0.260)` and
+    `mug-9 pos=(0.208,0.000,-0.250)`;
+  - a later restart restored 4 (book-12, chair-13, umbrella-14,
+    water_bottle-15).
+- **Clean-house key clears it all** (`clean_strip.png`): the real hotkey
+  (synthetic ctrl+shift+X):
+  - felt-tray: `15:27:19,782 clean-house key pressed` →
+    `15:27:20,007 clean house: {"status":"ok","cleared":3}`;
+  - felt-animation: `props: clean house - 3 prop(s) dissolved`;
+  - chair, mug and beanbag dissolve out together, and the overlay probe
+    then lists only `['chest']`;
+  - `%APPDATA%\Felt\props.json` → `"placed": []`.
+- **Walk still smooth**: hip-x burst of a 2.3 m walk (`hipx.py
+  wp21_walkx`): `frames=29 net=-2.267m moving_frames=15 backward_frames=0
+  speed(moving) min=0.76 max=2.30`.
+- **Also exercised live**:
+  - kick: `props: kicked headphones-11`, which rolled 0.69 m and settled;
+  - tidy: `props: tidied headphones-11 (threw it into the chest)`;
+  - held umbrella conjure; the water bottle in the full clip;
+  - autonomous events: `music_start -> headphones` (twice) and, while Mario
+    played PoE2, `game_start -> controller`;
+  - ambient sit on a conjured chair.
+- **Tests**: felt-animation 415 → **446 passed** (`tests/test_props.py`,
+  31 tests: manifest vs the real library and models, clip mapping, catalogue
+  fields, clutter cap/age/spot/focus weight, persistence, fetch, conjure,
+  pickup reuse, use + switches + segment, sit (conjure / walk to a chair),
+  stand before walking, tidy, forced tidy, kick, prop_moved, clear, props
+  off, endpoints). felt-tray 142 → **143** (clean key posts `/props/clear`,
+  survives felt-animation being down). felt-core 356 → **359** (weather
+  endpoint).
+- **Commits (all pushed)**:
+  - felt-character-assets `ce1aa64` (models + credits), `057db3f`
+    (props.gd, shader, main.gd), `6590a1f` (README);
+  - felt-animation `349fd21`, `3feef03`, `8120de0`, `6e21a65`, `d1da885`;
+  - felt-tray `46041e2`;
+  - felt-core `9473cb9`.
+- **Test page**: `E:\Felt\tools\review\test-props.html`.
+
+### Not done / unverified
+
+- **felt-core's `/v1/weather/now` is committed and pushed but not
+  deployed.** The auto-mode classifier blocked the vendored-copy step into
+  clockmost-infra ("Production Deploy"), so I stopped there. Until someone
+  runs deploy steps 2–4, felt-animation's weather loop sees the 404 and
+  turns weather props off. The umbrella/sunglasses events work from the
+  test page. After deploying, restart felt-animation.
+- **Gemini review didn't run**: `agy-delegate` answered
+  `error: interrupted` three times (300 s, 500 s, and a one-file 150 s
+  probe). I reviewed every crop in `review\` myself.
+- **Side view of the seat**: the armrests hide the exact seat contact, so
+  the no-float/no-sink claim rests on the numbers (hips 0.515 m joint, seat
+  0.425 m) plus the front view and the thigh line in the side views.
+- **Not captured on screenshots**: the throw arc into the chest (it happened
+  after the burst window; the log and state confirm it). The carry-back /
+  stash variant of tidy wasn't run live.
+- **Umbrella**: she carries the closed umbrella by the crook. There's no
+  arm-raised clip for holding an open one overhead. Mario's "hanging from
+  the tip" comment matches the open-umbrella test grid, which was
+  replaced; the current grip isn't judged by him.
+- **Kick**: the foot swings toward the camera but the prop can only move
+  along x (2.5D), so it slides/rolls sideways. The strength
+  (`kick_impulse` 2.4) isn't tuned by eye.
+- **Grips**: tuned from screenshots for the mug (sip), water bottle, phone,
+  headphones, sunglasses, controller, book and umbrella. The snack bag
+  (left hand, mirrored grip) and the pillow/blanket were only spot-checked.
+  Mario hasn't judged any of them.
+- **Not run live**: `time:evening`, `time:late_night`, the weather events,
+  and the reaction-table book.
+- **Found, not fixed (outside WP-21)**:
+  - WP-10's "come here" is mirrored: world +x is screen left, but
+    `geometry.cursor_fraction_to_world_x` maps the right edge to +x. The
+    props code uses the correct sign.
+  - `music loop iteration failed` tracebacks come from inside the existing
+    `estimate_tempo_from_audio` (3 today).
+- The chair's Kenney pink hasn't had an Endfield colour pass (`tint` is
+  supported in the catalogue).
+
 ---
 
 ## WP-22

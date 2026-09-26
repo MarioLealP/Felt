@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Felt props test</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: system-ui, sans-serif; background: #0f0f10; color: #e8e8ec; margin: 0; padding: 24px; max-width: 820px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  p.sub { color: #9a9aa2; margin: 0 0 18px; }
+  h2 { font-size: 1rem; color: #c9c9d1; margin: 22px 0 6px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #26262b; }
+  button { min-width: 230px; padding: 8px 14px; border-radius: 4px; border: 1px solid #3a3a42; background: #1c1c21; color: #eee; cursor: pointer; font: inherit; text-align: left; }
+  button:hover { background: #26303a; border-color: #4f6a80; }
+  .what { color: #c9c9d1; flex: 1; font-size: 0.92rem; }
+  #log { margin-top: 18px; color: #8f8; font-family: monospace; font-size: 0.85rem; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<h1>Felt: props test (WP-21 review)</h1>
+<p class="sub">Each button drives her live through felt-animation (no-cors requests, Felt must be running). One at a time: wait for her to finish before the next. The chest sits at the right end of the primary screen.</p>
+
+<h2>Accept items</h2>
+<div class="row"><button data-do="sit">1. Sit on the chair</button><span class="what">Walks to a chair already on the floor, or conjures one behind her (dissolve), and sits on it. Hips on the seat: no floating, no sinking.</span></div>
+<div class="row"><button data-do="stand">&nbsp;&nbsp;&nbsp;Stand up</button><span class="what">Stands up off the chair (the chair stays as clutter).</span></div>
+<div class="row"><button data-do="drink">2. Sip from the mug</button><span class="what">Gets the mug (picks it up off the floor, fetches it from the chest, or conjures it if the chest is far), sips, puts it down.</span></div>
+<div class="row"><button data-do="fetch" data-item="phone">3. Fetch from the chest</button><span class="what">Walks to the chest, the lid opens, she reaches in and comes out with the phone (it fades in inside the chest, no pop), then puts it down.</span></div>
+<div class="row"><button data-do="conjure" data-item="potted_plant">4. Conjure a big item</button><span class="what">Looks around, points, and a potted plant dissolves in beside her with a glowing edge and a sparkle puff.</span></div>
+<div class="row"><button data-clear="1">6. Clean house</button><span class="what">Same as the Ctrl+Shift+X key: everything but the chest dissolves out at once.</span></div>
+<p class="sub">5. Persistence: place a few things, restart Felt (Launch Felt), and they're back where they were.</p>
+
+<h2>More props</h2>
+<div class="row"><button data-do="bottle">Open a water bottle</button><span class="what">The full drink_water clip, with a water bottle: opens it, drinks, puts it down.</span></div>
+<div class="row"><button data-do="conjure" data-item="beanbag">Conjure a beanbag</button><span class="what">Another big item.</span></div>
+<div class="row"><button data-do="conjure" data-item="umbrella">Conjure the umbrella (held)</button><span class="what">Conjured into her hand, held a few seconds, put down.</span></div>
+<div class="row"><button data-do="tidy">Tidy up</button><span class="what">Picks up the oldest clutter and throws it into the chest (or carries it there).</span></div>
+<div class="row"><button data-do="kick">Kick something</button><span class="what">Walks up to the nearest dropped item and kicks it; it rolls and settles.</span></div>
+
+<h2>Events</h2>
+<div class="row"><button data-event="music_start">Music starts</button><span class="what">Headphones on (they come off when the music stops).</span></div>
+<div class="row"><button data-event="game_start">Game starts</button><span class="what">Holds a controller for a while, then puts it down.</span></div>
+<div class="row"><button data-event="weather:sun">Sunny</button><span class="what">Sunglasses on for a while.</span></div>
+<div class="row"><button data-event="weather:rain">Rain</button><span class="what">Carries the umbrella for a while.</span></div>
+<div class="row"><button data-event="time:evening">Evening</button><span class="what">A desk lamp appears on the floor.</span></div>
+<div class="row"><button data-event="time:late_night">Late night</button><span class="what">Blanket + pillow.</span></div>
+
+<div id="log"></div>
+
+<script>
+const API = "http://127.0.0.1:8421";
+const log = (t) => { document.getElementById("log").textContent = t; };
+
+// Simple requests only (text/plain JSON) = no CORS preflight from file://.
+// Responses are opaque; watch her instead.
+function post(path, body) {
+  return fetch(API + path, { method: "POST", mode: "no-cors",
+    headers: { "Content-Type": "text/plain" }, body: body ? JSON.stringify(body) : "" });
+}
+
+document.querySelectorAll("button").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    try {
+      if (btn.dataset.clear) { await post("/props/clear"); log("sent: clean house"); return; }
+      const body = btn.dataset.event ? { do: "event", key: btn.dataset.event } : { do: btn.dataset.do };
+      if (btn.dataset.item) body.item = btn.dataset.item;
+      await post("/props/debug", body);
+      log("sent: " + JSON.stringify(body));
+    } catch (e) { log("failed: " + e + " (is Felt running?)"); }
+  });
+});
+</script>
+</body>
+</html>

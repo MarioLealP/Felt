@@ -75,6 +75,13 @@ at your own pace, in normal use where possible.
   The keepers get wired to mood later. Slow styles slide until then,
   because walk speed is fixed at 1.3 m/s.
 
+- [ ] **WP-20 layering** (easiest in the WP-35 studio):
+  - she waves while walking and talk-gestures while sitting;
+  - big-leg clips (jump, byebye_happy) still read well when only their
+    upper body shows during a walk or sit;
+  - should `reaction/hit` layer instead of being full-body?
+  - crossed-arm clips vs the baggy shirt.
+
 ## Decisions
 
 - [ ] **WP-16 taste memory:** OK for your listening profile ("likes X,

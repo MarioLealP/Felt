@@ -484,3 +484,30 @@ these as Mario prefers. WP-34 stays last.
     CI plus Claude's review. They're reported in the feed.
   - **Never auto-merged:** privacy rules, secrets, deploys, the capture
     blocklist, voice. Those always need Mario's yes.
+- **2026-09-26, fun mode dropped.** Mario: "let's not waste electricity like
+  that, we keep it purely practical". The mastermind is dispatch, watch and
+  report only.
+
+## Final WP list (after the 2026-09-26 discussion)
+
+Replaces the earlier "Proposed WPs" section. Each WP becomes a short ticket
+on the Gitea board (WP-37), with the long spec linked for agents.
+
+| WP | What | Depends |
+|---|---|---|
+| **WP-37** | Gitea board + issue forms (What/Why/Where/Accept/Depends/Evidence) + migrating WP-01…36 and the backlogs + the README generated from the board + metrics script | none |
+| **WP-38** | Architecture audit: system map + a per-repo `ARCHITECTURE.md` + ranked refactors | WP-37 |
+| **WP-39** | Repo tooling: ruff, pyright, pre-commit, Gitea Actions CI in every repo | WP-38 |
+| **WP-40** | God-file splits: felt-animation `server.py`, felt-core `brain.py`, felt-tray `app.py` (main.gd stays with WP-35) | WP-39 |
+| **WP-41** | ntfy alert hygiene on clockmost: severity tiers, expected-event suppression, dedupe | none |
+| **WP-42** | Felt app on clockmost behind SSO: Chat / Feed / Daily briefs / Diary logs, desktop + phone clients, editable lists (game news, noise rules) | WP-37 |
+| **WP-43** | Email: noise deny-list, ambient mentions (once each), tell-me-more, Gmail drafts (never send) | WP-42 |
+| **WP-44** | Server and PC care via ntfy (urgent → spoken, warn → ambient, info → never), plus disk and backup checks feeding ntfy | WP-41, WP-42 |
+| **WP-45** | Morning brief, spoken + written card | WP-42, WP-43 |
+| **WP-46** | Reminders (time / event / recurring → Google Calendar) + calendar heads-ups (absorbs WP-31) + quiet mode (disappear, fully silent, calendar offer) | WP-42 |
+| **WP-47** | Home Assistant controls: lights + fan allowlist, asked-only, confirms for security entities | none |
+| **WP-48** | Spotify controls + DJ mode (Gemini picks, Spotify only plays) | WP-16 |
+| **WP-49** | Game companions: ask-anything lookup + the news tracker (FFXIV, Endfield, PoE), list editable in the app (pairs with WP-29) | WP-42 |
+| **WP-50** | Agents infra: 9router / smartrouter / OpenHands inventory → one gateway (pairs with WP-36), plus the server-GPU sizing numbers | WP-36 |
+| **WP-51** | Local coding-agent benchmark on backlog tasks | WP-50, WP-39 |
+| **WP-52** | Felt as mastermind: `agent-ok` dispatch, PRs + CI, the autonomy levels, feed reports, kill switch (practical only) | WP-51, WP-42 |

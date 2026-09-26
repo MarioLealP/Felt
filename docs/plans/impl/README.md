@@ -68,6 +68,8 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-32](WP-32-33-wardrobe-automation.md#wp-32) | Wardrobe Tier A: source accessories and clothing assets online (+ Booth shortlist for Mario) | none | M | ☐ |
 | [WP-33](WP-32-33-wardrobe-automation.md#wp-33) | ★ Wardrobe Tier A: a new tee every day (UV print areas, ≥ 60 tees, review gallery, daily pick) | none | M | 🔎 needs review |
 | [Tier C](MARIO-vroid-outfits.md) | **Mario's** VRoid outfit checklist (pajamas, hoodie, rain, winter, Halloween by mid-Oct, …) | none | ongoing | ☐ |
+| **Phase 7: packaging (last, after everything else is ticked)** |||||
+| [WP-34](WP-34-packaging.md) | One clean install per device: desktop = single tray app supervising everything (no console/PowerShell/scheduled tasks, Ollama folded in); Nitro5 = one install + model manifest; server bootstrap; `FRESH-INSTALL.md` | all WPs | XL | ☐ (first decision: Smart App Control / code signing) |
 | **Anytime** |||||
 | [WP-24](WP-24-hygiene.md) | Repo hygiene (AnimToVrmaConverter junk, dead code, felt-vision docs) | none | S | ☐ |
 

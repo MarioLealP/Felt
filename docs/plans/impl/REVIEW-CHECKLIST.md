@@ -7,7 +7,7 @@ at your own pace, in normal use where possible.
 
 ## Just use her for a bit and notice
 
-- [ ] **WP-12 face:** her mouth moves with her speech. Idle faces (pout,
+- [x] **WP-12 face:** her mouth moves with her speech. Idle faces (pout,
   grin, shocked…) keep their mouth shapes. No brow twitching.
 - [ ] **WP-14 gaze:**
   - her head and eyes follow your mouse and feel natural;
@@ -23,28 +23,28 @@ at your own pace, in normal use where possible.
   - she turns and walks with her feet planted, then faces you again;
   - she stands up before walking off if she was sitting;
   - she never slides without a walk cycle.
-- [ ] **WP-11 edges:** her outline looks clean on a **dark wallpaper**, with
+- [x] **WP-11 edges:** her outline looks clean on a **dark wallpaper**, with
   no light halo.
-- [ ] **WP-15 mood:** her tone and resting face shift over the day (morning
+- [x] **WP-15 mood:** her tone and resting face shift over the day (morning
   vs late night).
 
 ## One-off checks (a minute each)
 
 - [ ] **WP-10 hotkeys:** press each once. `Ctrl+Alt+`:
-  - H: hide / show
-  - B: be right back (and "back!" when she returns)
-  - M: shoo
+  - H: hide / show - works
+  - B: be right back (and "back!" when she returns) - works
+  - M: shoo - works
   - C: come to your cursor
   - L: look at this
-  - R: repeat
+  - R: repeat - works
   - S: shut up ("zip it" + a 10 min hush)
   - X: clean house (does nothing until WP-21)
-- [ ] **WP-10 tray:** the "Change action keybinds" submenu opens and
+- [x] **WP-10 tray:** the "Change action keybinds" submenu opens and
   rebinds.
-- [ ] **WP-07 privacy:** open Discord, a browser, and Felt's own chat window
+- [x] **WP-07 privacy:** open Discord, a browser, and Felt's own chat window
   in turn. She never reacts to any of them. A game or other allowed app
   does get a spoken reaction.
-- [ ] **WP-09 bubble:** her speech bubble shows up next to her, and its text
+- [x] **WP-09 bubble:** her speech bubble shows up next to her, and its text
   matches what she says.
 
 ## Needs a little setup
@@ -61,7 +61,7 @@ at your own pace, in normal use where possible.
 - [ ] **WP-17 GPU temperature:** start LibreHardwareMonitor elevated once,
   so `gpu_temp_c` stops being null.
 - [ ] **WP-17 games list:** tell me which games to recognise (the
-  `games.toml` list).
+  `games.toml` list). - Use the window title and recognize every game, no need to specify?
 - [ ] **WP-18 run start/stop clips:** I'll send `locomotion/run/start` and
   `run/stop` to her while you watch. Are they facing the right way? (Two
   clips from the same batch played facing away.)
@@ -79,4 +79,4 @@ at your own pace, in normal use where possible.
 
 - [ ] **WP-16 taste memory:** OK for your listening profile ("likes X,
   skips Y") to go to Gemini with chat calls? Music is cloud-OK under your
-  privacy line, but it's a stored profile, so yes or no.
+  privacy line, but it's a stored profile, so yes or no. - Yes

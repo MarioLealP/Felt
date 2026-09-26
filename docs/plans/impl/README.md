@@ -37,16 +37,16 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | **Phase 2: the reaction pipeline** |||||
 | [WP-05](WP-05-cloud-models-governor.md) | felt-core: cloud model split (Gemma 4 / Flash Lite) + quota governor | WP-04 | M | ✅ |
 | [WP-06](WP-06-skill-replies-cloud.md) | felt-core: skill replies phrased in the cloud (result-gated), short spoken style, weather cache | WP-05 | M | ✅ |
-| [WP-07](WP-07-screen-capture-v2.md) | Screen capture v2: per-window capture + blocklist + Gemma vision reactions | WP-05 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-07](WP-07-screen-capture-v2.md) | Screen capture v2: per-window capture + blocklist + Gemma vision reactions | WP-05 | L | ✅ (Mario live-reviewed 09-26) |
 | [WP-08](WP-08-playback-sync-stop.md) | Playback moves to felt-animation: voice/lips/body in sync, stop | WP-01 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
 | [WP-09](WP-09-bubble-ducking-hush.md) | Speech bubble, call ducking, "shut up" hush | WP-08 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
 | [WP-10](WP-10-keybinds-presence.md) | Control keybinds + presence (hide / BRB / move / look / repeat / stop) | WP-09 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
 | **Phase 3: face and body** |||||
-| [WP-11](WP-11-15-face-body.md#wp-11) | MSAA anti-aliasing | none | S | 🔎 needs review (fixed 09-25, see AUDIT) |
-| [WP-12](WP-11-15-face-body.md#wp-12) | Face compositor + procedural face life | WP-08 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-11](WP-11-15-face-body.md#wp-11) | MSAA anti-aliasing | none | S | ✅ (Mario live-reviewed 09-26) |
+| [WP-12](WP-11-15-face-body.md#wp-12) | Face compositor + procedural face life | WP-08 | L | ✅ (Mario live-reviewed 09-26) |
 | [WP-13](WP-11-15-face-body.md#wp-13) | Listening pose + backchannel nods | WP-08 | S | 🔎 needs review (fixed 09-25, see AUDIT) |
 | [WP-14](WP-11-15-face-body.md#wp-14) | Gaze: head/eyes follow cursor, look at camera | WP-12 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
-| [WP-15](WP-11-15-face-body.md#wp-15) | Mood × time-of-day system + reaction table + tone line | WP-07, WP-12 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
+| [WP-15](WP-11-15-face-body.md#wp-15) | Mood × time-of-day system + reaction table + tone line | WP-07, WP-12 | L | ✅ (Mario live-reviewed 09-26) |
 | **Phase 4: context awareness** |||||
 | [WP-16](WP-16-17-context.md#wp-16) | Music: beat sync, Spotify now-playing, LRCLIB lyrics | WP-15 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
 | [WP-17](WP-16-17-context.md#wp-17) | Signals: game start/stop, AFK, GPU heat, rage-click rate, call energy | WP-15 | M | 🔎 needs review (fixed 09-25, see AUDIT) |

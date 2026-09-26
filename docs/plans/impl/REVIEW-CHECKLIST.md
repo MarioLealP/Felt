@@ -75,7 +75,7 @@ at your own pace, in normal use where possible.
   The keepers get wired to mood later. Slow styles slide until then,
   because walk speed is fixed at 1.3 m/s.
 
-- [ ] **WP-20 layering** (easiest in the WP-35 studio):
+- [ ] **WP-20 layering** (buttons: open `E:Felt	oolseview	est-layers.html` in Firefox):
   - she waves while walking and talk-gestures while sitting;
   - big-leg clips (jump, byebye_happy) still read well when only their
     upper body shows during a walk or sit;

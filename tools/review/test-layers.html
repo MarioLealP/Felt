@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Felt layer test</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: system-ui, sans-serif; background: #0f0f10; color: #e8e8ec; margin: 0; padding: 24px; max-width: 780px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  p.sub { color: #9a9aa2; margin: 0 0 18px; }
+  h2 { font-size: 1rem; color: #c9c9d1; margin: 22px 0 6px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #26262b; }
+  button { min-width: 210px; padding: 8px 14px; border-radius: 4px; border: 1px solid #3a3a42; background: #1c1c21; color: #eee; cursor: pointer; font: inherit; text-align: left; }
+  button:hover { background: #26303a; border-color: #4f6a80; }
+  .what { color: #c9c9d1; flex: 1; font-size: 0.92rem; }
+  #log { margin-top: 18px; color: #8f8; font-family: monospace; font-size: 0.85rem; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<h1>Felt: layer test (WP-20 review)</h1>
+<p class="sub">Each button drives her live through felt-animation (no-cors requests, Felt must be running). Watch her, then tick or comment the WP-20 items in REVIEW-CHECKLIST.md.</p>
+
+<h2>Upper body over a walk</h2>
+<div class="row"><button data-seq="walk,gesture/wave">Walk + wave</button><span class="what">Shoo her across, wave starts mid-walk. Legs keep walking, arms wave.</span></div>
+<div class="row"><button data-seq="walk,gesture/talking">Walk + talk gesture</button><span class="what">Talking hands while walking.</span></div>
+<div class="row"><button data-seq="walk,emotion/happy">Walk + happy (big-leg clip)</button><span class="what">Only its upper body should show. Does it still read well?</span></div>
+
+<h2>Upper body over sitting</h2>
+<div class="row"><button data-seq="sit,gesture/talking">Sit + talk gesture</button><span class="what">Seated legs, talking upper body.</span></div>
+<div class="row"><button data-seq="sit,gesture/wave">Sit + wave</button><span class="what">Waves from the seat.</span></div>
+
+<h2>Full-body interrupts</h2>
+<div class="row"><button data-seq="walk,reaction/hit">Walk + hit</button><span class="what">Currently full-body. Should it layer instead?</span></div>
+<div class="row"><button data-seq="reaction/turn_surprised">Surprised turn</button><span class="what">Full-body 180° turn, then back to idle.</span></div>
+
+<h2>Other</h2>
+<div class="row"><button data-seq="emotion/angry">Angry (crossed arms?)</button><span class="what">Check crossed-arm clips against the baggy shirt.</span></div>
+<div class="row"><button data-seq="idle">Back to standing idle</button><span class="what">Reset if she's stuck seated.</span></div>
+
+<div id="log"></div>
+
+<script>
+const API = "http://127.0.0.1:8421";
+const log = (t) => { document.getElementById("log").textContent = t; };
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Simple requests only (text/plain JSON, urlencoded form) = no CORS preflight
+// from file://. Responses are opaque; watch her instead.
+function playTag(tag) {
+  return fetch(API + "/debug/play_tag", { method: "POST", mode: "no-cors",
+    headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ tag }) });
+}
+function walk() {
+  return fetch(API + "/presence", { method: "POST", mode: "no-cors",
+    body: new URLSearchParams({ action: "move" }) });
+}
+
+document.querySelectorAll("button[data-seq]").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const steps = btn.dataset.seq.split(",");
+    try {
+      for (const step of steps) {
+        if (step === "walk") { await walk(); await sleep(900); }
+        else if (step === "sit") { await playTag("idle/sitting"); await sleep(1800); }
+        else { await playTag(step); }
+      }
+      log("sent: " + steps.join(" -> "));
+    } catch (e) { log("failed: " + e + " (is Felt running?)"); }
+  });
+});
+</script>
+</body>
+</html>

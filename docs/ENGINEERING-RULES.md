@@ -206,7 +206,7 @@ project-specific facts (machines, ports, deploy flow); this file is about
 
 36. **ruff** (lint + format) on every Python repo (felt-core, felt-animation,
     felt-tray, felt-vision, felt-voice).
-37. **pyright** (or basedpyright) for type checking on the same repos.
+37. **ty (Astral; replaces pyright after WP-40)** (or basedpyright) for type checking on the same repos.
 38. **pre-commit** wired to run both, plus whatever repo-specific hooks exist,
     before a commit lands.
 39. **gdlint/gdformat** for `felt-character-assets`' GDScript.

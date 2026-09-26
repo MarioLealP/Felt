@@ -314,3 +314,16 @@ brain.py split):
   waiting up to 10 min.
 - **Proof:** a trivial felt-core commit shows up live without anyone
   touching the server.
+
+## Follow-up: switch the type checker to Astral `ty` (Mario, 2026-09-26)
+
+"Also use Astral TY instead of pyright."
+- Replace pyright with `ty` in every Python repo: the dev deps (`uv add --dev
+  ty`, `uv remove --dev pyright`), pre-commit, and the CI workflows.
+- Take a fresh baseline with ty; its counts won't match pyright's. Gate it
+  the same way, so CI fails only on *new* errors.
+- **When:** right after WP-40 lands, together with the felt-core CD job.
+  The three WP-40 refactor agents keep the pyright baseline as their
+  "no new errors" check until then, so the tool isn't swapped mid-refactor.
+- Check ty's current config and CLI (it's newer than pyright) when doing
+  the swap.

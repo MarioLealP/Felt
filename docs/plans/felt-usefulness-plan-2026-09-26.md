@@ -411,3 +411,17 @@ these as Mario prefers. WP-34 stays last.
 
   **Calendar heads-ups** Google-style ("X in 30 min") = WP-31, confirmed in
   scope. All of them also appear in the app.
+- **2026-09-26, C4 Spotify: controls + DJ mode.**
+  - **Controls:** skip/back/pause/volume, "what's this song", "save this
+    song". Never on her own initiative. Needs a one-time re-auth for
+    playback scopes.
+  - **DJ mode**, on Mario's word ("play whatever you want and however you
+    want"):
+    - she runs the queue until stopped, paused or hushed;
+    - picks from WP-16 taste memory × time of day × mood;
+    - optional budgeted radio-DJ lines between tracks, never over call
+      talk;
+    - skip / "not this" / "more like this" feed taste memory.
+  - **Spike question:** Spotify's recommendations API was restricted for
+    new apps. If it's still unavailable, the fallback is Gemini suggesting
+    tracks → search → queue (music is cloud-OK).

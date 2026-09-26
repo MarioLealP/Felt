@@ -51,7 +51,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-16](WP-16-17-context.md#wp-16) | Music: beat sync, Spotify now-playing, LRCLIB lyrics | WP-15 | L | 🔎 needs review (fixed 09-25, see AUDIT) |
 | [WP-17](WP-16-17-context.md#wp-17) | Signals: game start/stop, AFK, GPU heat, rage-click rate, call energy | WP-15 | M | 🔎 needs review (fixed 09-25, see AUDIT) |
 | **Phase 5: assets and the desktop world** |||||
-| [WP-18](WP-18-23-assets-world.md#wp-18) | Animation assets: Animset Pro triage + downloads + walking fix | WP-01 | M | ⚠️ A + C 🔎 needs review; **Part B (downloads, CREDITS.md) not started** |
+| [WP-18](WP-18-23-assets-world.md#wp-18) | Animation assets: Animset Pro triage + downloads + walking fix | WP-01 | M | 🔎 needs review (A + B + C; B: 58 clips, CREDITS.md, no ledge-sit found) |
 | [WP-19](WP-18-23-assets-world.md#wp-19) | Sound batch: Orpheus non-verbals → RVC → Mario picks | none | M | 🟡 WIP: accepted for now (38 keepers live, sync OK 09-26). Revisit with a deep dive on alternatives once every other WP is done |
 | [WP-20](WP-18-23-assets-world.md#wp-20) | AnimationTree layering | WP-14, WP-18 | L | ☐ |
 | [WP-21](WP-18-23-assets-world.md#wp-21) | Props system, chest, dissolve FX, clean-house key | WP-20 | L | ☐ |

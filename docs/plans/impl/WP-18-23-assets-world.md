@@ -258,6 +258,169 @@ un-crouched/un-turned idle pose across every new tag, now understood to be
 because none of them ever actually loaded - not evidence of a retargeting
 problem on their own, now that the real cause is known).
 
+### Notes from implementation: Part B (2026-09-26)
+
+**Result: 58 clips added (32 Quaternius UAL, 26 Bandai Namco), 0 from the
+VRoid pack; 1 clip dropped (VRoid Squat).** No existing clip was moved or
+renamed. felt-animation, main.gd and felt-core are untouched: the new tags
+exist but nothing picks them yet (mood-styled walk selection is a separate
+step).
+
+- **VRoid VRMA pack**: 6 of the 7 are already in the library (byte-identical
+  md5): `Show full body`, `Greeting`, `Peace sign`, `Finger Gun` (VRMA_04
+  "Shoot"), `Spin`, `Model Pose`. Only **VRMA_07 "Squat"** was missing. I
+  added it, but it's **dropped as broken**: in the overlay it never squats.
+  She stands straight with her arms held out sideways at the moments the
+  hips track dips (3.4 s, 6.9 s). Cause: VRMA_07's rest pose uses rotated
+  bone frames (hips rest quaternion `[0.5,0.5,0.5,0.5]`, limbs along X),
+  unlike VRMA_01–06 (identity rests), and main.gd's retarget doesn't handle
+  that. Fixable later by re-baking it to identity rests (world-delta
+  conversion) if Mario wants it.
+- **Quaternius UAL 1 + 2**: only the **free "Standard" tier** exists without
+  paying (43 takes each; the Pro/Source zips are paid). It was fetched from
+  itch.io without a login. Each pack is one multi-take FBX, and
+  `Convert-MixamoFbx`/`BatchMixamoConverter` only take the first clip
+  (`A_TPose`), so I added `MultiClipFbxConverter.cs` (one `.vrma` per take).
+  **Rig mapping was confirmed on one clip first** (`Walk_Formal_Loop`):
+  Unity auto-mapped every humanoid bone (pelvis→Hips, spine_01→Spine,
+  spine_02→Chest, thigh/calf/foot/ball, clavicle/upperarm/lowerarm/hand,
+  fingers). But the rig came out **facing ~180° away** (hips yaw +166…-177°
+  where known-good clips read 0°). Unity's clip root settings
+  (rotationOffset, bake-into-pose) turned out to be ignored by
+  AnimationClipToVrmaCore (identical output, tested), so
+  `vrma_fix_facing.py --yaw 180` rewrites the hips track. After it the
+  clip faced the viewer in the overlay. Then batch: 32 useful takes
+  (weapons, swimming, farming, sword/shield, death and slide were skipped).
+- **Bandai Namco dataset-1** (dataset-2 wasn't needed): the walks are
+  5–16 s straight-line takes (stand, walk ~8 m, stop), and the BVH rest pose
+  isn't a T-pose (every chain lies along +X). New tools:
+  - `bvh_cycle.py` cuts one seamless in-place gait cycle (seam error
+    0.4–1.7° average) and reports the natural speed.
+  - `bvh_to_fbx_tpose.py` re-rests the skeleton in a facing-aware T-pose
+    and bakes the motion onto it via world-space Copy Transforms. Unity then
+    auto-maps all 21 bones.
+  - The dataset has **no sneak style**, so `locomotion/walk/sneak` is UAL's
+    crouched walk (`Crouch_Fwd_Loop`).
+  - Styles renamed for tags: `not-confident`→`shy`, `old`→`elderly`.
+  - The two feminine gestures were yawed +39°/+22° to face the viewer.
+- **Walk speeds differ from main.gd's 1.3 m/s**. Tired is about 1.0, sad
+  0.4–0.6, proud 0.7, happy 1.4 and active 1.5–1.7. The wiring step should
+  set the speed per gait, or the feet will slide. The values are in
+  `CREDITS.md`.
+- **Ledge sit: neither pack has one.** Only UAL's free Standard tier is
+  available, and it has chair sits (`Sitting_*`) and a standing rail lean
+  (`Idle_Rail_Loop`, now `ambient/lean_rail`). Bandai has no sitting at
+  all. WP-23's ledge sit still needs sourcing: felt-t2a-studio ("sits on a
+  ledge swinging legs"), a Booth shortlist, or UAL Pro (paid, needs Mario's
+  OK). Nothing was invented.
+- **`.pck` size**: 376,325,604 → 377,801,664 bytes (+1.48 MB, +0.4 %).
+- The `Failed to find required VRM keys` error prints twice per new `.vrma`
+  during export (from the v0 preflight in `vrm_extension.gd`). It's
+  **harmless**: every such clip got its `.import`, loaded, and played.
+
+**New tags**:
+- `locomotion/walk/{happy,tired,sad,angry,feminine,childish,proud,active,shy,elderly,formal,sneak,carry,zombie}`
+- `locomotion/jog`
+- `greeting/bow`
+- `emotion/annoyed`
+- `ambient/{fixing,lean_rail,phone_call,snack}`
+- `reaction/hit`
+- `prop/{chest_open,pickup_table}`
+
+Clips were also added to these existing tags:
+- `idle`, `idle/sitting`
+- `transition/{stand_to_sit,sit_to_stand}`
+- `gesture/{talking,talking/sitting,button_push,shaking_head,nodding,wave}`
+- `dance`
+- `air/{jump_start,fall,land_soft}`
+- `crouch/idle`, `climb/1m`, `recover/getup_back`, `prop/throw_right`
+
+The full per-clip list is in `CREDITS.md`.
+
+### Proof
+
+- **Files**:
+  - 58 `.vrma` + 58 `.vrma.import` under
+    `felt-character-assets/felt-godot-overlay/animations/library/`. The
+    library has 169 `.vrma` (111 before).
+  - `animations/library/CREDITS.md`.
+  - Tooling in `E:\Felt\AnimToVrmaConverter\`: `MultiClipFbxConverter.cs`,
+    `vrma_fix_facing.py`, `bvh_cycle.py`, `bvh_to_fbx_tpose.py`, plus a
+    README section.
+- **Commits**:
+  - felt-character-assets: `2a0de98` (UAL, 64 files), `d3dedb8` (Bandai,
+    52 files) and `da437a4` (CREDITS), pushed `7637990..da437a4 main -> main`.
+  - AnimToVrmaConverter: `46d5673`, pushed `b60717f..46d5673`.
+- **Conversion**:
+  - `MultiClipFbxConverter: done. ok=43 failed=0` for UAL1 and for UAL2.
+  - `MultiClipFbxConverter: done. ok=26 failed=0` for Bandai (log
+    `E:\Felt\scratch\wp18b\bn_all.log`).
+  - `vrma_inspect.py`: hips XZ drift ≤ 0.02 m on every added looping clip
+    (no sliding baked in), and hips yaw ≈ 0 at clip start after the fixes.
+- **Export**:
+  - `..\tools\godot\Godot.exe --headless --export-release "Windows Desktop" build/windows/FeltOverlay.exe`
+    reported `export exit=0`.
+  - The final export log `E:\Felt\scratch\wp18b\export_final.log` has 116
+    `Storing File` lines for `ual1_/ual2_/bn1_` files (58 × `.vrma` + `.import`).
+  - The overlay logged `Loaded '…'` 169 times.
+- **Per-clip visual check**:
+  - A temporary single-clip `wp18b_review/<clip>` tag was built for each of
+    the 59 candidates, played by socket on an overlay launched directly
+    (felt-animation stopped, so nothing fought her body), and screenshotted
+    mid-clip.
+  - The overlay log showed 59 `Tag 'wp18b_review/…' -> playing` lines. That
+    log was later overwritten by the final spot-check run.
+  - Screenshots are `E:\Felt\scratch\wp18b_<clip>.png`, crops
+    `crop_<clip>.png`.
+  - The review tags were removed before the final export (0 `wp18b_review`
+    lines in `export_final.log`).
+- **Gemini review**:
+  - 4 batches via `agy-delegate`; raw answers in
+    `E:\Felt\scratch\gemini_review_wp18b_{1..4}.txt`.
+  - It flagged 6 of 59: Squat, `ual1_hit_chest`, `ual1_hit_head`,
+    `bn1_walk_not_confident_001`, `bn1_walk_old_001`, `bn1_bow_feminine`.
+    I checked every flag myself (`E:\Felt\scratch\wp18b\m_flagged.png`,
+    `m_reshoot.png`):
+    - Squat: confirmed broken.
+    - The two hit clips (0.3/0.4 s) had simply ended before the capture.
+      Re-shot at 0.15/0.2 s they show a small hit flinch, so they're fine.
+    - The other 3 are false positives: normal mid-stride walks and a deep
+      bow.
+  - Random "OK" checks, 3 per pack, all agreed (6/6: `ual1_sitting_enter`,
+    `ual2_idle_rail_loop`, `ual2_laytoidle`, `bn1_walk_feminine_002`,
+    `bn1_walk_happy_001`, `bn1_byebye_childish`; `m_okcheck.png`).
+  - Agreement: 1 of 6 flags was a real defect, 0 misses in the sample.
+- **Final build spot check** (normal tags, `m_final.png`):
+  - Tags checked: `locomotion/walk/happy`, `…/tired`, `…/sneak`,
+    `greeting/bow`, `emotion/annoyed`, `ambient/lean_rail`. All face the
+    viewer and are posed correctly.
+  - Raw log: `Tag 'locomotion/walk/happy' -> playing 'bn1_walk_happy_002' (blend=0.35s)`.
+- **Left running**:
+  - felt-animation restarted hidden (PID 35728 listening on :8421).
+  - It relaunched the overlay (PID 27168 on :8765), and the relay
+    connection is `Established` between them.
+- **No `.vrm`/`.vrm.import` touched**: none is newer than this session's
+  first download. The untracked `characters/Felt_*` outfits are left alone.
+
+### Not done / unverified
+
+- **Ledge-sit clip**: not in either pack (see above). Still open for WP-23.
+- **VRoid Squat** dropped (rest-pose mismatch). It isn't in the library.
+- **Walking in motion not checked for foot sliding**. Each clip was checked
+  from a single frame, plus the hips-drift numbers. No styled walk was
+  played while main.gd actually moves her, because nothing sends those tags
+  yet. At 1.3 m/s the slow styles will visibly slide until speed is set per
+  gait.
+- **Loop seams judged numerically only** (bvh_cycle seam error). The
+  overlay re-blends each loop anyway.
+- **Style choice is based on the source labels.** Mario hasn't judged
+  whether `feminine`/`childish`/`shy` read as cute on Felt.
+- **UAL clips have a slight hips yaw of about -14° in their idle stances**
+  (the UAL rest stance). It looks natural in the screenshots but hasn't been
+  judged by Mario.
+- Dataset-2 (2,902 more Bandai clips: feminine/youthful walks, waves) wasn't
+  used. It's an easy follow-up with the same tools.
+
 ---
 
 ## WP-19

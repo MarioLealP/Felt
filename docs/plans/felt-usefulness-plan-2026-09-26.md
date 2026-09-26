@@ -473,3 +473,14 @@ these as Mario prefers. WP-34 stays last.
     WP-36's llama.cpp router plus the cloud models.
   - Check whether the side projects still depend on them before any
     retirement.
+- **2026-09-26, D agent autonomy: accepted as proposed** (Mario: "Sounds
+  about right I like it").
+  - Agents only open PRs, never push to main.
+  - CI (Gitea Actions) must pass, and the ticket's Accept items are met with
+    evidence.
+  - **Normal** tickets: Claude's technical review, then Mario's final OK
+    from the ticket.
+  - **Trivial** tickets (docs, `.env.example` syncs, lint): auto-merge after
+    CI plus Claude's review. They're reported in the feed.
+  - **Never auto-merged:** privacy rules, secrets, deploys, the capture
+    blocklist, voice. Those always need Mario's yes.

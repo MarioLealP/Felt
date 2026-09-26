@@ -425,3 +425,9 @@ these as Mario prefers. WP-34 stays last.
   - **Spike question:** Spotify's recommendations API was restricted for
     new apps. If it's still unavailable, the fallback is Gemini suggesting
     tracks → search → queue (music is cloud-OK).
+- **2026-09-26, DJ mode track picking: Gemini, never Spotify
+  recommendations** (Mario: "they're always the same, poke gemini for it").
+  - Gemini gets taste memory, the recent history and the mood/time, and
+    returns track suggestions.
+  - felt-core searches Spotify and queues them, avoiding recent repeats.
+  - Spotify is only the player.

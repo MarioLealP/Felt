@@ -830,6 +830,223 @@ walking or sitting, and every new behaviour fights the others.
 Existing behaviours (thinking loop, reactions, sit/stand, walk) still work,
 and finished notices still arrive.
 
+### Notes from implementation (2026-09-26)
+
+**Architecture (main.gd).** An `AnimationTree` (`LayerTree`, a child of the
+VRM scene) now plays the same `AnimationLibrary`. The VRM's own
+`AnimationPlayer` only holds it and is set inactive.
+- **Base layer**: two `AnimationNodeAnimation` slots (A/B), each behind an
+  `AnimationNodeTimeSeek` so a newly loaded clip restarts at 0, cross-faded
+  by a `Blend2`. A new clip goes into whichever slot shows less, and the
+  blend fades toward it over the tag's `TAG_BLEND_TIMES` time.
+- **Upper layer**: its own A/B pair, mixed over the base by a `Blend2`.
+  Its filter is `Chest` and every bone under it (114 bones: upper chest,
+  neck, head, eyes, shoulders, arms, hands, fingers, hair), so hips, spine
+  and legs always come from the base.
+- **Unchanged**: tag → random clip, repeat-avoidance, looping `idle*`, the
+  walk `loop` flag and the in-place/symmetrised cycles. `deterministic` is
+  copied from the player (false).
+- **Completion**: each layer tracks its clip's elapsed time against its
+  length (`_update_layers`, also while she's hidden) and sends
+  `{"finished": tag, "layer": "base"|"upper"}`. Looping clips never
+  finish.
+  - An upper one-shot fades the upper layer out over 0.3 s.
+  - A base one-shot reverts to the last idle posture. Locomotion is still
+    exempt while a walk is moving.
+- **New `"interrupted": true` notice**: a one-shot replaced before it ends
+  now sends `{"finished", "interrupted": true}` (the old player sent
+  nothing, so waiters sat out the 30 s timeout). It isn't sent when the
+  same tag replaces itself, because that clip's own notice answers the
+  waiters.
+
+**Tag classes. main.gd decides them and reports them** (`_tag_layer`), sent
+as `{"layers": {tag: class}}` to every client on connect. I chose this over
+a shared list in the README: which body part a clip uses is presentation,
+so there is one source of truth, and felt-animation can't drift from it.
+felt-animation only reads the report to pick locks.
+- **`upper`**: `gesture/*`, `emotion/*`, `reaction/*`, minus the overrides.
+  Played on the upper layer when the base is doing something (walking,
+  sitting, a transition) or the upper layer is already in use.
+  - While the base is only standing idle they play full body, exactly as
+    before WP-20. Their own leg and hip motion is kept, so standing
+    gestures look unchanged.
+  - If a base-class tag (a walk) starts mid-clip, the clip moves onto the
+    upper layer at the same time position: no visible cut, and no finished
+    notice until it really ends.
+- **`base`**: `idle*`, `locomotion/*`, `sit/chair_loop`, `crouch/idle`.
+  These are postures and cycles a gesture rides on; changing them never
+  stops an upper clip.
+- **`full`**: everything else (transitions, ambient, dance, sleepy, air,
+  climb, recover, prop, greeting, greeting/bow) plus the override list.
+  They play whole-body on the base layer, and the upper layer fades out.
+- **Override list, checked per clip** (lower-body motion measured from the
+  `.vrma` tracks: max leg rotation from frame 0, hip rotation and hip
+  travel):
+  - `reaction/turn_surprised`: 180° hip turn, 0.93 m of travel. **Full.**
+  - `reaction/hit`: small (legs ≤ 10°, hips ≤ 9°, 0.02 m), but kept
+    full-body as the spec lists it: a hit is a whole-body event. It is a
+    one-line change to layer it.
+  - `greeting/bow` (hips 14–40°, spine 11–13°) and `recover/*` aren't
+    upper-class, so they are full anyway.
+  - The other upper tags have a few big-leg clips (`emotion/happy` jump,
+    `emotion/angry` just_do_it, `emotion/sad` sad_idle_1, `gesture/wave`
+    byebye_happy, `gesture/shaking_head` no). Standing, they play full body
+    as before. Layered, only their upper body shows, so they're not
+    overrides.
+
+**Procedural layers.** `FeltPoseModifier` is unchanged and still the first
+child of `Skeleton3D`. The feet clamp is on the tree's `mixer_applied`. The
+frame order is proved by counters in `{"probe_bones"}`: 31,295 modifier
+runs in the same frame as, and after, `mixer_applied`, against 2 without
+(the first frames at startup).
+
+**felt-animation.**
+- `state.py`: the single activity lock became a **base lock** and an
+  **upper lock**.
+  - `run_sequence` / `begin_thinking` with all-`upper` tags take only the
+    upper lock.
+  - Any other tag takes base then upper. That is the old behaviour: a
+    full-body clip waits for a gesture and never cuts it off. The fixed
+    order means no deadlock.
+  - `walk_to` takes only the base lock.
+  - `busy` still means either lock is held, so the ambient, idle-refresh
+    and micro-expression loops behave as before.
+  - `run_sequence`, `play_and_wait`, `begin_thinking` and `walk_to` keep
+    their semantics.
+- `overlay.py`: stores the report (`tag_layer`). A tag missing from it
+  counts as `full`, so an old overlay gets the old single-lock behaviour
+  (tested).
+- `overlay.py` also logs every finished notice with its layer.
+  `is_looping_tag` is unchanged (still `idle*`, the same as main.gd's
+  `_is_looping_tag`).
+- `library.resolve_posture_tag(upper_body=)`: while sitting, an upper-class
+  reply tag with no `/sitting` variant now plays over the sitting legs
+  instead of standing her up first.
+- Relay protocol: additive only (`layers`, and `layer`/`interrupted` on
+  `finished`), documented in felt-character-assets/README.md.
+
+### Proof
+
+Test driver `E:\Felt\scratch\wp20\drive.py` (socket, prints every overlay
+reply with ms). Hip x comes from `hipx.py`: the centroid of the alpha band
+45–58 % down her bounding box, which ignores a waving arm, at 157 px/m for
+half-size bursts. Crops are `E:\Felt\scratch\wp20_c_*.png`; montages are
+`E:\Felt\scratch\wp20\m_*.png`.
+
+- **Build**: `Godot_console.exe --headless --export-release "Windows
+  Desktop" build/windows/FeltOverlay.exe` gave exit 0, pck 377,811,856 B
+  (`E:\Felt\scratch\wp20_export.log`). Startup log:
+  `WP-20 AnimationTree: base + upper layers, upper mask = Chest and below (114 bones), deterministic=false`.
+- **Wave while walking** (`m_wavewalk.png`, overlay driven directly):
+  arms up waving, legs mid-stride, position advancing.
+  - Probe mid-walk: `base={'clip': 'walk_forward', 'tag': 'locomotion/walk/normal_walk'} upper={'clip': 'bn1_byebye_feminine', 'tag': 'gesture/wave', 'weight': 1.0}`.
+  - Hip x: 36 frames, 20 moving, 0 backward while stepping, 0.48–2.41 m/s.
+    The one -0.31 m/s frame is the 2.5 cm settle at the turn-back (the
+    WP-18 walk had the same 2–3 cm settle).
+  - Plain walk without a wave, same metric: 35 frames, 0 backward,
+    0.31–2.49 m/s.
+- **Wave while walking through felt-animation's own locks**:
+  `POST /presence action=move`, then 0.6 s later `POST /debug/play_tag
+  gesture/wave`.
+  - `F:\Temp\felt-animation.log`:
+    `12:10:28,606 playing 'locomotion/walk/normal_walk' (looping)` →
+    `12:10:36,416 finished 'gesture/wave' (layer upper)`. The wave was
+    sent at 12:10:29, mid-walk, not queued behind it.
+  - Hip x: 41 frames, 22 moving, 0 backward, 0.63–2.52 m/s.
+- **Talk gesture while sitting** (`m_sittalk.png`): seated legs from
+  `idle/sitting`, the upper body from `gesture/talking/sitting` (probe
+  `upper={'clip': 'sitting_talking', 'weight': 0.94}` over
+  `base={'clip': 'idle_sit'}`). The standing `gesture/talking` clip
+  (talking_2) layered over the sit also gestures with seated legs.
+- **Full-body reaction interrupting** (`m_interrupt.png`):
+  - (a) Wave on the upper layer after a walk, then `reaction/turn_surprised`:
+    `{"finished": "gesture/wave", "interrupted": true, "layer": "upper"}`,
+    the turn plays whole-body, then
+    `{"finished": "reaction/turn_surprised", "layer": "base"}`, and the
+    base is back on `idle`.
+  - (b) `gesture/talking` playing full body while standing (probe
+    `'gesture': True`), then the turn:
+    `{"finished": "gesture/talking", "interrupted": true, "layer": "base"}`.
+- **Thinking loop during a real `/request_started`**, while walking
+  (`m_think.png`): `POST /presence move`, `POST /request_started`, then
+  4 s later `POST /reply_ready` (text, `animation_tag=gesture/nodding`,
+  1.2 s silent WAV). Log lines:
+  - `12:11:07,502 playing 'locomotion/walk/normal_walk' (looping)`
+  - `12:11:11,983 finished 'gesture/thinking' (layer upper)`
+  - `12:11:16,191 finished 'gesture/thinking' (layer upper)` (the reply
+    let the current iteration finish)
+  - `sync offset=31.0ms`
+  - `12:11:17,870 finished 'gesture/nodding' (layer upper)`
+
+  Legs walking with the head on the up-left thinking glance. The arms are
+  `thinking_face` (arms crossed): the same upper body full body vs layered
+  in `m_thk.png`.
+- **Idle → sit → stand** (`wp20_c_wp20_rt_{0idle,1sitting_down,2sat,3sit_talk,4stood}.png`):
+  transitions through `/debug/play_tag` (the lock path), posture tags
+  raw, as the ambient loop sends them. Log:
+  - `12:12:15,873 finished 'transition/stand_to_sit' (layer base)`
+  - `12:12:49,603 finished 'transition/sit_to_stand' (layer base)`
+
+  The final probe is `base={'clip': 'idle01', 'tag': 'idle'}`, standing.
+  `sit_to_stand` waited for the seated talk to release the upper lock
+  ("never interrupt").
+- **Finished notices on both layers** in felt-animation's log since the
+  restart: 25 (14 `layer base`, 11 `layer upper`). They include ambient
+  ones such as `finished 'emotion/laughing' (layer base)` and
+  `(layer upper)`, and `finished 'ambient/fixing' (layer base)`.
+- **Gaze + nod over a gesture** (`m_gaze.png`): with the seated talk on the
+  upper layer (probe weight 1.0), gaze point x=0.02 turns her head
+  hard left and x=0.98 turns it right. The nod dips the top of her head
+  2 px (half size) at 0.17 s. The procedural layer is on top of the tree.
+- **Gemini review**, 2 batches, 21 crops (`E:\Felt\scratch\wp20\gemini_{1,2}.txt`):
+  - 4 flagged, all checked by me and all false positives:
+    - `e2ewave_40732`: the far arm occluded mid-stride.
+    - `think_80291` / `think_81289`: `thinking_face`'s crossed arms
+      foreshortened at the 70° walk turn; confirmed with a full-resolution
+      reshot and a full-body vs layered comparison.
+    - `rt_3sit_talk`: crossed forearms over the baggy shirt. The same
+      shirt overlap shows in the full-body `thinking_face`.
+  - I spot-checked 2 OKs (`e2ewave_41757`, `rt_4stood`): both agree.
+- **Tests**: felt-animation 404 → **415 passed**. The new
+  `tests/test_layers.py` covers the report, the unreported → full default,
+  finished with layer/interrupted, wave during walk, full-body waits for
+  the walk, full-body waits for a gesture, upper tags queueing, mixed
+  sequences, thinking during a walk, the no-report fallback, and sitting
+  upper-body posture.
+- **Commits**:
+  - felt-character-assets `75be8dc` (main.gd) and `8779e0c` (README).
+  - felt-animation `b56f541` (overlay), `5023713` (locks), `f416db3`
+    (posture) and `e0ae657` (tests).
+
+  All pushed.
+- **Left running**: felt-animation (`.venv\Scripts\python.exe -m
+  felt_animation`, hidden) with the overlay it launched, on the final
+  code, connected (`felt-overlay reported layers for 94 tags (22 upper)`).
+
+### Not done / unverified
+
+- **Found, not fixed (pre-existing, outside WP-20)**:
+  - `gesture/talking/sitting`'s `sitting_talking` / `_1` clips are
+    44.0 / 44.9 s long, longer than felt-animation's 30 s `CLIP_TIMEOUT`.
+    A sequence waiting on them times out, releases its lock at 30 s, and
+    the next full-body tag then interrupts them (seen live:
+    `no completion notice ... within 30.0s`, then `(interrupted)`).
+    Fix by trimming the clips or raising the timeout.
+  - `_stand_up_if_sitting` (presence walks) plays `transition/sit_to_stand`
+    but never sends `idle`. main.gd then reverts to its last idle posture,
+    `idle/sitting`, until the next idle refresh. The ambient stand-up and
+    the reply path aren't affected. It was the same before WP-20.
+  - Repeat-avoidance can pick the same clip twice when an idle clip plays
+    in between (the history is shared across tags). Seen with
+    `thinking_face`.
+- **Not judged by Mario**: whether layered big-leg clips (the jump or
+  byebye_happy while walking/sitting) read well with only their upper
+  body, and whether `reaction/hit` should layer instead of being
+  full-body.
+- **Not exercised live**: runs with a gesture on top; the listening loop
+  (`reaction/listening`) over a sit; a mid-fade clip switch on one layer
+  (it pops at most the ≤ 50 % weight the reused slot still had, by design).
+
 ---
 
 ## WP-21

@@ -1366,6 +1366,73 @@ Crops are in `E:\Felt\scratch\wp21\shots\`; the review set is in
 - The chair's Kenney pink hasn't had an Endfield colour pass (`tint` is
   supported in the catalogue).
 
+### Follow-ups (2026-09-26, Mario's live review)
+
+1. **Mug sip removed.** The `sip:mug` and `time:morning` events and the
+   test-page button are gone. No clip maps to the mug any more; it stays in
+   the catalogue as a plain prop. Test:
+   `event_props(m, "sip:mug") is None`, and no clip entry has `item == "mug"`.
+2. **Water bottle: left hand, cap with the right, off the floor.**
+   - **Clip check**: `drink_water` already drinks with the **left** hand. The
+     probe put the left hand at her mouth at 8.5–15 s (0.19, 1.44, -0.23),
+     head 1.39. At 3.5–8 s and 15.5–19.5 s the left hand holds low
+     (≈ 1.06 m) with the right hand 0.2 m above it: the cap. So **no
+     mirroring was needed**.
+   - Only the clip's own right-hand table pickup (0–3.3 s) and put-down
+     (19.8 s–) are cut: `start 3.3`, `end 19.8`.
+   - She picks the bottle up off the floor with `prop/pickup_left`. With
+     `from_floor`, one fades in by her feet first if none is lying around.
+     Afterwards it goes back down on the floor.
+   - Left-hand grip: `pos [0.06,-0.04,0]`, `rot [0,90,90]`, picked from
+     three grids (`scratch\wp21\shots\bottle_grid*.png`,
+     `bottle_zoom2.png`).
+   - **Proof**:
+     - `bottle_segment.png` (4.2 / 6.5 s cap under her right hand's
+       fingers, 9.5–14 s at her mouth, 17 s recapping);
+     - end-to-end `bottle_e2e.png` / `bottle_e2e_zoom.png` (2.2 s picked up
+       in the left hand, 5.6 s right hand at the cap, 11.4 s at her mouth,
+       16.4 s recapping, 21.6 s put down upright);
+     - log: `water_bottle-33 faded in by her feet` → `picked up
+       water_bottle-33` → `put water_bottle-33 down at x=-1.87`.
+3. **Headphones lower**: Head grip y 0.065 → 0.04 (`headphones_y.png`
+   compares 0.065 / 0.045 / 0.035 / 0.025). `headphones_final.png`: front
+   and both side views (`debug_view_yaw` ±90) show the cups over her ears
+   and the band resting on her hair, not floating.
+4. **Sunny: no sunglasses.** The `weather:sun` event, its ambient weight and
+   the weather-loop trigger are removed, and so is the test-page button.
+   Rain → umbrella stays. Sunglasses stay in the catalogue; sunny becomes a
+   WP-27 summer outfit.
+5. **Chest at 40 %**: size 0.42 → 0.17 m (0.19 m wide), about shin height
+   beside her feet (`fetchT_overview.png`). The lid hinge is unchanged and
+   still opens toward the screen edge.
+   - No clip reaches lower than `prop/pickup_right`'s wrist at 0.27 m (in
+     front, z -0.26). `crouch/enter` and `crouch/idle` keep the hands at
+     0.40 m at her sides. The `ambient/fixing` kneel reaches 0.36–0.41 m
+     (probed twice).
+   - So the item now **fades in inside the open chest** (placed at chest
+     height 0.03, 0.3 s dissolve), then eases up into her hand as it
+     reaches the chest. I kept the bend-and-reach clip (the pickup), not a
+     crouch.
+   - Cue re-measured from the 0.07 s burst (`fetchT_take.png`): at the old
+     0.8 s cue the book faded in at 2.79–3.04 s and reached her hand at
+     3.21 s, when the hand was already rising. So the fade-in moved to 0.5 s
+     of the pickup and the hand closes on the item at 0.8 s, its lowest
+     point (0.76–0.92 s).
+   - The re-run (`fetchU_overview.png`) shows the phone inside the open
+     chest at 9.13 s. It was captured at ~1 fps, because Endfield was running
+     and the overlay rendered slowly, so the finer timing of that run isn't
+     resolved.
+   - Items wider than the small chest (the open book, 0.24 m) poke out of it
+     while fading in.
+- **Tests**: felt-animation **447 passed**, after `9bb5c4b`
+  (446). The mug-switch test became two bottle tests (floor spawn → left
+  pickup → segment → put down; a bottle already on the floor is reused).
+  The manifest and fetch tests were updated.
+- **Commits (pushed)**: felt-animation `a60a5f0` (no mug sip), `985f349`
+  (no sunglasses), `339749c` (bottle), `707f0cc` (headphones), `bd66759`
+  (chest); umbrella `fe8b7c9` (test page). No overlay rebuild was needed:
+  everything is manifest/felt-animation.
+
 ---
 
 ## WP-22

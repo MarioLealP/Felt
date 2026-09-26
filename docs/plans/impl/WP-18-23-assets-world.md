@@ -1536,6 +1536,215 @@ needed, so it wasn't built.
   plus a PNG encode) pins the frame rate at ~2 fps. The burst now takes a
   desktop-pixel `crop`.
 
+### Notes from implementation (2026-09-26)
+
+**Architecture (option 1, as spiked).**
+- **main.gd**: the main window covers the primary; `_build_side_views()`
+  adds one `Window` per other monitor. Each window is its monitor minus the
+  top pixel. The windows share one `World3D` and each has its own ortho
+  camera (`_frame_camera`, z = -6, near 1 / far 11, so the WP-18 clip-plane
+  fix carries over).
+- **One pixel map**, `_px_to_world` / `_world_to_px`:
+  - `ppm` = primary window height / `cam.size` = 313.77 px/m;
+  - world x = 0 at the primary's centre (desktop x 1720), desktop-right =
+    world -x;
+  - the floor (y = 0) is desktop row 1332 on both monitors, 105 px above
+    DISPLAY2's bottom edge instead of 108 (the 3 px step);
+  - floor span x = +5.48 (primary's left edge) .. -11.60 (DISPLAY2's right
+    edge); roam = +4.16 .. -10.28;
+  - `move` clamps to that roam range; the prop floor's walls sit at the
+    span's ends.
+- **Per-monitor-DPI caveat**: both monitors are at 100 %. Godot is
+  per-monitor-DPI aware and uses physical pixels with one `ppm`. A monitor
+  at another scale needs a per-view `ppm`, and felt-animation would have to
+  be DPI aware to read physical cursor/window pixels. This is written in
+  main.gd, geometry.py and the assets README.
+- **Following her across monitors**:
+  - the speech bubble's `CanvasLayer` reparents to whichever window her head
+    is over;
+  - gaze `cursor` maps the desktop cursor through the pixel map, so it works
+    on any monitor;
+  - gaze `point` fractions are of the monitor she is on;
+  - a new debug gaze mode `desktop` (x/y pixels) uses the same mapping
+    without moving the real cursor.
+- **The overlay reports its geometry**: `{"geometry": {...}}` on connect
+  (map, span, roam, window rects, PID).
+- **Culling**: a window with nothing within 1.5 m of its frame for 3 s skips
+  its 3D pass (`disable_3d`). In practice this rarely triggers: the chest
+  lives on DISPLAY2 and Mario's clutter is on the primary.
+- **Click-through**:
+  - main.gd no longer spawns a PowerShell. felt-animation's
+    `clickthrough.py` (ctypes) patches every "Engine" window of the
+    overlay's PID every 0.5 s, whether visible or minimized. It takes the
+    PID from the geometry report, or from its own `Popen` before that
+    report arrives.
+  - A window is shown (`SW_SHOWNOACTIVATE`: no focus steal from a game)
+    only once its styles are confirmed.
+  - Safety net: with no relay client for 20 s, main.gd minimizes its own
+    windows.
+  - `patch-clickthrough.ps1` now also patches every window, but it is only
+    kept for manual runs.
+- **felt-animation** (`geometry.py`):
+  - `estimate_from_monitors()` (Win32 `EnumDisplayMonitors`) rebuilds
+    main.gd's exact numbers until the report arrives;
+  - come-here: the cursor pixel on any monitor -> world x;
+  - shoo: the roam end farther from the cursor. The minimum-distance rule
+    is capped at 1.5 m; otherwise, from the primary's centre she could
+    only shoo TOWARD a cursor on DISPLAY2.
+  - ambient wander: around the middle of her monitor, crossing to the
+    other one 30 % of the time;
+  - walk-off: through the nearer OUTER edge. **Deviation**: it was the
+    farther edge, which is now up to a 17 m walk. Walk-on lands in the
+    middle of that side's monitor.
+  - props: floor spots across both screens, the focused window mapped
+    from desktop pixels.
+- **The chest's home is DISPLAY2's floor**: `props.json` `chest.desktop_x`
+  = 5072 (85 % across DISPLAY2, world -10.68), configurable. It falls back
+  to `x` and is clamped inside the floor. A fetch from the primary is now
+  "far" (> 3 m), so she conjures instead, as the WP-21 rules say.
+- **Supersampling decision: MSAA 2x only (`RENDER_SCALE` stays 1.0).**
+  `{"render_scale": s}` is there to try it. Numbers are below. At 1.5× the
+  walk dropped from 109 to 86 fps. While a game has the GPU the overlay
+  already starves at 1–13 fps at 1.0×, and 1.5× means 2.25× the pixels.
+  - GPU-load caveat: the busy % from the Windows counters is relative to
+    the current clock. At idle clocks it hardly moves with scale, because
+    the GPU clocks up.
+- **Dropped**: `LIMIT_TO_PRIMARY_MONITOR_FOR_TESTING` and
+  `SMALL_TEST_WINDOW_FOR_TESTING`.
+- **Relay additions** (documented in the assets README):
+  - out: `geometry`;
+  - screenshot options: `window` (`all` = stitched desktop, `primary`,
+    `screen1`) and `crop`;
+  - debug: `perf`, `render_scale`, `view_culling`, `view_visible`,
+    `view_vsync`, gaze `desktop`.
+
+### Proof
+
+Scripts and logs are in `E:\Felt\scratch\wp22\`; review crops are in
+`scratch\wp22\review\`.
+
+- **Build**: `Godot_console --headless --export-release` gave exit 0, pck
+  378,120,976 B, and no errors (the only overlay stderr line is the
+  pre-existing `icon.svg` one). Startup log: `WP-22 side view: screen 1
+  window pos=(3440, 358) size=(1920, 1079)` and `WP-22 world span
+  x=[-11.601, 5.482] roam=[-10.278, 4.158] ppm=313.766 views=2`.
+- **Stability**: see the spike findings. 3.5 + 32 min, about 26 min of it
+  with Mario's game at 97–99 % GPU. **0 display/driver/app-crash events**,
+  both windows normal throughout, no device-lost. The run was stopped early
+  at Mario's request; he watched it working. Short sessions on the final
+  build since then: clean.
+- **She walks onto DISPLAY2 and back** (shoo through felt-animation's own
+  locks, cropped bursts, `hipx2.py`, which isolates her from floor props by
+  her head column):
+  - DISPLAY2 -> primary: 12.64 m, 93 frames, 79 moving, **0 backward**,
+    0.38–2.51 m/s.
+  - Primary -> DISPLAY2: 14.35 m, 103 frames, 91 moving, 1 backward: the
+    -0.33 m/s turn-back settle 0.5 s before arrival, the same one WP-18/20
+    documented. **0 backward while stepping.**
+  - Across the seam: 1.27–1.46 m/s, no jump.
+  - Crops (`seam_crossing.png`, `seam_crossing_back.png`): straddling the
+    seam she isn't cut, doubled, shifted or resized; the feet stay on the
+    same line.
+- **WP-20 layers**: wave while walking across both monitors (`/presence
+  move` + `/debug/play_tag gesture/wave`). Probe mid-walk:
+  `base=walk_forward (locomotion/walk/normal_walk)`,
+  `upper=goodbye (gesture/wave) weight 1.0`; overlay notices
+  `{"finished": "gesture/wave", "layer": "upper"}` then `arrived`. 94
+  frames, 0 backward, 0.51–2.48 m/s (`wave_while_walking_seam.png`).
+- **WP-21 props on both screens**:
+  - Fetch from the chest on DISPLAY2 (`fetch_on_display2.png`): lid open,
+    reach in, book in hand, put down. Log: `fetched book (book-41) from the
+    chest` -> `put book-41 down at x=-9.92`.
+  - Conjure on DISPLAY2: potted plant pixels per 0.1 s
+    0 → 179 → 446 → 708 → 1105 → 1279 → 1143 (a progressive ~0.5 s reveal,
+    `conjure_on_display2.png`).
+  - Probe: chest at -10.68 plus the book and plant on DISPLAY2; Mario's
+    clutter (controller, lamp, headphones, phone, snack bag, bottle) on the
+    primary.
+- **Gaze on both monitors** (`gaze_primary.png`, `gaze_d2.png`, the debug
+  `desktop` mode = the cursor mapping):
+  - with her on the primary (desktop x 2347), targets at x 200/1300 turn
+    her head screen-left and targets at 3440/4400/5300 (the seam and
+    DISPLAY2) turn it right;
+  - on DISPLAY2 (x 4387), targets on the primary and at the seam turn it
+    left, and 5300 turns it right; camera mode faces front.
+- **No slicing**: `recover/getup_back` and `climb/2m` on DISPLAY2
+  (`getup_on_display2.png`, `climb_on_display2.png`): whole body in every
+  frame.
+- **Clicks pass through everywhere**, on the final build as launched by
+  felt-animation: `WindowFromPoint` found **0/192** grid points (12×8 per
+  monitor), 0/10 on her body and 0/7 on props hitting an overlay window.
+  After stripping `WS_EX_TRANSPARENT` by hand, the keeper re-applied it in
+  0.23 s.
+- **Supersampling / cost** (`perfab_idle2.txt`, no game running, 20 s per
+  config; fps = overlay median; GPU = the overlay's 3D busy %, at whatever
+  clock the GPU chose):
+
+  | config | fps | GPU busy |
+  |---|---|---|
+  | two windows, 1.0× (as built) | 110 | 63.7 % |
+  | DISPLAY2 window hidden (= the old single window) | 128 | 63.1 % |
+  | two windows, DISPLAY2 vsync off | 120 | 68.0 % |
+  | 1.5× | 100 | 65.8 % |
+  | 2.0× | 95 | 67.1 % |
+  | walking, 1.0× | 109 | 62.7 % |
+  | walking, 1.5× | 86 | 70.9 % |
+
+  - The overlay is CPU-bound at ~11–13 ms `process` per frame.
+  - The second window costs ~15 % fps (128 → 110).
+  - With a game running: 1–13 fps at 1.0×, 0–15 % GPU share (the spike's
+    run).
+- **Gemini review**: `agy-delegate` answered `error: interrupted` again.
+  I reviewed every crop myself; all OK.
+- **Tests**: felt-animation 449 → **470 passed**:
+  - `test_geometry` (+6): the report vs the monitor estimate, seam
+    continuity, come-here on both monitors, focused-window mapping, the
+    legacy fallback;
+  - `test_clickthrough` (5);
+  - `test_props` (+4): chest from `desktop_x`, fetch on DISPLAY2, a
+    two-monitor `pick_spot`, a focused window on DISPLAY2;
+  - `test_presence_endpoint` (+3, 4 updated);
+  - `test_multimonitor_server` (3).
+- **Commits (pushed)**:
+  - felt-character-assets `ddb4893` (main.gd, props.gd, ps1) and
+    `0b8562b` (README);
+  - felt-animation `4dec410` (geometry), `77147c8` (click-through),
+    `17f008c` (presence/props/server/chest) and `b1f1f44` (README);
+  - umbrella `9c5a28c` (spike findings).
+- **Left running**: felt-tray, felt-animation (hidden, it launched the
+  overlay) and one FeltOverlay (pid 6304, both windows patched, 111 fps).
+
+### Not done / unverified
+
+- **The 2 h session with a game is Mario's to confirm in normal use.** I
+  ran 3.5 + 32 min (26 min of it with his game) with 0 driver events. Mario
+  saw it working and asked to skip the rest.
+- **While a game has the GPU she runs at 1–13 fps**. That's no worse in kind
+  than WP-21's ~1 fps on the single window. It wasn't A/B'd under a game
+  (the game had ended), so the second window's share of the slowdown under
+  load isn't measured. Possible levers if it matters: vsync off on the
+  side window (+10 fps idle, untested for stability, so not enabled), a
+  frame cap, or skipping the DISPLAY2 3D pass more aggressively.
+- **GPU cost at a fixed clock** isn't measurable here: LibreHardwareMonitor
+  isn't running elevated (no power/clock sensors), and the Windows busy %
+  and Godot's GPU timer both move with the clock.
+- **One unexplained minimize** of the main window during the first spike
+  test (it didn't recur). The keeper now restores minimized windows, so
+  Show Desktop (Win+D) no longer hides her for good. That behaviour is a
+  change: tell Mario if he wants Win+D to hide her.
+- **Culling** rarely triggers with the chest permanently on DISPLAY2. The
+  "window 3D off" -> on switch while she crosses wasn't separately
+  measured for a hitch; the crossing bursts show none.
+- **The real cursor was not moved** (Mario was using the PC). Gaze uses the
+  same mapping through the `desktop` debug mode, and one real-cursor
+  sample was taken, but not a cursor sweep.
+- `Update Felt.bat` / `UpdateFelt.ps1` still copies `patch-clickthrough.ps1`
+  next to the exe. That's harmless (nothing runs it), and I didn't touch
+  it per the rules.
+- Not touched: WP-23 surfaces (the DISPLAY2 grid seam at y≈897 maps
+  through `_px_to_world`: world y = 1.949 - (897 - 720.5) / 313.77 =
+  1.39 m; ledges come from desktop pixels the same way).
+
 ---
 
 ## WP-23

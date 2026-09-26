@@ -57,7 +57,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-19](WP-18-23-assets-world.md#wp-19) | Sound batch: Orpheus non-verbals → RVC → Mario picks | none | M | 🟡 WIP: accepted for now (38 keepers live, sync OK 09-26). Revisit with a deep dive on alternatives once every other WP is done |
 | [WP-20](WP-18-23-assets-world.md#wp-20) | AnimationTree layering | WP-14, WP-18 | L | ✅ (Mario live-reviewed 09-26: good enough) |
 | [WP-21](WP-18-23-assets-world.md#wp-21) | Props system, chest, dissolve FX, clean-house key | WP-20 | L | ✅ (Mario 09-26: done, a bit janky, polish much later; see POLISH-BACKLOG.md) |
-| [WP-22](WP-18-23-assets-world.md#wp-22) | Follow-window overlay + multi-monitor + supersampling | WP-20 | L | ☐ |
+| [WP-22](WP-18-23-assets-world.md#wp-22) | Follow-window overlay + multi-monitor + supersampling | WP-20 | L | 🔎 needs review (one window per monitor; 2 h + game check is Mario's) |
 | [WP-23](WP-18-23-assets-world.md#wp-23) | Desktop world: platforms, ledges, falls, riding windows | WP-22, WP-21 | L | ☐ |
 | **Phase 6: life features** (Mario's picks; ★ = his priority) |||||
 | [WP-25](WP-25-31-life-features.md#wp-25) | Proactive channel: server → desktop pushes | WP-09 | S–M | ☐ |

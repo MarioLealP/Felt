@@ -447,3 +447,20 @@ these as Mario prefers. WP-34 stays last.
     socials). Avoid scraping where a feed exists.
 - **2026-09-26, C4 dropped:** the clipboard/file helper and the "what was I
   doing" AFK recap (Mario: "neither").
+- **2026-09-26, C4 focus timer dropped; a dedicated quiet mode added.** Mario:
+  "a dedicated go quiet so I can have an interview or something is cool …
+  disappear entirely, also use calendar for this".
+  - **Quiet mode** is separate from the 10-min "shut up" hush:
+    - she disappears entirely, props included (reusing the WP-10/21 hide);
+    - fully silent: no voice, non-verbals, fillers or bubbles;
+    - triggered by voice ("quiet mode for an hour"), a tray item or a
+      hotkey;
+    - ends by Mario or by its timer.
+  - **Nothing is lost:** everything goes to the app feed. Afterwards she
+    gives one short catch-up line ("while you were busy: …"). No snappy
+    line.
+  - **Calendar-aware:** ~5 min before a calendar event she asks "X is
+    coming up in 5 min, want me to go away when it starts?". A yes enables
+    quiet mode for the event's duration (it ends at the event end, or
+    early on Mario's word).
+  - Mario-triggered/confirmed, so it respects never-quiet.

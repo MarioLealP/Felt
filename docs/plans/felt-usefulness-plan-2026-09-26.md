@@ -511,3 +511,17 @@ on the Gitea board (WP-37), with the long spec linked for agents.
 | **WP-50** | Agents infra: 9router / smartrouter / OpenHands inventory → one gateway (pairs with WP-36), plus the server-GPU sizing numbers | WP-36 |
 | **WP-51** | Local coding-agent benchmark on backlog tasks | WP-50, WP-39 |
 | **WP-52** | Felt as mastermind: `agent-ok` dispatch, PRs + CI, the autonomy levels, feed reports, kill switch (practical only) | WP-51, WP-42 |
+- **2026-09-26, ordering: WP-38 (architecture audit) is pulled forward** to
+  run next, before WP-23. WP-37 stays in numeric order (Mario: "37 is
+  whatever"). WP-38 has no hard dependency on the board; its outputs
+  (`ARCHITECTURE.md` files and the refactor list) become tickets once WP-37
+  exists.
+- **2026-09-26, added: Felt has an overview of the Gitea board.** Mario:
+  "she should have overview of the gitea board also".
+  - She answers "what's in progress / waiting for me / next?".
+  - The morning brief includes "N tickets need your review".
+  - The feed notes cards moving to Needs review and agent PRs ready.
+  - Read-only board access through the Gitea API, with a scoped token in
+    sops. She never moves cards herself; that's Mario's or Claude's job.
+  - Part of **WP-37**'s scope (board API + a Felt board skill). WP-45
+    (morning brief) and WP-52 (mastermind) consume it.

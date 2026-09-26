@@ -276,3 +276,20 @@ Per the usefulness plan's accepted autonomy levels (2026-09-26):
 - ty and ruff run at **zero errors**: no baselines.
 - A genuine false positive gets an inline ignore with the rule name and a reason, never a blanket or per-file ignore.
 - CI fails on any error.
+
+## Type-safe code, not silenced code (2026-09-26)
+
+Mario: "You can type: ignore where needed, but you should still make type
+safe code".
+
+- **Annotate** every public function and method.
+- Use **typed models** (dataclass / `TypedDict` / pydantic) for relay
+  messages, API bodies and config, not loose `dict[str, Any]`.
+- **Avoid `Any` and `cast()`.** Where untyped data enters (JSON, HTTP,
+  Win32, untyped libraries), validate or narrow it at that boundary so the
+  rest of the code is fully typed.
+- `# type: ignore[...]` / `# ty: ignore[...]` **only where genuinely
+  needed**: untyped third-party libraries, or a confirmed checker gap.
+  Always with the rule name and a one-line reason.
+- In review, silencing an error that a real type could fix counts as
+  **not done**.

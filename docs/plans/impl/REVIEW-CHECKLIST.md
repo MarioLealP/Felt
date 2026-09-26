@@ -66,6 +66,15 @@ at your own pace, in normal use where possible.
   `run/stop` to her while you watch. Are they facing the right way? (Two
   clips from the same batch played facing away.)
 
+- [ ] **WP-18B styled walks and new clips:** I'll play them for you on
+  request. Which walk styles read as *her*?
+  - happy, tired, sad, angry, feminine, childish, proud, active, shy,
+    elderly (Bandai)
+  - formal, sneak, carry, zombie, jog (Quaternius)
+
+  The keepers get wired to mood later. Slow styles slide until then,
+  because walk speed is fixed at 1.3 m/s.
+
 ## Decisions
 
 - [ ] **WP-16 taste memory:** OK for your listening profile ("likes X,

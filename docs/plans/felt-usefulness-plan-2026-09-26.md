@@ -338,3 +338,24 @@ these as Mario prefers. WP-34 stays last.
   The D2 spike should include a VRAM-based sizing recommendation (which
   models the agents and chat need), so the purchase can be decided on
   numbers.
+- **2026-09-26, C4 PC and server care: via ntfy.** Mario: "She can actually
+  react based on ntfy".
+  - **Clarifies the old rejected feature:** relaying *home* (Home Assistant)
+    alerts stays rejected. **Server/PC alerts over ntfy are allowed.**
+  - Felt subscribes to the clockmost ntfy topic(s):
+    - **urgent** → a prompt spoken line;
+    - **warn** → a casual ambient "btw…" mention;
+    - **info** → never mentioned.
+  - Disk-space and backup checks feed ntfy rather than Felt polling them
+    herself.
+  - Chocolatey update notices are skipped (it auto-patches).
+- **New item: an ntfy alert hygiene pass on clockmost** (server-side,
+  before Felt consumes anything). Mario: "they are a bit too trigger happy,
+  since caddy update cuz we getting a new container up is basically the
+  same as a world ending event".
+  - Severity tiers across `clockmost-notify.sh` callers (healthcheck,
+    deploy, backup, prune, maintenance).
+  - Expected-event suppression (deploy-caused Caddy reloads and container
+    restarts, the Monday reboot, prune windows).
+  - Dedupe and cooldown for flapping checks.
+  - Proposed as its own WP ahead of the Felt ntfy consumer.

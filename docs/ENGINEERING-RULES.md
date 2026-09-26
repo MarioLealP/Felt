@@ -269,3 +269,10 @@ Per the usefulness plan's accepted autonomy levels (2026-09-26):
     fixing unrelated things it noticed along the way; note them instead.
 48. **A delegated agent never ticks its own WP** — status goes to
     `🔎 needs review`, same as rule 27, regardless of who or what did the work.
+
+
+## Zero-error policy (2026-09-26)
+
+- ty and ruff run at **zero errors**: no baselines.
+- A genuine false positive gets an inline ignore with the rule name and a reason, never a blanket or per-file ignore.
+- CI fails on any error.

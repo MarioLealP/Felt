@@ -327,3 +327,15 @@ brain.py split):
   "no new errors" check until then, so the tool isn't swapped mid-refactor.
 - Check ty's current config and CLI (it's newer than pyright) when doing
   the swap.
+- **Zero-error policy** (Mario, 2026-09-26: "you should fix all errors that
+  ty point out, not just new ones").
+  - The ty pass fixes **every** error in every repo; no baseline file.
+    Tests must stay green after each batch.
+  - Genuine false positives get **inline** suppressions with a reason
+    (`# ty: ignore[<rule>]  # why`).
+  - CI then fails on any type error.
+  - Same for ruff: the WP-39 leftovers (E501, SIM, E402, B905…) get fixed.
+    Only documented false positives stay as inline ignores (FastAPI
+    `File()`/`Form()` B008, the IIFE capture B023 in felt-tray `tray.py`).
+  - Fixes stay typing-only where possible. Any fix that changes logic gets
+    flagged in the notes and covered by a test.

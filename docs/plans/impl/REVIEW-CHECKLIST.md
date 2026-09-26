@@ -37,7 +37,7 @@ at your own pace, in normal use where possible.
   - C: come to your cursor
   - L: look at this
   - R: repeat - works
-  - S: shut up ("zip it" + a 10 min hush)
+  - S: shut up ("zip it" + a 10 min hush). Press S again (or tray, "Unhush (talk again)") to let her talk again
   - X: clean house (does nothing until WP-21)
 - [x] **WP-10 tray:** the "Change action keybinds" submenu opens and
   rebinds.

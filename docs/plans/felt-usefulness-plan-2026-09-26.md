@@ -431,3 +431,17 @@ these as Mario prefers. WP-34 stays last.
     returns track suggestions.
   - felt-core searches Spotify and queues them, avoiding recent repeats.
   - Spotify is only the player.
+- **2026-09-26, C4 game companions: both, plus game news.**
+  - **Generic ask-anything:** a web/wiki lookup on the game's name (cloud-OK).
+  - **Game-specific awareness:** PoE2 = WP-29 (prices + wiki RAG), plus
+    Endfield.
+  - **A news tracker** for FFXIV, Arknights Endfield and Path of Exile (and
+    more later).
+    - Official news/patch-note/maintenance sources per game.
+    - New items become ambient "btw" mentions, once each, plus the app feed.
+    - Maintenance and event times can become reminders.
+  - **The watched-games list is editable in the Felt app** (Track E).
+    "Whatever else I remember later."
+  - Spike: find reliable, current sources per game (RSS, official APIs,
+    Lodestone for FFXIV, the PoE forum/news, the Endfield official site or
+    socials). Avoid scraping where a feed exists.

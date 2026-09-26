@@ -359,3 +359,30 @@ these as Mario prefers. WP-34 stays last.
     restarts, the Monday reboot, prune windows).
   - Dedupe and cooldown for flapping checks.
   - Proposed as its own WP ahead of the Felt ntfy consumer.
+- **2026-09-26, C4 morning brief: yes, spoken + written.** Content:
+  - today's calendar and weather;
+  - the count of noteworthy emails;
+  - reminders;
+  - overnight urgent/warn alerts.
+
+  About 20 s, once a day, triggered by the first activity after the night.
+- **New Track E: the Felt app (a written feed).** Mario: "we might need an
+  actual app style for her, cuz I might miss her saying that but would come
+  in handy to see written".
+  - A timeline of everything she said or did:
+    - remarks;
+    - brief cards;
+    - email mentions (open in Gmail / tell me more / draft reply);
+    - ntfy alerts;
+    - reminders;
+    - HA actions;
+    - Track D agent reports.
+  - Read/unread for catching up after calls and games. Per-card actions:
+    dismiss, snooze, and "not interested" (which feeds the email noise
+    list).
+  - Chat lives in the same app.
+  - Built on the existing felt-dashboard (React) and felt-tray's Felt
+    window, using the clockmost front-end stack and the Endfield design
+    language.
+  - Open question: desktop-only, or also reachable from the phone (via
+    clockmost + SSO)?

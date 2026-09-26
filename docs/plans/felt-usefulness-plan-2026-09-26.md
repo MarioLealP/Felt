@@ -445,3 +445,5 @@ these as Mario prefers. WP-34 stays last.
   - Spike: find reliable, current sources per game (RSS, official APIs,
     Lodestone for FFXIV, the PoE forum/news, the Endfield official site or
     socials). Avoid scraping where a feed exists.
+- **2026-09-26, C4 dropped:** the clipboard/file helper and the "what was I
+  doing" AFK recap (Mario: "neither").

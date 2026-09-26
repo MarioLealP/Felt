@@ -500,6 +500,23 @@ In the overlay, the planted-shoe positions gave steps of 0.41 / 1.07 /
   pace yet (CREDITS.md speeds). **The default walk is still
   `locomotion/walk/normal_walk` (`walk_forward`), now symmetrised.**
 
+**Follow-up 2: "her feet are at a 30º incline".** This was caused by the
+symmetrise template. A new `{"probe_bones"}` debug message reads each
+foot's rotation against its rest pose in-engine. Mid-stance foot pitch
+while walking (+ = toes down):
+- original clip: left +4.3°, right **-38.6°** (right heel stance, roll
+  +9°; the raw .vrma already has it);
+- right-side template (5238e4f): left -32.5°, right -34.6° (roll ±13°),
+  which is Mario's 30°;
+- idle feet: within 1°.
+
+`run_forward`'s right foot is also rolled +58° at mid-stance. The left
+side is the good one in both clips, so `_symmetrise_cycle` now rebuilds
+Right from mirrored Left. **After:** walking mid-stance left +3.1°,
+right +3.6° (roll ±2.6°); run in place +2.7° / -0.1°. Steps are an even
+0.71-0.74 m (ratio 0.97), planted-foot slip is 0.13 m/s, and hip speed
+never goes backwards. The default walk is still `normal_walk`.
+
 ---
 
 ## WP-19

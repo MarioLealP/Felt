@@ -464,3 +464,12 @@ these as Mario prefers. WP-34 stays last.
     quiet mode for the event's duration (it ends at the event end, or
     early on Mario's word).
   - Mario-triggered/confirmed, so it respects never-quiet.
+- **2026-09-26, D1 9router / smartrouter / OpenHands: the spike decides, in
+  the actual WP.** Mario: both routers "only have gemini authed, was for
+  some side projects".
+  - They aren't load-bearing for Felt.
+  - The D1 spike still inventories them (what each does, who calls them),
+    then recommends keep/merge/retire toward **one gateway** in front of
+    WP-36's llama.cpp router plus the cloud models.
+  - Check whether the side projects still depend on them before any
+    retirement.

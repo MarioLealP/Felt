@@ -21,5 +21,11 @@ item says what's still off and where to start.
     - foot IK / foot locking against the floor;
     - the same in-place treatment for the start/stop clips;
     - per-style speeds once WP-18B styled walks get wired to mood.
+- **Irises slightly off when looking up** (2026-09-26, WP-14): "she tracks
+  fine, just slightly off on iris upwards".
+  - Eye pitch is capped at 4° up / 7° down (a39a122) to stop the white-eye.
+  - Things to check: whether 4° is too tight, and whether to drive the eyes
+    from the VRM's own lookAt range (`lookAt.rangeMapVerticalUp`) instead
+    of a hand-picked cap.
 - **WP-19 sounds deep dive**: see README. Covers laugh/giggle sources, a
   breath-preserving converter, and `ooh`/`mm-hm` mappings.

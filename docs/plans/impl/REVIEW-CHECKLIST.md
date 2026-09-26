@@ -9,12 +9,12 @@ at your own pace, in normal use where possible.
 
 - [x] **WP-12 face:** her mouth moves with her speech. Idle faces (pout,
   grin, shocked…) keep their mouth shapes. No brow twitching.
-- [ ] **WP-14 gaze:**
+- [x] **WP-14 gaze:** (Mario 2026-09-26: tracks fine, iris slightly off looking up, on the polish backlog)
   - her head and eyes follow your mouse and feel natural;
   - she looks at you while talking;
   - no white-eyes at the top of the screen;
   - the head leans up more than down.
-- [ ] **WP-14 eye flicks:** the small eye movements look alive, not jittery.
+- [x] **WP-14 eye flicks:** (fine) the small eye movements look alive, not jittery.
 - [ ] **WP-13 nod:** while you talk to her (hold the voice key and speak),
   she nods sometimes and tilts her head.
 - [ ] **WP-16 music:** play music with a clear beat. After about 15 s she

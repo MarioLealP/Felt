@@ -287,3 +287,30 @@ Flagged as a follow-up for whoever next has write access to that repo.
   work through them file by file.
 - **This WP wasn't live-reviewed by Mario.** Status set to
   `🔎 needs review` per rule 27, not ticked.
+
+## Follow-up: felt-core continuous deployment (Mario, 2026-09-26)
+
+"This needs to be automated as it was intended, we might need to implement
+some middleware, but the plan was always push to master -> builds ->
+deploys."
+
+**Design** (to be built right after WP-40, so it doesn't collide with the
+brain.py split):
+- **Trigger and gate:** a `deploy` job in felt-core's `.gitea/workflows/`,
+  on push to `main`, `needs: ci` (tests + ruff + pyright green), on the
+  server's Linux runner.
+- **Export:** `git -c core.autocrlf=false archive HEAD`. This permanently
+  fixes the CRLF vendoring problem.
+- **Vendor:** replace `projects/felt-core/app/` in a clone of
+  clockmost-infra, then commit ("felt-core: <sha> <subject>") and push as a
+  bot.
+- **Token:** a dedicated Gitea deploy token (or deploy key) with write
+  access to clockmost-infra only, stored as a runner secret. The job
+  touches only that path.
+- **Deploy:** the existing `clockmost-deploy` loop takes over unchanged:
+  backup check → deploy → health check → auto-revert plus an ntfy URGENT
+  alert on failure.
+- **Later:** trigger `clockmost-deploy.service` immediately instead of
+  waiting up to 10 min.
+- **Proof:** a trivial felt-core commit shows up live without anyone
+  touching the server.

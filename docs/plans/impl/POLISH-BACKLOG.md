@@ -37,5 +37,23 @@ item says what's still off and where to start.
       variant hasn't been run;
     - kicked props only move sideways;
     - the umbrella is carried closed, by the crook.
+- **Performance pass: benchmark everything, starting with gaming fps**
+  (2026-09-26, WP-22). Mario: "mark it on the to be fixed later, we need to
+  run some performance benchmarks i think in general".
+  - Known: the overlay drops to **1–13 fps while a game runs** (110–119
+    without), because Windows prioritises the foreground game.
+  - Levers to measure:
+    - render cheaper while WP-17 says a game is running (lower
+      `render_scale`, MSAA off, lower fps cap);
+    - vsync off on the side window (+10 fps idle, stability untested);
+    - dropping the side window's render when nothing is on it.
+  - Also benchmark:
+    - voice latency end to end;
+    - router/privacy after WP-36;
+    - felt-animation CPU;
+    - Nitro5 VRAM headroom;
+    - the desktop's GPU cost during games.
+  - Build one repeatable benchmark script so every later change can be
+    compared.
 - **WP-19 sounds deep dive**: see README. Covers laugh/giggle sources, a
   breath-preserving converter, and `ooh`/`mm-hm` mappings.

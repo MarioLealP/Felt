@@ -296,3 +296,13 @@ these as Mario prefers. WP-34 stays last.
 5. How far agents may go without him: PRs only, or auto-merge for trivial
    `agent-ok` work after CI.
 6. Whether "fun mode" is a thing.
+
+## Decisions log
+
+- **2026-09-26, A1 board: Gitea Projects** (Mario: "gitea one is plenty").
+  **Tickets are what Mario reads**: short and self-contained, with What / Why
+  (his quote) / Where / Accept (checkable) / Depends / Evidence, a few lines
+  each. The long WP markdown spec is linked for agents; Mario doesn't need to
+  open it ("I don't wanna parse through them, but I'm totally fine parsing
+  through a ticket"). The spike still confirms required issue-form fields,
+  org-level boards across repos, and moving cards through the API.

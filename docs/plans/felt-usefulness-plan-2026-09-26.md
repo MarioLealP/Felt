@@ -306,3 +306,17 @@ these as Mario prefers. WP-34 stays last.
   open it ("I don't wanna parse through them, but I'm totally fine parsing
   through a ticket"). The spike still confirms required issue-form fields,
   org-level boards across repos, and moving cards through the API.
+- **2026-09-26, C2 email: deny-list plus ambient mentions.** Mario: "it's not
+  what makes it worth interrupting, it's what doesn't … the alerts can be
+  part of her ambience loop, hey btw have you checked that email from …
+  Patreon about ZYX".
+  - Skip Gmail's Promotions and Social categories.
+  - An editable noise list of senders and patterns: review requests,
+    Google account data/security-checkup notices, shop marketing.
+    Mario-triggered voice additions ("I don't care about X emails").
+  - Every other email becomes an ambient-loop topic: a Gemini one-line hook
+    (google_ok), mentioned **once**.
+  - Budget: ~1 per hour max, never over call talking, preferably when idle.
+  - "Tell me more" gives a summary; "draft a reply" saves a Gmail draft;
+    she **never sends** email.
+  - No true interrupts by default.

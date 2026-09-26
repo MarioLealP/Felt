@@ -278,3 +278,23 @@ unit tests against the exact same decision logic real samples flow through,
 same confidence level WP-16's tempo-lock tests had before its live gap
 showed up, so flagged as "logic verified, live end-to-end not yet watched"
 rather than claimed as fully proven.
+
+### Follow-up (2026-09-26): automatic game detection
+
+Mario's review call: "use the window title and recognize every game, no
+need to specify". `signals/games.py` now treats a windowed process as a
+game when its exe is under a library root (Steam `libraryfolders.vdf` ->
+`steamapps\common`, Epic manifests' `InstallLocation`, GOG registry
+`path`, games.toml `roots`), is in Windows' GameConfigStore
+(`MatchedExeFullPath`; `ExeParentDirectory` is only a folder name here, so
+unused), or is named in games.toml `games`. A built-in ignore list
+(launchers, helpers, crash handlers, anti-cheat, VR runtime, Wallpaper
+Engine, embedded web views, `*launcher*`/`*crash*`/... patterns) plus
+browsers/Discord/Felt itself, plus games.toml `ignore`. `details.name` is
+the cleaned window title; tracking is keyed by exe path, with hysteresis
+(a tracked game stays running while its process lives, window or not).
+On this machine: Steam libraries `C:\Program Files (x86)\Steam` and
+`F:\SteamLibrary`, no Epic/GOG, 5 GameConfigStore exes, and `F:\Games`
+added as a games.toml root (Endfield/GRYPHLINK, FFXIV, WoW, Factorio).
+`games.exe` (the GRYPHLINK launcher window) is in games.toml `ignore`.
+Commit `31405ce` in felt-animation, 388 tests passing.

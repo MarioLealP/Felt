@@ -62,7 +62,7 @@ at your own pace, in normal use where possible.
   so `gpu_temp_c` stops being null.
 - [ ] **WP-17 games list:** tell me which games to recognise (the
   `games.toml` list). - Use the window title and recognize every game, no need to specify?
-- [ ] **WP-18 run start/stop clips:** I'll send `locomotion/run/start` and
+- [x] **WP-18 run start/stop clips:** (Claude checked 2026-09-26 by screenshot: both face you. Now enabled for runs.) I'll send `locomotion/run/start` and
   `run/stop` to her while you watch. Are they facing the right way? (Two
   clips from the same batch played facing away.)
 

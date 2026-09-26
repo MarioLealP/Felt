@@ -386,3 +386,19 @@ these as Mario prefers. WP-34 stays last.
     language.
   - Open question: desktop-only, or also reachable from the phone (via
     clockmost + SSO)?
+- **2026-09-26, Track E hosting and structure.** Mario: "server holds the
+  app, desktop and phone for presentation layer … a separate log for the
+  app, like chat which is the whole chat, then her diary from the WP, the
+  daily brief etc".
+  - The app is **served from clockmost** (next to felt-core, behind
+    Authentik SSO). The desktop (Felt window) and phone are presentation
+    clients only.
+  - **Separate logs:**
+    - **Chat** (the full history, plus typing to her);
+    - **Feed** (unprompted remarks, email mentions, alerts; read/unread and
+      actions);
+    - **Daily briefs** (an archive of the morning cards);
+    - **Diary** (WP-26);
+    - later: Reminders and Agents (Track D).
+  - Data stays in felt-core's store on the server. The privacy line is
+    unchanged: nothing new goes to the cloud just because it's displayed.

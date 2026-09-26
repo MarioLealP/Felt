@@ -422,6 +422,57 @@ The full per-clip list is in `CREDITS.md`.
 - Dataset-2 (2,902 more Bandai clips: feminine/youthful walks, waves) wasn't
   used. It's an easy follow-up with the same tools.
 
+### Notes from implementation: walk smoothness fix (2026-09-26)
+
+Mario: "she walks but isn't smooth at all". Diagnosed from a timed capture
+(new `{"screenshot": name, "burst": true}` relay message, every ~85 ms
+through a `POST /presence action=move` walk), with hip x measured from the
+alpha bounding box (scale 157 px/m at half size). Two walks at different
+pivot speeds gave the same scale.
+
+**Ranked causes (evidence):**
+1. **H2 root motion (main cause).** The clips in use, `walk_forward` and
+   `run_forward`, are the only root-motion cycles in the library: the hips
+   move forward 1.46 m and 2.31 m per clip (the bn1/UAL styled walks stay
+   in place). The pivot moved her as well, so hip x was a sawtooth. Before:
+   speed swung from -2.5 to +3.7 m/s (sd 1.79), 9/35 frames went
+   *backwards*, 45 cm off a straight line, and she snapped back 0.7 m on
+   arrival.
+2. **H1 cycle boundary.** The clips pad a **frozen tail**: the whole pose
+   holds from 0.80 s (walk) or 0.60 s (run) to 0.967 s. Each cycle was a
+   one-shot re-sent over the network (`finished` every 1.02-1.03 s: the
+   0.967 s clip plus ~60 ms of latency), with a 0.35 s restart blend. There
+   was no random clip switching, since each cycle tag has one clip.
+3. **H3 speed mismatch.** Her natural pace (drift / real 0.80 s cycle,
+   scaled to her rig) is 1.94 m/s walk and 4.10 m/s run. With the 70° turn,
+   that's 1.82 / 3.85 m/s on screen, against a pivot at 1.3 / 2.6. FK on
+   the source shows the feet planted (toes hold z=0.24 m, then 1.34 m) and
+   hips at a constant 0.061 m/frame, so matching the pace plants the feet.
+4. **H4 (gaze/feet clamp/turn) not supported.** The only other periodic
+   signal is a smooth, gait-locked head bob, the same before and after.
+
+**Fix:**
+- main.gd `_make_in_place_cycle`: for `locomotion` clips that are
+  seamless cycles, it trims the frozen tail and removes the hips' net
+  horizontal drift linearly, and it records the root speed.
+- `_walk_speed`: the pivot moves at that root speed × sin(turn), and falls
+  back to 1.3/2.6 for in-place clips.
+- The new `{"tag", "loop": true}` loops the clip, but only while a move is
+  in progress.
+- felt-animation `walk_to` sends the cycle **once**, looping, arms the
+  arrived waiter before the move, and just waits for `arrived`.
+- main.gd still swaps to idle on arrival. The Part C behaviour (turn-out,
+  turn-back, pivot ownership, walk start/stop disabled) is unchanged.
+
+**After** (2 walks): hip speed 1.27-2.32 m/s (sd 0.29), 0 backward frames,
+4 cm max off a straight line, no mid-walk `finished`, 2-3 cm settle on
+arrival. One 90 ms frozen frame in the second walk didn't line up with
+anything in the log and isn't periodic (likely the capture).
+
+**Not done:** `run/start` and `run/stop` (runs only) still carry 1.1-1.7 m
+of root motion while the pivot is still, so a run still lurches forward and
+slides back at its start and stop. Not verified live for runs.
+
 ---
 
 ## WP-19

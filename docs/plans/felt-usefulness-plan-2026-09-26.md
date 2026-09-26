@@ -320,3 +320,21 @@ these as Mario prefers. WP-34 stays last.
   - "Tell me more" gives a summary; "draft a reply" saves a Gmail draft;
     she **never sends** email.
   - No true interrupts by default.
+- **2026-09-26, C3 Home Assistant: small, asked-only, extensible.** Today
+  it's only lights and a fan (Mario is slowly buying more).
+  - Controls by voice/text for an entity allowlist, plus state questions.
+  - The allowlist grows as devices are added.
+  - Security-type entities (future locks, alarm) need an explicit yes.
+  - **No autonomous presence/game tie-ins for now** (no answer given, so the
+    default stands).
+  - No home-alert relaying.
+- **Hardware note for Track D.** Mario is considering a **new GPU + PSU for
+  the clockmost server**. If it happens:
+  - the WP-36 llama.cpp router (and possibly voice) can move off the
+    Nitro5's 6 GB card;
+  - local coding agents become realistic;
+  - prefer NVIDIA/CUDA, with the PSU sized for 24/7 peak draw plus headroom.
+
+  The D2 spike should include a VRAM-based sizing recommendation (which
+  models the agents and chat need), so the purchase can be decided on
+  numbers.

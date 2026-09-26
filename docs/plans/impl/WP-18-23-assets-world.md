@@ -473,6 +473,33 @@ anything in the log and isn't periodic (likely the capture).
 of root motion while the pivot is still, so a run still lurches forward and
 slides back at its start and stop. Not verified live for runs.
 
+**Follow-up, same day: "she strides always with the same leg".** The
+source cycle is lopsided, and it was before this fix too (the same clip
+data; the old restarts and foot sliding hid it). FK on `walk_forward`: the
+right foot works -0.28..+0.48 m around the hips, the left -0.57..+0.10, so
+the steps alternate 1.10 m (right) and 0.36 m (left). The 0.80 s trim is
+the real cycle (the pose at 0.80 = the pose at 0 within 0.04°), and the
+legs are half a cycle apart; the drift strip only moved the hips linearly.
+In the overlay, the planted-shoe positions gave steps of 0.41 / 1.07 /
+0.39 / 1.06 m. `run_forward` is milder (right -0.42..+0.54, left
+-0.54..+0.35, hips yawed +13..+30°).
+- **Fix (option a):** main.gd `_symmetrise_cycle` runs on the root-motion
+  cycles. It rebuilds each Left bone as the mirrored Right bone half a cycle
+  later (rest-relative deltas in skeleton space, across the plane between
+  the upper legs). Centre bones and the hips position meet their mirrored
+  half-shift halfway. The right side is the template because its foot stays
+  closer under the hips (mean +0.10 m vs -0.24).
+- **After:** steps 0.81 / 0.65 / 0.80 / 0.66 m. The remaining ±0.07 m is
+  the feet's ±0.074 m lateral offset seen at the 70° turn (±0.05 m on
+  screen). Hip speed is 1.39-2.68 m/s, with 0 backward frames. Run poses
+  were checked by montage only (the test run lasted 0.8 s).
+- **Why not option b:** among the symmetric Bandai/UAL walks, `active_001`,
+  `active_002` and `tired_002` have single-frame glitches (60°, 180° and
+  30° jumps). `formal` walks with stiff arms. `childish_002` is clean but
+  strongly styled. All of them are in place, and main.gd doesn't know their
+  pace yet (CREDITS.md speeds). **The default walk is still
+  `locomotion/walk/normal_walk` (`walk_forward`), now symmetrised.**
+
 ---
 
 ## WP-19

@@ -1484,6 +1484,58 @@ from her must still render, which a window that only follows her can't do.
 screen and back; props render on both screens; clicks pass through
 everywhere.
 
+### Spike findings (2026-09-26)
+
+**Result: option 1 works. One full-size transparent window per monitor, from
+one Godot process, is stable on the AMD RX 6700 (driver 32.0.21045.5002,
+OpenGL 3.3 / `gl_compatibility`).** The follow-window (option 2) wasn't
+needed, so it wasn't built.
+
+- **What ran**: the main window covers DISPLAY1 and a `Window` node
+  (`embed_subwindows = false`, transparent, borderless, always on top,
+  unfocusable, `mouse_passthrough`) covers DISPLAY2. Both share the root
+  `World3D` (a child `Window` inherits its parent viewport's world). Each
+  has its own orthographic `Camera3D`, framed through one pixel <-> world
+  map. The windows are 1 px shorter than their monitors, trimmed off the
+  TOP so they still touch side by side (the old 1 px trim off the width
+  would leave a 1 px seam through her).
+- **Stability**: 3.5 min short run, then a 32 min run (17:53–18:25, stopped
+  early at Mario's request: "seems to be working"). Driver
+  `scratch/wp22/stab.py` looped 93 cycles: walk primary <-> DISPLAY2, a wave
+  every third cycle, a prop dissolved in near her each cycle (up to 6, then
+  the oldest dissolved out), and the chest (on DISPLAY2) opened and closed.
+  Mario was **playing a game** (`javaw` "Homestead", GPU at 97–99 %) from
+  before the start until ~18:19.
+  - `scratch/wp22/monitor.ps1` logged every 5 s: overlay and total 3D GPU
+    load, plus System events from `amd*`, `Display` and `Dxg*` providers,
+    TDR ids 4101/141/117, and Application Error/Hang for any process.
+    Result: **0 events** (log `scratch/wp22/monitor.log`). Also 0 in the
+    week before; the old Vulkan crash left no System-log trace.
+  - Both windows stayed normal (never minimized or lost) at all 49
+    checkpoints. No device-lost in the overlay log (`ov_short1_*.log`: only
+    the pre-existing `icon.svg` warning).
+  - One unexplained event before the runs: in the first manual test, the
+    main window was minimized once (`iconic`) during a screenshot burst.
+    It didn't recur. The click-through keeper now restores any minimized
+    overlay window (no activate), so that case self-heals.
+- **Performance while the game had the GPU**: the overlay dropped to
+  **1–13 fps** (occasionally 52–89 when the game idled), using 0–15 % of
+  the GPU itself. Without the game it ran at 110–119 fps. That starvation is
+  pre-existing: WP-21 saw ~1 fps with Endfield running on the single-window
+  build. The single- vs dual-window numbers are in the build notes below.
+- **Click-through**: the old `patch-clickthrough.ps1` only ever patched the
+  first "Engine" window it found, and it only looked at *visible* ones.
+  Godot creates the minimized side window hidden (`WS_VISIBLE` unset,
+  iconic), so the script never saw it. A ctypes keeper (felt-animation
+  `clickthrough.py`) patches every "Engine" window of the PID, visible or
+  not, and then shows it with `SW_SHOWNOACTIVATE`. A `WindowFromPoint`
+  sweep (20 points per monitor, plus 2 on her body) ran at every
+  checkpoint: **0 of 40 and 0 of 2 hits on an overlay window at all 49
+  checkpoints**, i.e. clicks pass through everywhere, including over her.
+- **Found**: bursting full stitched screenshots (two full-window readbacks
+  plus a PNG encode) pins the frame rate at ~2 fps. The burst now takes a
+  desktop-pixel `crop`.
+
 ---
 
 ## WP-23

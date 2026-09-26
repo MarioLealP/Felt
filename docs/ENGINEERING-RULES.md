@@ -202,7 +202,7 @@ project-specific facts (machines, ports, deploy flow); this file is about
     the cloud-safety check can't determine an answer, the safe answer is "no
     capture" / "no cloud call" / "local only" — never the permissive default.
 
-## 10. Tooling (arriving WP-39)
+## 10. Tooling
 
 36. **ruff** (lint + format) on every Python repo (felt-core, felt-animation,
     felt-tray, felt-vision, felt-voice).
@@ -215,6 +215,40 @@ project-specific facts (machines, ports, deploy flow); this file is about
 41. **Gitea Actions CI must be green** on every repo before merge — tests
     plus lint, matching felt-dashboard's existing `ci.yml` `smell` job as the
     template.
+
+Wired up by WP-39 for felt-core/felt-animation/felt-tray/felt-vision (not
+yet felt-voice — read-only access, see its own WP-39 notes) and
+gdlint-only for felt-character-assets; see
+`docs/plans/impl/WP-39-tooling.md` for the exact per-repo baselines
+(pre-existing lint findings and pyright error counts this landed
+without fixing) and CI status.
+
+**Exact commands**, run from a repo root (felt-core/felt-animation/
+felt-tray/felt-vision):
+
+```sh
+uv run ruff check              # lint
+uv run ruff check --fix        # lint, safe autofixes only
+uv run ruff format              # format
+uv run ruff format --check      # format, check only (what CI runs)
+uv run pyright                  # type check
+uv run python scripts/check_pyright_baseline.py   # type check, gated on
+                                                   # the recorded baseline
+                                                   # (what CI runs)
+pre-commit install              # one-time, wires .git/hooks/pre-commit
+uv run pre-commit run --all-files   # run every hook without committing
+```
+
+felt-character-assets (from `felt-godot-overlay/`): `uvx --from
+"gdtoolkit==4.*" gdlint .` (report-only — see its own CI job and
+`gdlintrc`'s `excluded_directories`). **Never run `gdformat` on
+`main.gd`/`props.gd`** until WP-35's split lands (it would clash with
+the split and the `wp35-partial` stash).
+
+A new setting always ships with its `.env.example` key in the **same**
+commit (rule 6); the local `check-env-example` pre-commit hook (where
+one exists — felt-core, felt-animation, felt-tray) fails the commit
+otherwise.
 
 ## 11. Agents
 

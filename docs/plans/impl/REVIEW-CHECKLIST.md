@@ -19,7 +19,7 @@ at your own pace, in normal use where possible.
   she nods sometimes and tilts her head.
 - [ ] **WP-16 music:** play music with a clear beat. After about 15 s she
   bobs to it. A new track sometimes gets a remark.
-- [ ] **WP-18 walking:**
+- [x] **WP-18 walking:** (Mario 2026-09-26: slightly wonky but much better, polish later. See `POLISH-BACKLOG.md`.)
   - she turns and walks with her feet planted, then faces you again;
   - she stands up before walking off if she was sitting;
   - she never slides without a walk cycle.

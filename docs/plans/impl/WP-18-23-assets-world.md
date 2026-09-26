@@ -312,7 +312,8 @@ step).
   (`Idle_Rail_Loop`, now `ambient/lean_rail`). Bandai has no sitting at
   all. WP-23's ledge sit still needs sourcing: felt-t2a-studio ("sits on a
   ledge swinging legs"), a Booth shortlist, or UAL Pro (paid, needs Mario's
-  OK). Nothing was invented.
+  OK). Nothing was invented. **Resolved 2026-09-26:** Mario said to use the
+  existing sit animations for the ledge instead (see WP-23).
 - **`.pck` size**: 376,325,604 → 377,801,664 bytes (+1.48 MB, +0.4 %).
 - The `Failed to find required VRM keys` error prints twice per new `.vrma`
   during export (from the v0 preflight in `vrm_extension.gd`). It's
@@ -905,9 +906,12 @@ physics execution). **Size**: L. **Depends on**: WP-22, WP-21.
     (≈ 680 px). Measure her world height → pixels once and derive these.
   - Anything bigger means going around (walk to where platforms meet) or a
     jump arc.
-  - **Ledge sit**: sit on a window top edge with legs dangling. It needs a
-    ledge-sit clip; source one in WP-18 Part B (Quaternius/Bandai, or
-    felt-t2a-studio: "sits on a ledge swinging legs").
+  - **Ledge sit**: sit on a window top edge with legs dangling. **Decided
+    (Mario, 2026-09-26): use the existing sit animations**, no dedicated
+    ledge clip. Play `sit/chair_start` → `sit/chair_loop` / `idle/sitting` →
+    `sit/chair_end`, with her hips placed on the ledge y, so her legs hang
+    over the edge in front. Match the seat height to the clip's hip height,
+    the same measurement WP-21 needs for the chair.
 - **Events**:
   - a window moves → she rides it (her platform offset stays constant);
   - it's minimised/closed → fall → land → annoyed face → a budgeted "rude!"

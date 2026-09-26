@@ -402,3 +402,12 @@ these as Mario prefers. WP-34 stays last.
     - later: Reminders and Agents (Track D).
   - Data stays in felt-core's store on the server. The privacy line is
     unchanged: nothing new goes to the cloud just because it's displayed.
+- **2026-09-26, C4 reminders: yes, all three kinds**, chosen by phrasing:
+  - time-based ("in 20 min", "at 18:00");
+  - event-based ("after this match" → the WP-17 game_stop; "when I'm back"
+    → AFK/BRB end);
+  - recurring → created as Google Calendar events (so they sync to the
+    phone).
+
+  **Calendar heads-ups** Google-style ("X in 30 min") = WP-31, confirmed in
+  scope. All of them also appear in the app.

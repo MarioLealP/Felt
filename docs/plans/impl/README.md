@@ -60,6 +60,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-22](WP-18-23-assets-world.md#wp-22) | Follow-window overlay + multi-monitor + supersampling | WP-20 | L | ✅ (Mario 09-26: working; gaming fps and a 2 h session go in the performance pass, POLISH-BACKLOG.md) |
 | [WP-38](WP-38-architecture-audit.md) | Architecture audit: system map (`docs/ARCHITECTURE.md`) + engineering rules + ranked, merged cleanup list (pulled forward ahead of WP-23, 09-26) | none | M | 🔎 needs review |
 | [WP-39](WP-39-tooling.md) | Repo tooling: ruff/pyright/pre-commit + Gitea Actions CI (felt-core, felt-animation, felt-tray, felt-vision), gdlint report-only (felt-character-assets), felt-dashboard verified, WP-38's `.env.example`/README gap items | WP-38 | L | 🔎 needs review |
+| [WP-40](WP-40-god-file-splits.md) | God-file splits: felt-animation server.py (2150 LOC) → runtime/behavior/loops/routers/app; felt-core brain.py → brain/ package (deployed); felt-tray capture split + HushState race fix + FeltAnimationClient; dashboard lint | WP-39 | L | 🔎 needs review |
 | [WP-23](WP-18-23-assets-world.md#wp-23) | Desktop world: platforms, ledges, falls, riding windows | WP-22, WP-21 | L | ☐ |
 | **Phase 6: life features** (Mario's picks; ★ = his priority) |||||
 | [WP-25](WP-25-31-life-features.md#wp-25) | Proactive channel: server → desktop pushes | WP-09 | S–M | ☐ |

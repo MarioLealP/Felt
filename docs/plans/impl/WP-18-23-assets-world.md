@@ -1905,8 +1905,8 @@ Mario's feel check:**
   logging of `landed`. 6 tests.
 - **Nothing automatic yet.** Only the debug hooks move her vertically.
 
-**Slice 3 🔎 needs review (felt-animation `2a7c6e3`, felt-character-assets
-`3231e3a`, 2026-09-27; Sonnet agent, not yet live-reviewed by Mario):**
+**Slice 3 ✅ (Mario 2026-09-27 "looks fine"; + sync fix `2da622c` and the Ctrl+Alt+G "go to the ledge under the cursor" action, felt-animation `ddced58` / felt-tray `0f2777c`; felt-animation `2a7c6e3`, felt-character-assets
+`3231e3a`, 2026-09-27; Sonnet agent):**
 - **`navigation.py` (felt-animation, pure):** BFS over the platform graph -
   `Walk`/`HopDown`/`Climb` steps. Hop down: any lower platform whose
   x-range overlaps hers. Climb: only when the rise is <= ~2 m (`ppm` from
@@ -1964,3 +1964,129 @@ Mario's feel check:**
   root-motion guess, the platform-roam mood weights, and the DISPLAY2 seam
   hop/climb specifically need his live judgement. Ledge sit (slice 5) and
   window events (slice 4) are still open.
+
+**Slice 4 🔎 needs review (felt-animation, felt-character-assets; 2026-09-27;
+Sonnet agent, no live session running - see "Not done" below):**
+
+- **New module `window_events.py`** (felt-animation), kept separate from
+  loops.py per the WP's own instruction. Pure functions (unit tested on
+  synthetic data, same style as world.py/navigation.py) plus thin async
+  orchestrators loops.py's world tick calls:
+  - `detect_ride`/`try_ride`: compares the SAME hwnd's raw rect between
+    this tick and the previous one (needed a new `AppState.world_windows`
+    cache of the raw, unsegmented window list - the occlusion-clipped
+    `Platform` segments alone can't answer "did the window itself move").
+    A move within her platform's x-range after applying the same dx ->
+    `{"shift": {"dx_px", "y_px"}}` (new main.gd message, instant - no walk,
+    no fall/land clip); off the end -> falls through to the ordinary
+    vanish/fall sync unchanged. Runs before `_sync_platform_support` each
+    tick and skips it outright on a successful ride (a ride is not a fall).
+  - `classify_fall_cause`: reused `world.covers_whole_monitor`/
+    `world.monitor_for_point` (made public this slice - they were the
+    right check already, just underscore-private; renamed rather than
+    duplicated, per ENGINEERING-RULES §1.3/§1.5) to tell "vanished" (hwnd
+    gone - closed or minimised, indistinguishable and both fine per the
+    WP), "maximised" (hwnd still there, now covering its monitor's work
+    area) and "moved_away" (hwnd still there, elsewhere/occluded) apart.
+    `loops._sync_platform_support` now takes the tick's raw `windows`/
+    `monitors` (both default to `()` - every pre-slice-4 test call site
+    keeps working unchanged) and records the cause on
+    `AppState.pending_fall_cause` right when it sends the real `{"support"}`
+    that will make her fall - never for a deliberate nav_executor
+    hop/climb, which never calls this function.
+  - `react_to_landing`, fired from `AppState._on_world_settled` on a real
+    `{"landed"}` whose fall carried a cause: **non-verbal always** -
+    `emotion/annoyed` (vanished/moved_away) or `emotion/surprised`
+    (maximised) via the existing `behavior.run_sequence`/
+    `library.resolve_known_tag` path (both tags already exist in the
+    library, confirmed on disk: `emotion/annoyed`, `emotion/surprised`).
+    **Speech only through the budget**: Mario's brief said to reuse
+    whatever `play_presence_line` does rather than a fresh felt-core round
+    trip for a canned line - so this is a small local pool
+    (`WINDOW_ANNOYED_LINES = ("rude", "standing_there", "wow_okay")`,
+    sounds.json's `presence/<line>_*.wav` convention, same graceful
+    "uncurated -> silently nothing" degrade every other presence line
+    already has), rotated with no immediate repeat
+    (`pick_annoyed_line`), a 45s cooldown
+    (`WINDOW_EVENT_SPEECH_COOLDOWN_S`) so a burst of the same cause can't
+    become a burst of lines, and gated by the new
+    `FELT_WINDOW_EVENT_SPEECH_ENABLED` config/`.env.example` setting
+    (item 5's "config constant to disable window-event speech"). A
+    maximise never speaks (a judgement call: "surprised", not "rude" -
+    not Mario's own wording, flagged here).
+  - `maybe_retreat_from_fullscreen`: the foreground window (new
+    `windows_win32.foreground_window_rect`, deliberately NOT filtered
+    through `enumerate_windows_z_order`'s title/tool-window rules, since
+    some exclusive-fullscreen games/players report an empty title that
+    enumeration would otherwise skip) covering her own monitor's FULL
+    bounds (`monitor.bottom`, taskbar included - not the work-area check
+    `covers_whole_monitor` uses for maximised) -> `plan_route` +
+    `nav_executor.run_plan` (background task) to a corner of the OTHER
+    monitor's floor. `AppState.fullscreen_retreat_active` latches so it
+    plans once per episode, not every 4 Hz tick, and clears the moment
+    the foreground window there is no longer fullscreen. No-op with one
+    monitor (`len(monitors) < 2`).
+  - **New `AppState` fields**: `world_windows`, `pending_fall_cause`,
+    `fullscreen_retreat_active`, `window_event_last_line`,
+    `window_event_last_spoken_at`.
+  - **main.gd**: `_handle_shift` (new, next to `_handle_support`/
+    `_handle_hop`) - `_character_pivot.position.x -= dx_px / _ppm` (same
+    sign convention as `_px_to_world`'s x) plus the same "snap `_support_y`
+    and clamp feet" logic `_handle_support`'s upward case already used,
+    skipped outright while `_falling`/`_hopping`/`_climbing`. Documented in
+    `felt-character-assets/README.md`'s relay table.
+- **Tests**: `tests/test_window_events.py`, 28 new (pure ride/cause/
+  fullscreen/retreat-target/annoyed-line logic, plus the async
+  orchestrators against fakes, following test_platform_tracking.py/
+  test_nav_executor.py's patterns) - `uv run python -m pytest -q`: 567
+  passed total (539 before this file existed, +28 new, 0 regressions).
+  `test_platform_tracking.py`'s shared
+  `_setup` helper needed one addition (`pending_fall_cause` reset) - the
+  new field is a real singleton (`runtime.state`) attribute that
+  `_sync_platform_support` now always sets on a real fall, and that
+  file's own tests call it directly without going through the full
+  `_on_world_settled`/task machinery, so an unreset stale value from one
+  test crashed a later synchronous test's `asyncio.create_task` (no
+  running loop) - found by running the full suite, not just the new
+  file, fixed the same way `pending_platform_id` was already isolated
+  there.
+- **Verification done**: `uv run python -m pytest -q` (567 passed),
+  `ruff check`/`format --check` clean, `ty check` clean,
+  `scripts/check_env_example.py` OK, headless Godot export
+  (`Godot_console.exe --headless --export-release "Windows Desktop"`)
+  exit=0, no script errors in the export log (only the known, harmless,
+  pre-existing "Failed to find required VRM keys" v0-preflight prints -
+  see WP-18's own notes on that).
+- **Guesses / judgement calls flagged for Mario**:
+  - Ride detection uses the moving window's OWN rect (not the
+    occlusion-clipped platform segment) for the dx/range check - occlusion
+    changes introduced by the same drag aren't specifically re-validated
+    on the ride tick itself; the very next tick's ordinary sync would
+    catch her floating if that ever actually happens live.
+  - `moved_away` (a window moved elsewhere without dragging her, or got
+    occluded where she stood) gets the SAME `emotion/annoyed` + budgeted
+    line treatment as `vanished` - the WP's own text only spells out
+    vanished/closed explicitly; grouping moved_away with it (rather than
+    inventing a fourth silent case) is this session's call, not Mario's.
+  - Maximise reaction is non-verbal only (no speech at all, not merely
+    lower-budget) - the WP said "speech optional/budgeted" for maximise,
+    read here as "off by default" since Mario's own example lines
+    ("Rude!", "Hey! I was standing there.") read as annoyance, not
+    surprise.
+  - The other-monitor retreat corner is a fixed near-edge margin
+    (`RETREAT_CORNER_MARGIN_PX = 80px`) toward whichever OTHER monitor
+    sorts first (only two monitors exist on Mario's desktop today, so
+    "the other one" is unambiguous there); with 3+ monitors this always
+    picks the same one rather than the nearest.
+  - `standing_there`/`wow_okay` are brand-new presence-line ids with no
+    curated `.wav` yet (only `rude`/`back`/`zip_it` have takes from
+    WP-19) - the pool degrades to whichever of the 3 has real files, and
+    is completely silent until Mario curates at least one.
+- **Not done / live-unverified** (no felt-animation/overlay running this
+  session, per Mario's own bounds for this task - "don't restart Felt"):
+  everything above is unit-tested and export-clean only, not judged live.
+  Specifically unverified: riding a real dragged window, the annoyed
+  reaction/line actually firing on a real minimise/close, the surprised
+  reaction on a real maximise, and the fullscreen retreat actually walking
+  to the other monitor and not re-triggering while the fullscreen episode
+  continues. Ledge sit (slice 5) is still open after this.

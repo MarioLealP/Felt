@@ -1818,3 +1818,149 @@ physics execution). **Size**: L. **Depends on**: WP-22, WP-21.
   platform for > 2 s, drop her to the nearest floor).
 
 Mario judges the feel.
+
+### WP-23 build notes (2026-09-27)
+
+**Starting state (explorer map):**
+- Movement is **x-only**. `main.gd` clamps her feet to one global
+  `FLOOR_Y = 0` every frame (`_clamp_feet_to_floor`, ~L1731). There is no
+  gravity, jump or fall code anywhere.
+- One borderless always-on-top window **per monitor** covers the whole
+  screen (minus 1 px), all sharing one 3D world. Pixels map to world
+  linearly and identically on every monitor: `_px_to_world` / `_world_to_px`,
+  `_ppm`, `_origin_px`, `_cam_center_y`, reported to felt-animation in
+  `{"geometry": …}`.
+- Window enumeration exists only in felt-tray `capture_win32.py`
+  (`enumerate_windows`, for screenshots). It has DPI-aware DWM frame bounds
+  and skips cloaked, minimised and tool windows, but it **drops the z-order**.
+- The clips `air/{jump_start,fall,land_soft,land_hard}`, `climb/{1m,2m,vault}`,
+  `sit/chair_*` and `recover/getup_*` are on disk. Nothing plays them.
+
+**Slices, each shippable and each judged live by Mario:**
+1. **World model (felt-animation, pure Python + a Win32 adapter).**
+   - `world.py`: z-ordered windows → visible top-edge segments (subtract the
+     windows above) + per-monitor floors + the clearance rule →
+     `platforms[{id, hwnd, x0, x1, y}]` in desktop px, then world units via
+     the overlay geometry.
+   - A 4 Hz loop and `GET /world` for debugging. Fully unit-tested on
+     synthetic layouts (including the DISPLAY2 2×2 seam at y≈897).
+   - No movement change yet.
+2. **Vertical support in main.gd.**
+   - `FLOOR_Y` becomes a per-body `support_y`, set by
+     `{"support": {"y": …}}`.
+   - When the support drops away: gravity fall → `air/fall` →
+     `air/land_soft`/`land_hard` (above ~300 px) → report
+     `{"landed": {"height_px": …}}`.
+   - Watchdog: >2 s unsupported → drop to the nearest floor.
+3. **Getting around.**
+   - A path over the platform graph: walk, hop down (`jump_start`→`fall`→
+     `land`), climb ≤ 2 m steps (`climb/1m|2m`), otherwise route around.
+   - Mood-weighted destination choice replaces the x-only ambient wander.
+4. **Window events.**
+   - Ride a moving window (a constant offset).
+   - Minimise or close → fall + annoyed + a budgeted "rude!".
+   - Maximise → fall to the floor.
+   - Fullscreen → retreat to the other monitor's corner.
+5. **Ledge sit.** `sit/chair_*`, with her hips on the ledge y and legs over
+   the edge.
+
+**Slice 1 ✅ (felt-animation `3ad84d4`, 2026-09-27; built by a Sonnet
+agent, reviewed live):**
+- **What it added:**
+  - `world.py` (`compute_platforms`, pure);
+  - `windows_win32.py` (z-ordered enumeration, monitors with work areas);
+  - `world_loop` at 4 Hz, logging only on change;
+  - `GET /world`;
+  - 8 synthetic-layout tests.
+- **Live check on Mario's desktop:**
+  - monitors: 0..3440×0..1440 (primary) and 3440..5360×357..1437 (side);
+  - platforms: `floor:0` y=1440, `floor:1` y=1437, and **the 2×2 seam
+    emerges by itself** from the snapped bottom-left quadrant window
+    (x 3440–4400, y 897).
+  - So the `extra_seams` parameter isn't needed live, and there's no
+    hardcoded seam.
+  - Maximised windows and top edges too near the monitor top (y 142, y 357)
+    are correctly dropped.
+  - The overlay's own windows don't enumerate at all (they're
+    unfocusable/tool windows).
+- **Still unverified:** `her_height_px` = ppm × character height from the
+  overlay geometry report (540 fallback). Check `GET /world` once
+  felt-animation restarts on this build.
+
+**Slice 2 ✅ (felt-character-assets `63564e4`, felt-animation `4330a96`; Mario 2026-09-27: "fall looks amazing";
+Sonnet agent, diff reviewed; the headless export compiled clean). Needs
+Mario's feel check:**
+- **What it does in `main.gd`:**
+  - `FLOOR_Y` became `_support_y`.
+  - `{"support":{"y_px"}}`: below her feet → a gravity fall (9.8 m/s²,
+    12 m/s terminal) with `air/fall` re-triggered while falling, then
+    `air/land_hard` (drop > 300 px) or `land_soft`, and she broadcasts
+    `{"landed":{"height_px"}}`. Above her feet → an instant snap
+    (climbing is slice 3).
+  - `{"lift":{"height_px"}}` is the test hook.
+  - Watchdog: falling for > 2 s, or more than 2× her height below the fall
+    start → snap to support, and `landed` gets `watchdog: true`.
+  - A `move` that arrives mid-fall is queued (last one wins).
+- **felt-animation:** `POST /debug/drop` and `POST /debug/support`, plus
+  logging of `landed`. 6 tests.
+- **Nothing automatic yet.** Only the debug hooks move her vertically.
+
+**Slice 3 🔎 needs review (felt-animation `2a7c6e3`, felt-character-assets
+`3231e3a`, 2026-09-27; Sonnet agent, not yet live-reviewed by Mario):**
+- **`navigation.py` (felt-animation, pure):** BFS over the platform graph -
+  `Walk`/`HopDown`/`Climb` steps. Hop down: any lower platform whose
+  x-range overlaps hers. Climb: only when the rise is <= ~2 m (`ppm` from
+  the overlay's geometry report converts px to metres), picking the
+  smallest clip (`climb/1m`/`climb/2m`) that covers it; too tall -> no
+  direct edge, routed via a floor instead (every floor is mutually
+  walk-connected, since WP-22's walk already spans monitors). 11 tests,
+  including the DISPLAY2 seam (897 px on the side monitor, a climb/2m from
+  that floor) and an unreachable/too-tall case.
+- **Platform tracking (felt-animation):** `AppState.current_platform_id`/
+  `pending_platform_id`. `loops._sync_platform_support` runs every world
+  tick (4 Hz): anchors to the floor under her on the first tick; otherwise,
+  if her platform vanished or no longer contains her x, sends
+  `{"support"}` toward the highest platform below her feet (`world.
+  pick_landing_platform`, else the floor) - skipped while
+  `state.behavior.base_busy` (an active walk/fall/hop/climb already owns
+  her). `pending_platform_id` only commits to `current_platform_id` on a
+  real `{"landed"}`/`{"climbed"}` notice (`AppState._on_world_settled`).
+- **main.gd:** `{"hop": {"y_px"}}` (plays `air/jump_start`, then the
+  existing slice-2 fall) and `{"climb": {"y_px", "meters"}}` (plays
+  `climb/1m`/`climb/2m`, lerps `character.position.y` to the new support
+  over the clip's own duration - **guess:** these clips' root motion isn't
+  trusted to raise her the full step, flagged for Mario to judge live).
+  Both suspend feet-clamping and queue a `move` the same way a fall
+  already does, and reply `{"landed"}`/`{"climbed"}` on completion.
+  Documented in `felt-character-assets/README.md`.
+- **`nav_executor.py` (felt-animation):** runs a plan step by step, holding
+  the base lock for the whole thing (so the tick-based glue above doesn't
+  race it); each `HopDown`/`Climb` step is bounded by an 8 s timeout
+  (`wait_for_landed`/`wait_for_climbed`) and aborts the plan on a miss.
+  **Known gap:** a `Walk` step's own timeout doesn't currently abort the
+  plan the same way (`walk_body` doesn't report success/failure) - only
+  logs a warning. 6 tests against fakes.
+- **Ambient wander (felt-animation):** `_ambient_walk` picks a platform
+  target `PLATFORM_ROAM_CHANCE` (0.35) of the time instead of a floor x -
+  mood-weighted (`_platform_roam_weight`): boredom favours further/higher
+  platforms, low energy ("sleepy") favours nearer/lower ones, a small
+  constant pull toward the cursor stands in for "curious" (**guess:**
+  mood.py has no dedicated curiosity axis - see `MOOD_KEYS`), and a slight
+  penalty near the (approximated - the topmost window-kind platform, not a
+  real foreground-window query) focused window's centre. Never a platform
+  narrower than her width (`_her_width_px`, via `ppm` and
+  `character_width`). `FELT_PLATFORM_ROAM_ENABLED` (default on) disables it
+  entirely.
+- **`POST /debug/goto`** `{"platform_id", "x_px": float|null}` plans and
+  runs a route in the background; `GET /world` now also reports
+  `current_platform_id`.
+- **Verification done:** `uv run python -m pytest -q` (534 passed), `ruff
+  check`/`format --check` clean, `ty check` clean, `check_env_example.py`
+  OK, headless Godot export compiled clean (gdlint's pre-existing main.gd
+  findings are unrelated baseline noise per ENGINEERING-RULES.md's
+  report-only convention, not something this slice touched).
+- **Not done / unverified:** nothing live-checked on Mario's real desktop
+  yet (no running felt-animation/overlay in this session) - the climb
+  root-motion guess, the platform-roam mood weights, and the DISPLAY2 seam
+  hop/climb specifically need his live judgement. Ledge sit (slice 5) and
+  window events (slice 4) are still open.

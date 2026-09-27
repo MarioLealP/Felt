@@ -61,8 +61,8 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-38](WP-38-architecture-audit.md) | Architecture audit: system map (`docs/ARCHITECTURE.md`) + engineering rules + ranked, merged cleanup list (pulled forward ahead of WP-23, 09-26) | none | M | 🔎 needs review |
 | [WP-39](WP-39-tooling.md) | Repo tooling: ruff/pyright/pre-commit + Gitea Actions CI (felt-core, felt-animation, felt-tray, felt-vision), gdlint report-only (felt-character-assets), felt-dashboard verified, WP-38's `.env.example`/README gap items | WP-38 | L | 🔎 needs review |
 | [WP-40](WP-40-god-file-splits.md) | God-file splits: felt-animation server.py (2150 LOC) → runtime/behavior/loops/routers/app; felt-core brain.py → brain/ package (deployed); felt-tray capture split + HushState race fix + FeltAnimationClient; dashboard lint | WP-39 | L | 🔎 needs review |
-| [WP-53](WP-53-cicd.md) | Push to main = deployed: CI → image to Gitea registry → bot tag bump in infra → deploy loop (health check, auto-revert) → ntfy alerts; felt-core first, then 5 server apps, Nitro5, desktop via WP-34. KISS: no k3s/ArgoCD | WP-39 | L | ☐ (next; needs Mario to create 2 scoped tokens) |
-| [WP-23](WP-18-23-assets-world.md#wp-23) | Desktop world: platforms, ledges, falls, riding windows | WP-22, WP-21 | L | ☐ |
+| [WP-53](WP-53-cicd.md) | Push to main = deployed: CI → image to Gitea registry → bot tag bump in infra → deploy loop (health check, auto-revert) → ntfy alerts; felt-core first, then 5 server apps, Nitro5, desktop via WP-34. KISS: no k3s/ArgoCD | WP-39 | L | 🟡 phase 1 live for felt-core (09-27); vendored app/ removal + phase 2 apps left |
+| [WP-23](WP-18-23-assets-world.md#wp-23) | Desktop world: platforms, ledges, falls, riding windows | WP-22, WP-21 | L | ✅ 09-27 (all 5 slices; slice 5 "good enough" after the seated-loop fix `b9e4bba`) |
 | **Phase 6: life features** (Mario's picks; ★ = his priority) |||||
 | [WP-25](WP-25-31-life-features.md#wp-25) | Proactive channel: server → desktop pushes | WP-09 | S–M | 🔎 needs review (09-27) |
 | [WP-26](WP-25-31-life-features.md#wp-26) | ★ The diary: day-to-day continuity | WP-07, WP-15, WP-25 | M | ☐ (readable, cheeky: decided) |
@@ -78,7 +78,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | **Phase 7: packaging (last, after everything else is ticked)** |||||
 | [WP-34](WP-34-packaging.md) | One clean install per device: desktop = single tray app supervising everything (no console/PowerShell/scheduled tasks, Ollama folded in); Nitro5 = one install + model manifest; server bootstrap; `FRESH-INSTALL.md` | all WPs | XL | ☐ (first decision: Smart App Control / code signing) |
 | **Anytime** |||||
-| [WP-24](WP-24-hygiene.md) | Repo hygiene (AnimToVrmaConverter junk, dead code, felt-vision docs) | none | S | ☐ |
+| [WP-24](WP-24-hygiene.md) | Repo hygiene (AnimToVrmaConverter junk, dead code, felt-vision docs) | none | S | ✅ 09-27 |
 
 Not packaged yet (later, per the review doc): sentence streaming (B-3), the
 TTS engine / RVC speed-up (B-4), automatic memory (D-2), hands-free voice

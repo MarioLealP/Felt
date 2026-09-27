@@ -55,3 +55,45 @@ other WPs).
   no longer tracks packages or logs.
 - The Godot overlay still builds and runs.
 - felt-core tests are green, and it's deployed if felt-core changed.
+
+## Status (2026-09-27)
+- **AnimToVrmaConverter** `4c60c1a`:
+  - 24 `.unitypackage`/`.log` files are untracked (`git rm --cached`; the
+    files are still on disk);
+  - `.gitignore` gained `*.log`, `*.unitypackage`, an explicit rule for the
+    **paid Movement Animset Pro** pack (verified with `git check-ignore`),
+    and the loose root `MovementAnimsetPro_*.vrma`/`MaskmanFace_*.vrma`
+    outputs;
+  - the README notes that history still has the big files (a rewrite is an
+    option only);
+  - the remote is private Gitea.
+- **Still open, and it's Mario's call:** uncommitted edits in
+  `Convert-AnimToVrma.ps1` + `VrmaCliConverter.cs`.
+  - They date from **09-22**, before the 09-26 WP-18B "multi-take FBX
+    converter" commit.
+  - They comment out the package import, hardcode a `MovementAnimsetPro`
+    folder, and add per-clip multi-export. This looks like an earlier
+    agent's hack that WP-18B superseded.
+  - Also untracked and left alone: `My project (1)/` (a whole project copy)
+    and the imported asset folders `!dalha_はなみず/` and `=1000=/`.
+- **main.gd** `0aed5c5`: the dead `_unhandled_input` number-key/test
+  handler is removed (27 lines). `SMALL_TEST_WINDOW` was already gone. The
+  stale `all_bones.txt` (an old UTF-16 Godot console log, unreferenced) is
+  deleted. The export builds clean.
+- **felt-vision** `7db4cb5` → `a74f525`: the repo-root `.env` loads via
+  **pydantic-settings** (`VisionSettings`). Mario: "use pydantic-settings
+  instead of pythondotenv". The process env still wins. README and
+  `.env.example` are updated. The README had already been written.
+- **felt-core:** `chat_ws` logging was already done (the rules-33/34 audit).
+  **Plugin registry cache** `31d27d1`: it rescans only when a manifest or a
+  plugin's `skill.py` changes (keyed on file mtimes, because a dir mtime
+  misses edits inside subfolders). The test is `test_plugin_cache.py`.
+- **Closed 2026-09-27.** Mario: "feel free to delete whatever isnt used".
+  Auto mode blocks agent deletes, so Mario ran them:
+  - the WIP was stashed (`stash@{0}`);
+  - the 208 loose root `.vrma` outputs, `My project (1)/` and the
+    re-importable `!dalha_はなみず` pack were deleted.
+  - **Kept:** `=1000=` (no other copy exists). The imported packs
+    (Kipfel, Tako.S, MovementAnimsetPro, Violet) are source material and are
+    now **gitignored**, so paid content can't be pushed (`c0d9a55`).
+  - AnimToVrma `git status` is clean.

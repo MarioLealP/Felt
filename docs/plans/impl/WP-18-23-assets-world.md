@@ -2091,7 +2091,7 @@ Sonnet agent, no live session running - see "Not done" below):**
   to the other monitor and not re-triggering while the fullscreen episode
   continues. Ledge sit (slice 5) is still open after this.
 
-**Slice 5 🔎 (felt-character-assets `6f6caf8`, felt-animation `f198006`,
+**Slice 5 ✅ (Mario 2026-09-27 "good enough", after the feet→hips blend `9b1f503` and the seated-loop re-trigger `b9e4bba`; felt-character-assets `6f6caf8`, felt-animation `f198006`,
 2026-09-27; Sonnet agent, no live session running - bounds for this task
 said not to restart Felt):**
 

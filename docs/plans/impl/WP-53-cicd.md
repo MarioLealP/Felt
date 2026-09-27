@@ -63,6 +63,65 @@ never an alarm.
 5. Note: nova-lemuria has its own pipeline. Check it against the same
    standard; don't migrate it blindly.
 
+## Phase 1 notes (felt-core, 2026-09-27)
+
+**Status:** accept #1 ✅. At 17:31 felt-core `bbf73c8` went live on its own
+(`git.clockmost.com/benylin/felt-core:bbf73c83a469`, healthy) after a bare push.
+- **#2 ✅.** Canary `66d6c9b`: the test failed, an urgent ntfy "felt-core CI
+  failed" arrived, and nothing deployed. The canary was reverted in `70ff303`.
+- **#3 accepted without a staged test.** Mario: "assume it's working". The
+  17:01 run's spurious `auth:403` rollback exercised the real path: probe fail →
+  ROLLBACK → last-good redeployed, plus an `auto-revert` infra commit.
+- **#4 ✅.** The vendored `projects/felt-core/app/` was removed (infra
+  `706ae1e`), along with a stale untracked plaintext `app/.env` from 09-11
+  that nothing referenced. `00-implementer-context.md`'s old "copy into the
+  vendored app" deploy steps were replaced with "push main".
+- **Phase 1 is done.** Next is phase 2 (clockmost-console, drive-rag,
+  poe2rag, herosiege-filter, caddy).
+
+**How it's built vs. the design:**
+- Build, push and promote are one CI job: a shared `deploy.sh` in public
+  `Benylin/ci-workflows`, curl'd and run.
+  - Gitea's cross-repo `workflow_call` failed silently, so it isn't used.
+  - The secrets (registry token, infra deploy key, infra repo URL, known_hosts,
+    optional ntfy) are user-level, so they're shared by every repo.
+- Design step 4 ("trigger the deploy right away") was done by **polling**, not
+  a push trigger (Mario chose option B, 2026-09-27). The deploy timer now runs
+  every **1 min** (was 10). An idle tick is one local `git fetch`, then exit.
+  - It needs no new credential and opens no CI→server path. It's the same
+    pull model as ArgoCD and OpenShift image triggers.
+  - The timer is now tracked as `ops/clockmost-deploy.timer`.
+  - The loop picks the bump up on its next tick. It also exits silently if the git
+  lock is busy; that happened once and cost one tick.
+- The server pulls with `claude`'s `docker login` (a package:read token).
+
+**Problems found and fixed on the way:**
+1. **Split-horizon DNS.** The tunnelled names had Cloudflare AAAA records, and
+   Cloudflare 403s the server itself. That broke `docker login` and the `auth`
+   route probe, and the probe failure caused a spurious auto-revert.
+   - Fix: the server's `/etc/hosts` pins git, auth, herosiege and twitch-* to
+     `192.168.1.110`.
+2. **CrowdSec appsec dropped registry layer uploads** as 403 ("request body
+   exceeded maximum allowed size"). Through Cloudflare, the check timed out and
+   returned a 500 instead.
+   - Fix: the Caddyfile `@waf` exempts only `PATCH|PUT
+     git.clockmost.com/v2/<owner>/<image>/blobs/uploads/<uuid>` (Mario: exact
+     endpoint, no `/v2/*`).
+3. **The server's infra checkout lost its Gitea token** (revoked), which
+   silently stopped the deploy loop for every app.
+   - Fix: it now uses an SSH deploy key with write access (`gitea-local` alias,
+     `~/.ssh/id_ed25519_infra`).
+4. **The first CI run "succeeded" by digest, but the push had failed.** The
+   digest came from `docker build -q`. Check the registry or Gitea log, not the
+   digest.
+
+**Still to do (phase 1):**
+- accept #2: a failing test → ntfy, and no deploy;
+- accept #3: a broken health check → auto-revert and ntfy;
+- confirm `NTFY_TOKEN` is set so failures actually alert;
+- delete the vendored `projects/felt-core/app/`;
+- optional: build the immediate deploy trigger.
+
 ## Accept
 
 - A trivial commit pushed to felt-core `main` is live on the server with no

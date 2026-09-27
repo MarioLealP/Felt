@@ -2,7 +2,9 @@
 
 Live bugs Mario reported. Each one moves to a Gitea ticket once WP-37 is up.
 
-## B-1: repetitive "you're crushing it" screen reactions during games (HIGH)
+## B-1: repetitive "you're crushing it" screen reactions during games (HIGH) — root cause fixed 2026-09-27
+
+**Root cause (2026-09-27):** a feedback loop in felt-animation `tone.py`. The "streak" came from her OWN reaction emotions, and "A 3rd win in a row - go big" told the model to escalate hype, which extended the streak. The fix: streak lines now damp (felt-animation `ab9ed38`), and her recent remarks are fed back last (felt-core `0b09e03`). The cadence part (session-aware cooldown) is still open. See the personality plan.
 
 **Mario, 2026-09-27:** "she needs to stop saying you crushing it every 5s or
 I will go insane, she always uses the exact same comment or very similar when

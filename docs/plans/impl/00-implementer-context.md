@@ -129,24 +129,21 @@ extend this protocol. Keep it additive and document new messages in
   the foreground to see output until WP-01 adds file logs.
 - **felt-core tests**: `cd E:\Felt\felt-core; uv run pytest -q` (135 passing
   at baseline; must stay green).
-- **Deploying felt-core** (the server runs a *vendored copy*; pushing
-  felt-core's own repo does NOT deploy it):
-  1. Commit and push in `E:\Felt\felt-core`.
-  2. Copy the tree to the server's vendored copy:
-     `git -C E:/Felt/felt-core archive HEAD | ssh clockmost-claude "tar -x -C /home/clockmost-infra/projects/felt-core/app"`
-     (or `scp` individual changed files into
-     `/home/clockmost-infra/projects/felt-core/app/...`).
-  3. On the server, in `/home/clockmost-infra`: `git add
-     projects/felt-core/app && git commit -m "felt-core: <what>" && git push`
-     (its origin is the local Gitea). **You must push**: the deploy loop
-     resets to origin and would otherwise revert you.
-  4. Trigger the deploy: `ssh clockmost-claude "sudo -n -v 2>/dev/null; sleep 1; sudo -n systemctl start clockmost-deploy.service"`,
-     then watch it with `ssh clockmost-claude "sudo -n journalctl -u clockmost-deploy.service -n 30 --no-pager"`.
-     Look for `deployed felt-core`; it auto-reverts on a failed health
-     check.
-  5. Verify live: `curl` the changed endpoint at `http://192.168.1.110:8420`,
-     and read `docker compose logs -t --since 5m felt-core` in
-     `/home/clockmost-infra/projects/felt-core`.
+- **Deploying felt-core: just push `main`** (WP-53, since 2026-09-27).
+  - CI runs ruff, ty and pytest, builds
+    `git.clockmost.com/benylin/felt-core:<sha>`, and bumps the tag in
+    clockmost-infra. The server's deploy loop (every 1 min) pulls it and
+    health-checks it. It auto-reverts and sends ntfy on failure.
+  - **Do not** copy code into `projects/felt-core/app` (the old vendoring,
+    now removed from the flow) and don't build on the server.
+  - A red CI run sends an urgent ntfy and nothing deploys.
+  - To confirm it's live:
+    `ssh clockmost-claude "docker ps --filter name=felt-core-felt-core --format '{{.Image}} {{.Status}}'"`
+    shows `…:<your 12-char sha>` and `healthy`. The deploy log is
+    `/var/log/clockmost-deploy.log`.
+  - Verify the behaviour: `curl` the changed endpoint at
+    `http://192.168.1.110:8420`, and run
+    `docker logs --since 5m felt-core-felt-core-1`.
   - Secrets (Gemini key, etc.) are in that project's sops `secrets.env`. Don't
     print or commit them. New *non-secret* settings go in felt-core's
     `config.py` with defaults plus `.env.example`.

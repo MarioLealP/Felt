@@ -38,6 +38,94 @@ desktop-initiated (request → reply), and there's no server → desktop path.
 /v1/proactive/debug`, only when `FELT_DEBUG=1`) is spoken on the desktop
 within ~2 s; an expired one never is.
 
+### Notes from implementation (🔎 needs review, 2026-09-27)
+
+**felt-core** (`src/felt_core/`):
+- `db.py`: `proactive` table exactly as specced (`id, kind, text,
+  payload_json, created_at, expires_at, delivered_at`) — `animation_tag`/
+  `emotion` live inside `payload_json`, not extra columns, since the WP
+  spec's table listing is exactly those six. Helpers:
+  `insert_proactive`, `claim_next_proactive` (atomic select+mark-delivered
+  in one transaction, excludes expired rows so an expired item is
+  structurally unreachable, not just filtered by a caller),
+  `get_proactive_item`, `requeue_proactive` (clears `delivered_at` only if
+  not expired), `prune_expired_proactive` (called at startup, same
+  convention as `delete_old_latency_rows`).
+- `proactive.py` (new module): `enqueue_proactive(config, kind, text, *,
+  animation_tag=None, emotion=None, ttl_s=600)` — the one function WP-26/
+  WP-31 should call; `wait_for_next(config, timeout_s)` — the long-poll,
+  polling `claim_next_proactive` every 0.5 s. **Deviation from the spec's
+  "async wait with a small internal poll/asyncio.Event"**: implemented as
+  plain `asyncio.sleep`-paced polling, no `asyncio.Event`. A module-level
+  `asyncio.Event` binds to whichever event loop first waits on it, and
+  felt-core's own test suite (a fresh loop per async test) hit "Event is
+  bound to a different event loop" immediately — not worth a per-loop
+  lazy-Event workaround for a 0.5 s worst-case wakeup delay in a
+  single-process app. `clamp_timeout` bounds `?timeout=` to 1–30 s.
+- `api.py`: `GET /v1/proactive/next?timeout=` (204 on timeout, JSON
+  `{id, kind, text, animation_tag, emotion}` otherwise), `GET
+  /v1/proactive/{id}/audio` (reuses `tts_cache`/`strip_for_tts` exactly
+  like `_synthesize_reply`, just returning the bare WAV with no X-*
+  headers), `POST /v1/proactive/{id}/requeue` (`{"requeued": bool}`),
+  `POST /v1/proactive/debug` (404 when `FELT_DEBUG` isn't set — not a 403,
+  so the route's existence isn't discoverable either way). `/next` was
+  added to `_UNTIMED_PATHS` (a 30 s-capped long-poll would otherwise swamp
+  the `total` stage's percentiles, same reasoning as `/v1/music/now`).
+  Auth: none — same LAN-only, no-auth posture as every other `/v1/*`
+  route (see `api.py`'s own CORS comment).
+- `config.py`/`.env.example`: `debug: bool = False` / `FELT_DEBUG=`.
+
+**felt-tray** (`src/felt_tray/`):
+- `api_client.py`: `FeltCoreClient.get_proactive_next(timeout)` (None on
+  204, HTTP timeout padded `+10s` past the server-side long-poll so an
+  honest slow 204 isn't mistaken for a network failure),
+  `get_proactive_audio(item_id)`, `requeue_proactive_item(item_id)`.
+- `proactive_poller.py` (new module): `ProactivePoller` — a daemon thread
+  long-polling `get_proactive_next` in a loop. On an item: if
+  `not is_visible() and kind != "urgent"`, requeues it and idles 10 s
+  (`_HIDDEN_PAUSE_S`) before polling again (avoids a hot requeue loop
+  while Felt stays hidden); otherwise fetches audio and calls the
+  `deliver` callback. A `get_proactive_next`/`get_proactive_audio` failure
+  backs off 5 s → 60 s (doubling each miss, reset to 5 s on any success,
+  including a clean timeout). `tick()` is split out from the thread loop
+  so tests drive it directly with a fake client, no real thread/sleep.
+- `app.py`: `App._on_proactive_item(item, audio)` — the poller's `deliver`
+  callback, toasts the text (if any) and calls the existing
+  `_deliver_reply(text, animation_tag, audio, prompted=False,
+  emotion=...)`, the exact same felt-animation `/reply_ready` path a
+  screen reaction uses, so hush/ducking/bubble/cooldown all apply
+  desktop-side unchanged. Poller is built in `_build_proactive_poller()`
+  and started in `run()` only when `config.proactive_poll_enabled`
+  (default on); stopped in `quit()`.
+- `config.py`/`.env.example`: `proactive_poll_enabled: bool`,
+  `FELT_PROACTIVE_POLL_ENABLED=1` (off via `0`/`false`).
+
+**Tests**: felt-core — `tests/test_db_proactive.py` (10, db helpers) +
+`tests/test_proactive.py` (17, enqueue/wait_for_next/clamp_timeout +
+all 4 endpoints incl. debug 404/200 and 204-on-timeout with a 1 s
+timeout) — 423 passed total, `ruff check`/`ruff format --check`/`ty
+check` all clean. felt-tray — `tests/test_proactive_poller.py` (11,
+visible/hidden/urgent/backoff/audio-failure/exception-safety) +
+`tests/test_api_client.py` additions (5) + `tests/test_app_delivery.py`
+additions (2, `_on_proactive_item` wiring) + `tests/test_config_proactive.py`
+(4) — 174 passed total, `ruff`/`ty` clean.
+
+**Not done / unverified**: this is unit/smoke-tested only, not
+live-verified against a real deployed felt-core + running felt-tray/
+felt-animation (rule 27) — Mario needs to run the accept test himself
+once felt-core deploys with `FELT_DEBUG=1`:
+```
+curl -X POST http://192.168.1.110:8420/v1/proactive/debug ^
+  -H "Content-Type: application/json" ^
+  -d "{\"kind\": \"diary\", \"text\": \"hey, missed you\"}"
+```
+(PowerShell; a plain `curl.exe`/WSL bash quoting works too) and confirm
+Felt speaks it within ~2 s. Also unverified live: the hidden/away requeue
+behavior (needs Felt actually hidden during a real proactive push) and
+the 404 posture for `/v1/proactive/debug` on the real deployment (depends
+on `FELT_DEBUG` staying unset in prod `secrets.env`/compose env, which
+this WP did not touch).
+
 ---
 
 ## WP-26

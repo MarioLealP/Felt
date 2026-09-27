@@ -1965,7 +1965,7 @@ Mario's feel check:**
   hop/climb specifically need his live judgement. Ledge sit (slice 5) and
   window events (slice 4) are still open.
 
-**Slice 4 🔎 needs review (felt-animation, felt-character-assets; 2026-09-27;
+**Slice 4 ✅ (accepted without a live check: Mario 2026-09-27 "i assume its working if it isnt i complain, so mark as finished"; presence takes standing_there_1-3 / wow_okay_1-3 generated into Sounds/candidates/presence for him to curate; felt-animation, felt-character-assets; 2026-09-27;
 Sonnet agent, no live session running - see "Not done" below):**
 
 - **New module `window_events.py`** (felt-animation), kept separate from
@@ -2090,3 +2090,116 @@ Sonnet agent, no live session running - see "Not done" below):**
   reaction on a real maximise, and the fullscreen retreat actually walking
   to the other monitor and not re-triggering while the fullscreen episode
   continues. Ledge sit (slice 5) is still open after this.
+
+**Slice 5 🔎 (felt-character-assets `6f6caf8`, felt-animation `f198006`,
+2026-09-27; Sonnet agent, no live session running - bounds for this task
+said not to restart Felt):**
+
+- **Mario's own decision, 2026-09-26 (reused, not re-litigated): no
+  dedicated ledge clip.** `sit/chair_start` -> `sit/chair_loop` (falls back
+  to `idle/sitting` if that tag somehow has no clips) -> `sit/chair_end`,
+  same three clips WP-21's chair table already measured.
+- **Hip-height measurement**: WP-21's own table (hand-measured once,
+  `sit/chair_*` group: Hips joint 0.574 m, z +0.417) is where the "match
+  seat height to the clip's hip height" number came from - but this slice
+  doesn't reuse that fixed number. main.gd's `_clamp_hips_to_seat`
+  measures the **live** Hips bone world y every frame
+  (`skel.global_transform * skel.get_bone_global_pose(hips_idx).origin`,
+  the same idiom `_probe_bones`/`_lowest_foot_world_y` already use) and
+  pins it to the ledge's own y, continuously, through the whole
+  `chair_start` -> `chair_loop` -> `chair_end` sequence - so it tracks
+  whatever each clip's own Hips height happens to be at that instant
+  instead of a single hardcoded constant, and automatically covers the
+  approach/stand-up transitions (not just the steady loop) without any
+  extra per-clip tuning.
+- **main.gd**: `{"ledge_sit": {"y_px"}}` / `{"ledge_stand": {}}`, `{"seated"
+  true|false}` out. Feet-clamping is suspended the whole time she's seated
+  (`_seated`, same guard style as `_falling`/`_climbing`); `sit/chair_loop`
+  now loops (`_is_looping_tag`), same as `idle/sitting`. A support drop
+  while seated unseats her instantly (no `chair_end`) and falls as usual
+  (`_end_seat_instant` + `_start_fall`); a `shift` (riding) moves the seat y
+  with the window; an incoming `move` stands her up first (`chair_end`)
+  then walks, via the queued-move mechanism `_falling`/`_hopping`/
+  `_climbing` already use. Documented in `felt-character-assets/README.md`.
+- **felt-animation**: new `ledge_sit.py` (kept out of `loops.py` per
+  ENGINEERING-RULES #1/#2) - `sit_chance` (mood-weighted: sleepy more
+  likely, bored less), `sit_duration_s` (45-180s, shorter when bored),
+  `sit_on_ledge`/`stand_up_from_ledge` orchestrators, and
+  `maybe_sit_after_arrival` (never on a floor platform; `force=True` for
+  the explicit Ctrl+Alt+G `ledge` presence action - "always sit when she
+  got there via the explicit ledge action", per the WP's own wording).
+  Wired from `loops._ambient_walk` (the platform-roam arrival, mood chance)
+  and `routers/presence._do_ledge` (the explicit action, always). `state.
+  seated_on_ledge` + `GET /world`. `behavior.stand_up_if_sitting` (the
+  "walk_to stands her up first" path every base-layer behaviour - `walk_to`
+  itself, `nav_executor.run_plan` - already calls) now checks
+  `seated_on_ledge` first, before the separate WP-21 chair-posture
+  mechanism, so a walk/nav plan/presence move stands her up off a ledge the
+  same way it already stands her up off a chair. `runtime.AppState.
+  _on_world_settled` (an `on_message` callback) syncs the bookkeeping on an
+  **unprompted** `{"seated": false}` (main.gd's own instant-unseat on a
+  support drop) - felt-animation never sends `ledge_stand` for that case,
+  it only notices the fact after main.gd already acted on it.
+- **Tests** (`tests/test_ledge_sit.py`, 18 new, following test_window_
+  events.py/test_platform_tracking.py's fake-overlay/monkeypatched-state
+  patterns): sit chance scales with mood (sleepy up, bored down), duration
+  bounds + bored-shortened, never sits on a floor even when forced, the
+  explicit ledge action always sits regardless of the chance roll, the
+  ambient chance can decline, seated + move stands first then walks (order
+  asserted), seated + an unprompted `{"seated": false}` (a support drop)
+  clears bookkeeping and cancels the stay timer without ever sending
+  `ledge_stand`, the stay timer firing stands her up, `GET /world` reports
+  `seated_on_ledge`, and a real `OverlayClient._read_loop` resolves
+  `wait_for_seated` from a genuine `{"seated": true}` line.
+  `test_nav_executor.py`'s fake state gained `seated_on_ledge=None`
+  (`stand_up_if_sitting` is on `run_plan`'s path now).
+- **Verification done**: `uv run python -m pytest -q` (585 passed, 567
+  before this file + 18 new, 0 regressions), `uv run python -m ruff check`/
+  `format --check` clean, `uv run python -m ty check` clean,
+  `scripts/check_env_example.py` OK (no new config settings - every
+  constant here is a hardcoded WP-authored tuning number, not an env
+  toggle). Headless Godot export
+  (`Godot_console.exe --headless --export-release "Windows Desktop"`)
+  exit=0, no new script errors (`grep main.gd` on the export log is empty;
+  the pre-existing "Failed to find required VRM keys" v0-preflight prints
+  are the same known-harmless ones WP-18's own notes cover).
+- **Guesses / judgement calls flagged for Mario**:
+  - The hip-pin approach means the very first frame or two of
+    `sit/chair_start` (whatever its own Hips height is right as she starts
+    sitting down, closer to standing height than seated) pushes her whole
+    body down briefly to keep Hips at the ledge y, rather than a smoothed
+    "she settles down" motion - not judged live; may read as a small pop at
+    the very start of sitting down. If it looks wrong, the fix is a short
+    blend-in of the hip-pin offset over the first ~0.2s of `chair_start`
+    rather than pinning it flat from frame 0.
+  - `sit/chair_loop`'s hip height across its own clip is close to constant
+    per WP-21's table (one row for the whole `start/loop/end` group,
+    unlike some UAL clips whose table rows are split "(start)"/"(end)") -
+    assumed genuinely near-constant rather than separately verified frame
+    by frame.
+  - Sit chance/duration constants (`BASE_SIT_CHANCE` 0.35, sleepy up to
+    0.85, bored duration ×0.6, 45-180s) are this session's own numbers, not
+    Mario's - same "a guess, flagged" convention slice 3's platform-roam
+    weights already used.
+  - `props.PropDirector`'s own internal `_walk`/`stand_up_if_sitting` (the
+    WP-21 chair's prop-sequence walk helper) was NOT extended to check
+    `seated_on_ledge` - out of scope for this slice (a prop fetch/conjure
+    sequence walking her while ledge-seated is an edge case neither
+    mentioned in the WP nor hit by the existing prop sequences, which
+    don't run concurrently with ambient/presence ledge-sitting today);
+    flagged rather than silently left per ENGINEERING-RULES #26.
+- **Not done / live-unverified** (no felt-animation/overlay running this
+  session, per this task's own bounds - "do NOT restart Felt"): everything
+  above is unit-tested and export-clean only. Specifically unverified:
+  Ctrl+Alt+G onto a real window landing her seated with legs visibly
+  hanging over the edge, the mood-weighted ambient sit chance ever
+  actually firing live, standing up on an incoming move/support-drop/
+  timeout judged by eye, and riding a dragged window while seated. **Mario
+  should judge this live before it's ticked** (ENGINEERING-RULES #27: only
+  Mario ticks a WP after a live review).
+
+This is the last WP-23 slice. All five (world model, support/gravity/lift/
+`landed`, navigation + platform tracking + `nav_executor` + the `ledge`
+action, window events, ledge sit) are now built and unit-tested; none has
+had Mario's live "judge the feel" pass yet per this task's own "don't
+restart Felt" bound.

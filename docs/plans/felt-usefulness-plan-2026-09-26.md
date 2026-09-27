@@ -525,3 +525,42 @@ on the Gitea board (WP-37), with the long spec linked for agents.
     sops. She never moves cards herself; that's Mario's or Claude's job.
   - Part of **WP-37**'s scope (board API + a Felt board skill). WP-45
     (morning brief) and WP-52 (mastermind) consume it.
+
+## Track F: interaction rethink, one voice-variety system (2026-09-27)
+
+Mario: "i like how chatty she is, just dont want the exact same phrase over
+and over, she says you crushing it for anything over and over, we need to
+rethink the system".
+
+**The amount of talking stays as it is.** The problem is sameness across
+every source. This track replaces B-1's narrower fix (see
+`impl/BUGS.md`).
+
+1. **One speak service in felt-core** for every unprompted line: screen,
+   WP-17 events, music, unhush, email mentions, ntfy alerts, reminders,
+   game news, ambient. Sources propose a topic plus context; the speak
+   service writes the line.
+2. **Shared voice memory:**
+   - the last ~30 spoken lines from all sources go into every prompt
+     ("don't echo");
+   - a deterministic **phrase tracker** auto-bans n-grams/expressions she
+     used more than ~2 times in the last few hours ("crushing it",
+     "absolutely", "let's go"…) for a cooldown;
+   - a **similarity check**: a near-duplicate gets one regeneration with a
+     different move, else the topic goes to the feed only.
+3. **Choose the move before the words.** The director rotates remark types:
+   observation, question, tease, trivia (game/song), callback to something
+   earlier, opinion, reaction. The prompt asks for that type, which breaks
+   the "hype template" structurally.
+4. **Grounding:** only what's really known goes in (window/app, WP-17 game
+   state, song, time, mood). **No invented outcomes** ("another win",
+   "three in a row").
+5. **A richer persona sheet:** her own opinions, running jokes and pet
+   phrases, so there's more than generic cheering to draw from.
+6. **Never truly quiet** still holds. The cadence rules stay deterministic;
+   a skipped duplicate still lands in the Felt app feed.
+
+Open decisions (one at a time): the persona sheet content (Mario's input
+on her personality), and the per-app session cadence (keep the 90 s
+cooldown vs stretch it in long sessions; Mario likes the current
+chattiness, so the default is keep it).

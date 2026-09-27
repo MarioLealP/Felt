@@ -38,6 +38,21 @@ desktop-initiated (request → reply), and there's no server → desktop path.
 /v1/proactive/debug`, only when `FELT_DEBUG=1`) is spoken on the desktop
 within ~2 s; an expired one never is.
 
+### Live accept test (2026-09-27) ✅
+- The test queued one live line from inside the felt-core container with
+  `enqueue_proactive()`. It didn't use FELT_DEBUG, which stays off in prod
+  (`/v1/proactive/debug` → 404 verified).
+- felt-tray claimed it **0.4 s** after the enqueue. The already-expired item
+  was never delivered (`delivered_at` NULL).
+- The felt-tray log shows the full chain: `/next` 200 → `/audio` 200 (+2.1 s)
+  → felt-animation `/reply_ready` 200. That's about 3 s end to end; almost
+  all of it is on-demand TTS.
+- **Fix: felt-core `db0b5cb`.** Audio is pre-synthesised at enqueue time
+  (when enqueued inside the server loop, which is how WP-26/WP-31 will
+  call it). A `/audio` fetch mid-synthesis joins the same task.
+- A 422 on a malformed debug body only reveals that the route exists.
+  Harmless.
+
 ### Notes from implementation (🔎 needs review, 2026-09-27)
 
 **felt-core** (`src/felt_core/`):

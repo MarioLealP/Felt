@@ -64,7 +64,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-53](WP-53-cicd.md) | Push to main = deployed: CI → image to Gitea registry → bot tag bump in infra → deploy loop (health check, auto-revert) → ntfy alerts; felt-core first, then 5 server apps, Nitro5, desktop via WP-34. KISS: no k3s/ArgoCD | WP-39 | L | 🟡 phase 1 live for felt-core (09-27); vendored app/ removal + phase 2 apps left |
 | [WP-23](WP-18-23-assets-world.md#wp-23) | Desktop world: platforms, ledges, falls, riding windows | WP-22, WP-21 | L | ✅ 09-27 (all 5 slices; slice 5 "good enough" after the seated-loop fix `b9e4bba`) |
 | **Phase 6: life features** (Mario's picks; ★ = his priority) |||||
-| [WP-25](WP-25-31-life-features.md#wp-25) | Proactive channel: server → desktop pushes | WP-09 | S–M | 🔎 needs review (09-27) |
+| [WP-25](WP-25-31-life-features.md#wp-25) | Proactive channel: server → desktop pushes | WP-09 | S–M | ✅ 09-27 (live: claimed in 0.4 s, expired never delivered; audio pre-synth `db0b5cb`) |
 | [WP-26](WP-25-31-life-features.md#wp-26) | ★ The diary: day-to-day continuity | WP-07, WP-15, WP-25 | M | ☐ (readable, cheeky: decided) |
 | [WP-27](WP-25-31-life-features.md#wp-27) | ★ Wardrobe: ties Tier A + Tier C together (outfit definitions, triggers, model swap) | WP-33, WP-21, WP-15 | L | ☐ (Tier A automated first; Tier C outfits from Mario) |
 | [WP-28](WP-25-31-life-features.md#wp-28) | Screen-matched lighting + contact shadow | WP-07 | M | ☐ |

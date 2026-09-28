@@ -202,6 +202,17 @@ roles), and vector-storage summaries (P4 self-memory covers what we need).
 - P3's move-first rotation and the phrase tracker;
 - P4 self-memory.
 
+## Decision 3 (Mario, 2026-09-27): P4 self-memory is merged into WP-26, fully autonomous
+- "do it along with the personality change since she will have memories on
+  that side too" means P4 is built inside WP-26 (see its "Combined with
+  personality plan P4" section).
+- "she can add her own, make it manageable context":
+  - self-memories are added automatically, with no approval queue;
+  - Mario can view, pin, edit, veto and delete them;
+  - **hard context budget**: ≤ 8 memories in the prompt, keyword-relevant
+    first, and the diary snippet plus memories ≤ ~200 tokens total;
+  - ≤ 30 active, and unused ones retire.
+
 ## Decisions (one at a time, in order)
 1. **Who is she?** The core concept and her relationship to Mario. Everything
    else hangs off this.

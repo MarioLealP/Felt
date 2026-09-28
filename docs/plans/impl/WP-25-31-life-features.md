@@ -209,6 +209,68 @@ summarised locally into the diary). Facts are never used.
 - The page reads `GET /v1/diary?limit=30` plus the weekly summaries. The
   dashboard is LAN-only, like the rest of felt-core's API.
 
+### Combined with personality plan P4, self-memory (Mario, 2026-09-27)
+Mario asked to do WP-26 "along with the personality change since she will
+have memories on that side too". One nightly pass reads one set of
+cloud-safe material and writes both halves:
+- **Diary** (her record of *their* day): `entry`, `callbacks`, `mood_word`,
+  exactly as above.
+- **Self-memory** (what *she* takes away): `self_updates` in the same JSON
+  call. Each is `{kind: opinion|like|dislike|running_joke|grudge,
+  text, confidence}`, e.g. "decided the Factorio trains are 'her'
+  trains", or a running joke about the same boss.
+  - Stored in `self_memory(id, kind, text, source_date, uses, last_used,
+    status: active|retired|vetoed, pinned, edited)`.
+- **How it reaches her prompt:**
+  - `persona.yaml`, Mario-authored, stays the fixed core.
+  - A compiled "who you've become" block of ≤ ~8 active self-memories,
+    most relevant first, keyword-matched to what's on screen (the
+    SillyTavern lorebook idea), each with a use count and cooldown.
+  - The diary's "Recently" snippet.
+  - Everything together is capped at ~200 tokens on top of the sheet
+    (Gemma's free tier is 16K TPM).
+- **Guardrails:**
+  - A self-memory can't contradict `persona.yaml`. The writing prompt gets
+    the sheet and must not overwrite core traits.
+  - At most ~30 active; the oldest unused ones retire.
+  - Nothing from facts or unsafe chat.
+- **UI deferred** (Mario, 2026-09-28: "dont make the dashboard yet, thats
+  a later feature"). WP-26 ships the API only; the pages belong to
+  **WP-42 (Felt app)**. When built, Mario controls both there: the diary list plus edit/delete, and the self-memory list plus
+  pin, edit, veto and delete. A vetoed item is never re-added. Its text goes
+  into the writer's "don't" list.
+- **Morning greeting:** `enqueue_proactive` inside the server loop, so the
+  audio is pre-synthesised. It's written in her persona voice and may use a
+  callback or a fresh self-memory.
+
+### Build notes (🔎 awaiting the first real morning, 2026-09-28)
+- **felt-core `8143725` (deployed):**
+  - `POST /v1/events`; the `diary`/`diary_weeks`/`self_memory` tables;
+  - `diary.py` (material gatherer + writer);
+  - `self_memory.py` (upsert/dedupe/veto/≤30 cap + `memory_block`, wired
+    into `personality_prompt` for replies, screen and event reactions);
+  - the diary and self-memory API; the `diary_recall` skill (public).
+  - A Sonnet agent built it; a session limit cut it off before its checks. I
+    finished it: 1 test with near-duplicate data, 10 ty errors in tests, 1
+    lint finding.
+- **Review fix:** the writer ran inline in `/v1/events`, but felt-animation
+  posts with a 2 s timeout and buffers/retries, so a retried day_start
+  could start a second write (two cloud calls, two greetings). It now runs as
+  a FastAPI background task after the 204, with a per-date in-progress
+  guard. There's a test for it.
+- **Test fix:** `test_metrics` slept 10 ms and asserted ms > 0. Windows'
+  ~15.6 ms monotonic tick made it order-dependent. It now sleeps 50 ms.
+- **felt-animation `96f6eaf` + `483f210`:** event reporting (games+duration,
+  afk, day_start once per date after 05:00, hourly mood, hush, window_fall,
+  ledge_sit, prop_used), buffered across outages. **The music_track poll was
+  removed.** It hit `/v1/music/now` (a live Spotify call per request) every
+  15 s on top of felt-tray's poll, and felt-core already keeps listening
+  history for the diary.
+- The dashboard UI is deferred to WP-42.
+- **Next:** restart Felt so felt-animation reports events. The first entry
+  is written on the first activity after 05:00; then check the morning
+  greeting and `GET /v1/diary`.
+
 **Tests**: material selection excludes unsafe chat windows and facts;
 callback decay; the weekly compression trigger; prompt snippet length.
 

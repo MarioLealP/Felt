@@ -74,7 +74,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-32](WP-32-33-wardrobe-automation.md#wp-32) | Wardrobe Tier A: source accessories and clothing assets online (+ Booth shortlist for Mario) | none | M | ☐ |
 | [WP-33](WP-32-33-wardrobe-automation.md#wp-33) | ★ Wardrobe Tier A: a new tee every day (UV print areas, ≥ 60 tees, review gallery, daily pick) | none | M | 🔎 needs review |
 | [WP-35](WP-35-animation-studio.md) | Animation Studio: contained window to browse/play/scrub every clip, build base+upper combos, inspect feet/root motion, mark clips keep/broken | WP-20 | M–L | ☐ |
-| [WP-36](WP-36-llamacpp.md) | Replace Ollama with llama.cpp router mode; **rev 2 (09-29): host on the server's P104**, 2026 models (Gemma 4 E4B / Qwen3.5 bake-off), local screen reactions | none | M–L | ☐ planned + benched 09-29 (first decision: local-first screen reactions) |
+| [WP-36](WP-36-llamacpp.md) | Replace Ollama with llama.cpp router mode; **rev 2 (09-29): host on the server's P104**, 2026 models (Gemma 4 E4B / Qwen3.5 bake-off), local screen reactions | none | M–L | ☐ planned 09-29: Gemma 4 12B on the P104, one call with native tools (blind A/B won); blocked on the server backup HDD |
 | [Tier C](MARIO-vroid-outfits.md) | **Mario's** VRoid outfit checklist (pajamas, hoodie, rain, winter, Halloween by mid-Oct, …) | none | ongoing | ☐ |
 | **Phase 7: packaging (last, after everything else is ticked)** |||||
 | [WP-34](WP-34-packaging.md) | One clean install per device: desktop = single tray app supervising everything (no console/PowerShell/scheduled tasks, Ollama folded in); Nitro5 = one install + model manifest; server bootstrap; `FRESH-INSTALL.md` | all WPs | XL | ☐ (first decision: Smart App Control / code signing) |

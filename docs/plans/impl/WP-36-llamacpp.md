@@ -195,15 +195,149 @@ max 62 s** (Gemma 4 26B free tier, n=70, `/v1/metrics/latency`).
 - **Local embeddings** for memory recall, if keyword recall stops being
   enough.
 
-### Decisions for Mario (one at a time)
+### Decisions (settled 2026-09-29)
 
-1. **Screen reactions: local-first on the P104, cloud as fallback?**
-   (Recommended.) 3–5 s instead of 31 s, and screenshots stay home. The
-   cost is a smaller model's eye, and Phase B measures that before the
-   flip.
-2. **The model:** decided by his blind A/B in Phase B.
-3. The rest (router/privacy local, Ollama removal) was already agreed
-   under the original WP-36.
+1. **Local-first, everywhere quality holds.**
+   - Mario: "Sounds good" (local screen reactions), then "at the end of
+     the day the more we can do local the better".
+   - The cloud stays only for what is inherently external (web search,
+     research) and as a fallback when the P104 is down.
+2. **Model: Gemma 4 12B QAT q4_0** (+ its 0.18 GB mmproj), chosen by
+   Mario's blind A/B (3 rounds, below).
+
+### Blind A/B (2026-09-29)
+
+**Setup:**
+- 2 messages per arm, then 2, then 3; letters reshuffled each round;
+  Mario ranked the replies.
+- Every arm got the production prompt from `personality_prompt` (persona
+  + memory block + tone).
+- Rounds 2 and 3 add "Reply out loud in one to three short spoken
+  sentences."
+
+| Round | cloud (flash-lite) | Gemma 4 12B | Qwen3.5-9B | Gemma 4 E4B | Qwen3.5-4B |
+|---|---|---|---|---|---|
+| 1 (map / walk) | 1, 1 | — | 2, 3 | 3, 2 | 4, 4 |
+| 2 (boring; rice: "don't like any") | 2 | 3 | 1 | 4 ("goes off on its own") | — |
+| 3 (rice / project / desktop, **new persona**) | 3, 2, 2 | **1, 1, 1** | 2, 3, 3 | — | — |
+
+**Round 2 exposed three persona bugs,** which every model showed, the
+cloud included. The fix is felt-core `ad0c221`.
+- **The quoted pet phrases became a script.** Mario, on Gemma 12B: "it
+  goes im choosing to be supportive about *".
+- **Bread became a reflex:** every food message turned into "baguette
+  wins".
+- **The diary block was recited word for word** ("digital surgeon… sleepy
+  Nitro machine", "red rocks"). WP-26 had already written its first entry
+  on 09-28, and the block was presented as bare text. It's now framed as
+  background, not to be quoted.
+
+After the fix the catchphrase count dropped from 2 to 0, and the 12B won
+every item in round 3.
+
+### The 12B on the P104: one slot, one call (measured 2026-09-29)
+
+**What fits:**
+- 7.9 GiB at `-c 8192 -np 1 -ub 1024 -ctk q8_0 -ctv q8_0` (`-ub 1024`
+  is required: the image chunk asserts `n_ubatch >= n_tokens` at the
+  default 512).
+- `-c 16384 -np 2` and `-np 3` both run out of memory.
+
+**Speed:** 20 tok/s generation, ~120 tok/s prompt. Screen reactions from
+the image take 6–7 s.
+
+**Classifiers, measured on 18 real-prompt routing cases and 16 privacy
+cases:**
+
+| | Router | Privacy | Router warm | Privacy warm |
+|---|---|---|---|---|
+| Gemma 12B (GPU) | **18/18** | **16/16** | 1.0–2.1 s | 0.9 s |
+| Qwen3.5-0.8B (CPU) | 13/18 | 14/16: salary and therapist leaked as SAFE | 0.3–1 s | 0.2 s |
+| Qwen3.5-2B (CPU) | 13/18 | 13/16: the server IP leaked | 0.5–1.3 s | 0.4 s |
+
+The small CPU models are **rejected**: a privacy classifier that leaks is
+worse than none.
+
+**Three prompts in one slot doesn't work here.** Privacy, router and
+persona are three different prefixes.
+- `--cache-ram` does restore them, but Gemma's cache entries are
+  0.5–0.9 GB each and a restore over PCIe Gen1 x4 takes ~2 s.
+- An interleaved turn took **9–23 s**, and a cold 4.1K-token router
+  prompt took 17 s.
+
+**What works: one call with native tool calling.**
+- The persona is the system prompt, the skills are OpenAI `tools`, and
+  llama-server runs with `--jinja`.
+- **18/18** on the same routing cases.
+- Tool turns take 1.1–2 s and pick sensible arguments ("Kasane Teto",
+  "desk lamp, off", "Divine Orb").
+- Chat turns answer in character in 3–4 s (80-token cap).
+- It's one prefix, so it stays warm.
+- Script: `/home/ai-models/gguf/toolcall.py`.
+
+### Revised design (supersedes phases C/D above where they conflict)
+
+**One GPU model does everything:**
+- `felt-llm` serves Gemma 4 12B and nothing else on the GPU:
+  `--models-max 1`, `load-on-startup`, never evicted.
+- A chat turn is one `/v1/chat/completions` call carrying the persona,
+  the memory block, history and every skill as a `tools` entry.
+- A tool call runs the skill, and the result goes back as a `tool`
+  message for the spoken phrasing: a second call on the same warm
+  prefix.
+- The 2026-09-11 finding that "the chat model is unreliable at tools
+  under a mixed prompt" was about qwen2.5:3b, and doesn't hold for
+  Gemma 4 12B (18/18).
+
+**`router.py` and the local privacy call retire from the chat path:**
+- The separate router call goes. Its hand-written examples ("give me
+  five minutes" → `felt_presence`, …) move into the tool descriptions.
+- There's no privacy check on local turns: nothing leaves the LAN.
+- **The privacy check stays wherever data would leave:** skill phrasing
+  that still uses the cloud, `web_search`/`delegate_research` queries,
+  and the cloud fallback. It runs on the same 12B as a one-off call and
+  pays the ~2 s cache swap. That's rare, so acceptable.
+
+**Skills need real parameter schemas.**
+- Each skill's manifest gets a JSON-schema `parameters` object, so the
+  model fills them properly. Today they're free-text hints in the router
+  prompt.
+- `parse_router_response`'s repair logic is no longer needed for tool
+  calls (the server parses them).
+
+**Screen reactions:**
+- Local-first on the same model: the image plus her screen instruction,
+  with `json_schema` output.
+- Cloud Gemma 26B is only the fallback.
+
+**The diary writer** moves local too, which is what makes a *private*
+diary possible (it can read everything).
+
+**Cloud leftovers:**
+- `web_search`/`delegate_research`, which are external by nature
+- a fallback when felt-llm is unhealthy
+- the persona eval's reference arm
+
+**Remaining phases, in order:**
+1. **A: the `felt-llm` stack** as above, with the 12B preset.
+2. **C': the felt-core port.**
+   - `local_llm.py` (OpenAI client, tools, `json_schema`)
+   - skill parameter schemas
+   - the chat orchestrator moves to a single call with tools; router and
+     privacy are removed from local turns
+   - the warm-up loop keeps the persona prefix hot
+   - metrics with `cache_n`
+3. **D': switch-over.**
+   - A feature flag `local_first=true` flips chat, screen reactions and
+     the diary together; the rollback is flipping it back.
+   - Measure 30+ real turns.
+4. **F: desktop cleanup and Ollama removal**, as before.
+
+**Blocked on 2026-09-29:** the server's 500 GB backup HDD disappeared
+after the P104 install (all six SATA links down, `SStatus 0`, still gone
+after a reseat and a SCSI rescan). With no local full backup, the deploy
+gate aborts every update, so nothing new deploys until it's back. That
+includes felt-core `ad0c221` and the felt-llm stack.
 
 ---
 

@@ -1059,3 +1059,36 @@ care about her being down, we go full local so we can drop any dependency."
   (Mario's sudo).
 - **Desktop:** uninstall Ollama, delete the `OllamaServe` task and
   `%USERPROFILE%\.ollama` (~7.5 GB) after Mario's OK.
+
+## Status (2026-09-29 evening)
+
+Built, deployed and measured live through `/v1/chat`:
+- **felt-core `ab125cd`:** the C' local-first port.
+- **felt-core `ba12a9b`:** a cache-stable prompt. The persona rotates
+  daily, and per-turn context rides on the user message. Warm turns went
+  from 22–26 s to 5–10 s.
+- **felt-core `24bd218`:** D'', full local.
+  - **Removed:** `cloud.py`, `router.py`, `privacy.py`,
+    `delegate_research`, the persona eval, and every
+    Gemini/ninerouter/Ollama config key.
+  - **Added:** `POST /v1/reaction-tag` and the warm-up loop.
+  - **Measured:** warm turns take 4.6–8 s, and a reaction-tag call 1.9 s.
+- **felt-tray `3857b2a`** (the felt-vision fallback is gone), **felt-animation
+  `6d9c3d4`** (the reaction picker goes through felt-core; the desktop
+  Ollama health loop is gone), **umbrella `ca85a54`** (LaunchFelt).
+- **infra `7ff9501`:** the Gemini and ninerouter keys are out of felt-core's
+  sops secrets.
+- **Desktop:** Ollama uninstalled (winget) and the `OllamaServe` task
+  removed. `%USERPROFILE%\.ollama` (6.9 GB) waits for Mario's OK.
+
+**Left:**
+- Mario revokes the Gemini key in AI Studio.
+- Nitro5: `sudo systemctl disable --now ollama` and
+  `sudo pacman -Rns ollama ollama-cuda`.
+- Delete `/home/ai-models/ollama` on the server (Mario's call), plus the
+  benchmark GGUFs under `/home/ai-models/gguf` that aren't Gemma 12B.
+- Archive the felt-vision repo.
+- **Open observation:** the first turn after a quiet spell still took 17 s
+  once. Background jobs (screen reactions, events, reaction-tag) share the
+  single slot and displace the chat prefix, and the `--cache-ram` restore
+  then pays ~2 s or more. Watch real use before tuning.

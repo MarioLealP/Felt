@@ -980,3 +980,82 @@ Documented but not needed now:
 
 **Deploy:** felt-core CI → auto-deploy. The server `.env` needs no change:
 the defaults point at felt-llm.
+
+## D'' — full local, no cloud AI (Mario, 2026-09-29)
+
+Mario: "If local felt is down, means I don't need her rn, so no need to ever
+care about her being down, we go full local so we can drop any dependency."
+
+**Measured after C' + the cache fix (`ba12a9b`):**
+- a warm chat turn takes 5–10 s, processing 230–400 new tokens;
+- the first turn after a felt-llm restart takes ~22 s, which the warm-up
+  absorbs.
+
+### felt-core
+- **Remove the cloud AI code:**
+  - `cloud.py` and its governor/limits;
+  - every `cloud_generate` call site and fallback;
+  - `gemini_*` and `cloud_model_*` config;
+  - `/v1/metrics/cloud`;
+  - the `delegate_research` plugin (cloud via ninerouter);
+  - the cloud arm of `evals/persona_eval.py`: either rework it to compare
+    local variants, or delete it if that's simpler, and note which.
+- **Remove the Ollama paths:**
+  - `ollama_*` config, `router_model`, `_ollama_chat`;
+  - `router.py`'s LLM call. Keep `parse_router_response` only if something
+    still uses it; otherwise delete it.
+  - `privacy.py` (`is_safe_for_cloud`): nothing leaves the LAN, so it has
+    no purpose. Delete it and its call sites.
+  - the `local_first` switch and `legacy_config`: local is the only path.
+- **When felt-llm is unavailable** (`LocalLLMUnavailable`):
+  - chat, text-chat, voice-chat, react/screen, react/event and
+    context/screen answer **503** `{"detail": "felt-llm offline"}`;
+  - background loops (diary, weather precompute, proactive, email summary)
+    log at INFO and skip;
+  - no fallbacks anywhere.
+- **Weather precompute** (`brain/background.py`): phrase the line with
+  `local_llm` (same prompt as today's cloud call, no tools).
+- **Warm-up:** at startup, and whenever felt-llm comes back after being
+  unreachable, a background task sends one tool-bearing chat call built
+  with `local_turn_messages` for a dummy message, so the persona+tools
+  prefix is cached before Mario's first turn. Check every 60 s; the health
+  check is `GET {local_llm_url}/health`. Never recorded in latency metrics.
+- **New `POST /v1/reaction-tag`** `{"text": str, "tags": [str]}` →
+  `{"tag": str | null}`:
+  - one `local_llm.chat` call with `response_format` json_schema
+    `{"tag": {"enum": tags}}`, max_tokens 32, temperature 0;
+  - 503 when felt-llm is offline. The caller keeps its fallback tag.
+  - The prompt: pick the single animation tag that best fits how Felt says
+    this line.
+- Remove dead tests, and keep coverage for everything that remains.
+- ruff, ty and `check_env_example` stay clean.
+- Removed keys come out of `.env.example`. The server `.env` is generated
+  from sops; stale keys there are harmless, and the lead removes the Gemini
+  key.
+
+### felt-animation
+- `reaction.py`: `classify_reaction` calls felt-core
+  `POST {felt_core_url}/v1/reaction-tag` with the known tags. Keep the
+  existing timeout and fallback-tag behaviour; use a 3 s timeout.
+  felt-animation already has, or adds, a felt-core URL config (check
+  config.py / .env.example).
+- Delete `ollama_health.py` and its task, and remove
+  `FELT_ANIMATION_OLLAMA_URL` / `FELT_ANIMATION_OLLAMA_MODEL` (config,
+  `.env.example`, README).
+
+### felt-tray + umbrella
+- felt-tray: remove the felt-vision fallback (`watcher._felt_vision_fallback`
+  and `FELT_VISION_URL`). A 503 from `/v1/react/screen` now just means no
+  reaction.
+- Umbrella `LaunchFelt.ps1` / `UpdateFelt.ps1`: remove the Ollama and
+  felt-vision start/health lines.
+- felt-vision repo: archive later (lead).
+
+### Machines (lead / Mario)
+- **Server:** remove `FELT_GEMINI_API_KEY` from felt-core's `secrets.env`
+  (sops). Mario revokes the key in AI Studio. `/home/ai-models/ollama`
+  stays until Mario says delete.
+- **Nitro5:** `systemctl disable --now ollama` and remove the package
+  (Mario's sudo).
+- **Desktop:** uninstall Ollama, delete the `OllamaServe` task and
+  `%USERPROFILE%\.ollama` (~7.5 GB) after Mario's OK.

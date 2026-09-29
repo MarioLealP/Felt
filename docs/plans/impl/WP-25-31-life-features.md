@@ -561,3 +561,59 @@ the diary mentions it the next day.
 
 **Accept**: a test event 12 min out produces the 10-min heads-up on time
 (spoken plus a bubble), including while she's "away".
+
+### WP-27 build spec (2026-09-30): Tier-C VRM outfits
+
+**Mario's decisions (2026-09-30):**
+- **Halloween:** 31 October only.
+- **Christmas:** 23–26 December, with **Xmas** and **Reindeer** on
+  alternate days.
+- **Gaming:** she keeps her normal (daily) outfit.
+- **Rare themed pool:** China, Maid, Cyberpunk, Cyberpunk2.
+- **Daily random pool:** General 1–4, LaceDress, NightOuting, Sport and the
+  default `felt.vrm`, which is the only one that gets the WP-33 daily tee.
+- **Ambient:** now and then she changes into anything; themed outfits are
+  rare.
+- **Night:** pyjamas when it's properly late (past ~01:00, the same "late"
+  rule as her bedtime nags) or when her mood is sleepy. Back to the day's
+  outfit after 05:00.
+- **Bikini:** **only** as a reaction to Mario asking about the weather when
+  the answer is sunny, at a **1 % chance**. It is not the summer default.
+  - Mario: "do bikini only for whats the weather -> sunny and do that like
+    the mega rare 1% chance".
+- **The VRMs are full models**, exported like the original `felt.vrm`, in
+  `felt-godot-overlay/characters/Felt_*.vrm`.
+  - **They are not committed to git** until Mario says which are free to
+    push; some come from Booth packs.
+
+**Measured (glTF inspection):**
+- All 16 outfits have the same 52 `J_Bip_*` humanoid bones with identical
+  rest rotations. Only the hips' rest height differs, which is the shoe
+  height: −1.4 to +4.9 cm, absorbed by `_clamp_feet_to_floor`.
+- Meshes are merged (`Face (merged)`, `Body (merged)`, `Hair001 (merged)`),
+  and each adds 8–109 clothing spring bones.
+- **So an outfit change = swap the whole character scene and reuse the
+  retargeted `AnimationLibrary`.** There is no re-retargeting.
+
+**Relay contract (felt-animation → main.gd):**
+`{"outfit": {"id": "maid", "vrm": "res://characters/Felt_Maid.vrm", "fx": "puff"|"none"}}`.
+- main.gd swaps the model, keeping the pivot (position/facing), the current
+  tag and the props held on bones. It re-runs every per-model setup:
+  animation tree, pose modifier, feet clamp, face/blink/mouth caches, MToon
+  tuning, collider radii, and the props' skeleton.
+- It replies `{"outfit_applied": {"id": ...}}` when done, or
+  `{"outfit_failed": {"id", "error"}}`.
+- `"fx": "puff"` plays the prop puff at her position during the swap.
+
+**felt-animation decides:**
+- `outfits.json`: id, vrm, pool (`daily` / `themed` / `special`), triggers.
+- The wardrobe state persists (the current outfit plus the day's pick), so a
+  restart re-sends the current outfit on overlay connect.
+- **Change styles** (choreography by felt-animation):
+  - **Quick:** a spin/twirl clip, with the outfit message sent mid-clip.
+  - **Proper:** a walk off-screen ("brb, changing"), the swap while she's
+    hidden, then back.
+  - Night pyjamas and the date outfits use **proper**; ambient changes and
+    the bikini use **quick**.
+- A debug endpoint `POST /outfit {"id": ...}` forces a change, for testing
+  and a later tray menu.

@@ -16,6 +16,197 @@ Everything below was measured read-only on 2026-09-26. Nothing was changed.
 
 ---
 
+## ⚡ Revision 2 (2026-09-29): host it on the server's P104, not the Nitro5
+
+The P104-100 (8 GiB, Pascal sm_61) is now installed in the server and
+passed its burn-in (see `runbooks/clockmost-infra.md` → GPU). That changes
+**where** this WP runs and **what models** it serves. The *why* below
+(Ollama is fragile, router mode covers model management) and the caller
+inventory still hold. Steps 0 and 3 (Nitro5 install, VRAM sharing with
+felt-voice) and the Nitro5 resource plan are **superseded** by this
+section. Steps 1, 2, 4, 6 and 7 still apply, retargeted at the server.
+
+Mario, 2026-09-29: "don't just move, lets do a proper plan, and check what
+we can improve / change, … newer models so we are up to date".
+
+### Why the server is better than the Nitro5
+
+- **It's always on.** The Nitro5 reboots most days and is off whenever
+  Mario isn't using voice. felt-core's local paths (router, privacy,
+  private chat) fail whenever it's off. felt-core's logs show connect
+  timeouts to `192.168.1.104:11434` today.
+- **It's the same box as felt-core.** Calls go over the Docker network,
+  and the models sit on local disk (`/home/ai-models/gguf`), with no NFS
+  automount (the root cause of 09-26's outage).
+- **The whole 8 GiB is ours.** Nothing else uses the P104, so there's no
+  sharing with felt-voice or ComfyUI. The Nitro5 keeps felt-voice (TTS)
+  and ComfyUI, and gets its full 6 GB back.
+- **TTS stays on the Nitro5.** Research (Gemini, 2026-09-29, unsourced
+  but consistent with PyTorch's release notes): PyTorch's cu128+ wheels
+  dropped sm_61, and Chatterbox/RVC in fp32 on Pascal would run about
+  3–5× slower than the 3060. Not worth it.
+
+### Model research (2026-09-29)
+
+Gemini did a web-search pass (`agy`, gemini-3.1-pro). I verified every
+name against the Hugging Face API, because its report cited only org
+pages, missed half the recent releases, and got two facts wrong: "Ollama
+depends on PyTorch" is false, and "llama.cpp must be compiled from source
+for sm_61" is disproved by our own bench on the official image.
+
+**Current generation, fits 8 GiB, llama.cpp-supported, Apache-2.0:**
+
+| Model | Released | GGUF used | Weights + mmproj | Notes |
+|---|---|---|---|---|
+| Qwen3.5-9B | 2026-02 | unsloth Q4_K_M | 5.68 + 0.92 GB | natively multimodal; hybrid Gated-DeltaNet attention (small KV) |
+| Qwen3.5-4B | 2026-02 | unsloth Q6_K | 3.53 + 0.67 GB | same family |
+| Gemma 4 E4B | 2026-03 (QAT GGUF 2026-05) | google QAT q4_0 | 5.15 + 0.99 GB file, **4.2 GB VRAM** | image + audio input; per-layer embeddings |
+| Qwen3.5-0.8B | 2026-02 | unsloth Q8_0 | 0.81 GB | classifier candidate; not needed (below) |
+
+**Checked and rejected:**
+- **Too big for 8 GiB with any context:** Gemma 4 12B (QAT q4_0 is
+  6.98 GB), Qwen3.6/3.8 (27B+, and Qwen3.8-Flash-Next is 125B total),
+  Granite 4.2 30B.
+- **MoE with CPU offload** (Qwen3.6-35B-A3B class): needs ~20 GB, and the
+  host has 14 GiB and is already memory-pressured.
+- **Granite 4.2 8B** (2026-08, Q4_K_M 5.35 GB): text-only, business-tuned.
+  A fallback if the Qwen/Gemma picks disappoint.
+- **LFM2.5-VL-3B** (2026-08): a small VLM, a fallback for vision only.
+- Anything older (qwen2.5, llama3.1, the Ollama blobs we hold): a
+  generation behind.
+
+### Feasibility bench on the P104 (2026-09-29, measured)
+
+**Setup:**
+- official `ghcr.io/ggml-org/llama.cpp:server-cuda` (build 11243, v0.5.0),
+  **unmodified — sm_61 kernels included**
+- `-ngl 99 -c 8192 -np 1`, thinking off (`chat_template_kwargs.enable_thinking=false`)
+- 120 W cap
+- **Prompts:** her real compiled persona (≈1.4K tokens), 4 chat lines, her
+  real screen-reaction instruction, and her real privacy prompt with 8
+  labelled cases.
+- **Images:** 2 synthetic 1600×900 screenshots. One is a VS Code Godot
+  parse error at 02:47; the other is a Teto YouTube page.
+- **Files:** script `/home/ai-models/gguf/bench.py` + `runbench.sh`, raw
+  output `bench-*.json` next to them.
+
+| | Qwen3.5-9B Q4_K_M | Qwen3.5-4B Q6_K | Gemma 4 E4B QAT |
+|---|---|---|---|
+| VRAM (ctx 8K, + mmproj) | 6.6 GiB | 4.8 GiB | **4.5 GiB** |
+| Generation | 27.8 tok/s | 34.0 tok/s | **43.2 tok/s** |
+| Prompt processing | 160 tok/s | 290 tok/s | **390 tok/s** |
+| Chat, first turn (cold persona) | 11.8 s | 8.7 s | **4.5 s** |
+| Chat, warm (persona cached) | 1.2–6 s (rambles to the 160 cap) | 2.5–4 s (rambles) | **0.5–0.8 s** |
+| Screen reaction from the image | 10–12 s | 7–9 s | **3.8–5.4 s** |
+| Read the screenshot correctly | ✅ both | ✅ both | ✅ both (misread `seat_y` as "seat") |
+| Privacy classifier | 8/8, 0.37 s | 8/8, 0.34 s | 8/8, **0.15 s** |
+| Character (my read) | most "her": teasing, bread, "my sit animation", but long and **invents specifics** ("that script from last week") | rambles, invents | short spoken-length lines, **doesn't invent** ("which song?"), but blander |
+
+**For comparison:** today's cloud screen reaction is **p50 31 s, p95 55 s,
+max 62 s** (Gemma 4 26B free tier, n=70, `/v1/metrics/latency`).
+
+**Findings:**
+1. **Local vision is now viable and much faster than the cloud.** It also
+   keeps screenshots on the LAN. Today every screenshot goes to Google.
+2. **A single GPU model can do every job** (chat, privacy, router, vision,
+   diary), so a separate classifier model isn't needed. Every candidate
+   got 8/8 at ≤0.4 s. One model means one CUDA context, no eviction
+   juggling, and `--models-max 1` on the GPU.
+3. **Persona prefix caching is what matters.** Warm is 10–20× faster than
+   cold, so the warm-up loop (step 2) is essential. The multimodal calls
+   re-evaluated the whole persona each time (`prompt_n` 1525 vs 63 for
+   text), which is worth tuning (image placed after a cached text prefix,
+   `--cache-reuse`) before judging vision latency.
+4. **The bench isn't the eval.** It lacks felt-core's post-history
+   instruction and length rules, so "rambles" and "invents" may largely
+   disappear in the real prompt. The real pick comes from
+   `evals/persona_eval.py` (Phase B).
+
+### Revised phases
+
+**A. `felt-llm` stack on the server** (clockmost-infra `projects/felt-llm/`)
+- compose:
+  - the official image **pinned by tag + digest** (≥ b11146; bench used
+    11243)
+  - `devices: [nvidia.com/gpu=all]`
+  - router mode with a preset INI; `/home/ai-models/gguf:/models:ro`
+  - `mem_limit`; `restart: unless-stopped`
+- **Network:**
+  - joins a `felt` network shared with felt-core. felt-core calls
+    `http://felt-llm:8080`.
+  - LAN port published only for the desktop's reaction picker (step 4),
+    scoped by the host firewall to the desktop like felt-core's 8420,
+    with `--api-key-file`.
+  - no Caddy/public route
+- **Preset:**
+  - one GPU model with `np 3` (chat, router, privacy each keep their own
+    warm slot)
+  - `c` sized per slot for the 3.8K router prompt
+  - `cache-ram` capped (the default is 8 GiB, and the host has 14)
+  - no flags that are already defaults
+- **Monitoring:** GPU temperature/power into the existing Zabbix, plus an
+  ntfy alert on the container going unhealthy.
+- **The 120 W cap stays** until the memory thermal pads are replaced.
+  Felt's load is bursty (~45 W measured while generating).
+- **Model files:** `manifest.toml` (the name, HF repo, file and SHA-256
+  for each GGUF) + an idempotent `fetch.sh`, committed in the umbrella's
+  `tools/felt-llm/` (WP-34 reuses them).
+
+**B. Bake-off with the real prompts**
+- `persona_eval.py` gains a `local:<model>` arm pointed at felt-llm.
+  Candidates: Gemma 4 E4B, Qwen3.5-9B, Qwen3.5-4B, and the current cloud
+  model as reference.
+- Its metrics (hype/agree rate, distinct-2, repeated trigrams) plus the
+  **blind A/B HTML for Mario**, who picks by taste.
+- **Router parity:** replay 50 recent real messages through the router
+  with a JSON-schema `enum` of the skill names. ≥ 48/50 must match cloud
+  or the current router.
+- **Privacy:** a 40-case labelled set (the 8 above + real-shaped cases).
+  Fails closed.
+- **Vision:** 10 synthetic screenshots of Mario's real apps (PoE2,
+  Factorio, VS Code, YouTube, Discord, FFXIV). Did she read it right, is
+  the line in character, and how long did it take.
+
+**C. felt-core port** (step 1 + step 2 as written, retargeted)
+- `local_llm.py` with per-caller backend flags
+- router date line moved to the end
+- warm-up loop
+- metrics with `cache_n`
+
+**D. Switch-over**
+- Flip router and privacy first, then chat.
+- Then remove Ollama on the Nitro5 (step 7) and point felt-voice's docs
+  at the full 6 GB.
+
+**E. Local screen reactions.** Mario's decision, see below.
+
+**F. Desktop** (steps 4, 5, 7 as written)
+- the reaction picker moves to felt-llm
+- the desktop's Ollama and felt-vision are removed
+- `LaunchFelt.ps1` is cleaned up
+
+### Improvements this unlocks (later, not in this WP)
+
+- **A private diary.** WP-26's writer only sees cloud-safe material. A
+  local writer could also read the private chat and facts. It's a
+  nightly batch, so latency doesn't matter.
+- **Gemma 4 takes audio input,** a possible future path for STT or tone.
+  Not now.
+- **Local embeddings** for memory recall, if keyword recall stops being
+  enough.
+
+### Decisions for Mario (one at a time)
+
+1. **Screen reactions: local-first on the P104, cloud as fallback?**
+   (Recommended.) 3–5 s instead of 31 s, and screenshots stay home. The
+   cost is a smaller model's eye, and Phase B measures that before the
+   flip.
+2. **The model:** decided by his blind A/B in Phase B.
+3. The rest (router/privacy local, Ollama removal) was already agreed
+   under the original WP-36.
+
+---
+
 ## Why
 
 ### 1. Ollama is fragile here, and it is down right now

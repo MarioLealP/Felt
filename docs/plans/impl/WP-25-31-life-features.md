@@ -617,3 +617,17 @@ the diary mentions it the next day.
     the bikini use **quick**.
 - A debug endpoint `POST /outfit {"id": ...}` forces a change, for testing
   and a later tray menu.
+
+**Status 2026-09-30: Tier C accepted.**
+- felt-animation `3f71524` (outfits.json, `outfits.py`, `/outfit`) and
+  overlay `5724dd7` (the whole-model swap).
+- Live: Halloween (the tallest heels, +4.9 cm) and Maid swapped with feet on
+  the floor, and animations, hair, cloth and lipsync were all normal.
+- Mario: "yes on floor, everything normal, animations etc look great. Just
+  swapped to maid, all perfect there too".
+- **Left:**
+  - **Tier A:** recolour variants on top of these outfits.
+  - **Say which outfit VRMs may be committed:** some come from Booth packs,
+    so none are in git yet.
+  - **Optional:** a "brb, changing" line for proper changes (it's a silent
+    walk-off now).

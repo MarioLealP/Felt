@@ -905,3 +905,78 @@ these in when WP-36 runs:
 Documented but not needed now:
 - KV-cache quantisation (`cache-type-k/v=q8_0`) as a later RAM/VRAM lever;
 - explicit batch/ubatch tuning, since no CPU contention has been measured.
+
+## C' — felt-core port: build spec (2026-09-29)
+
+`felt-llm` is live on the server (infra `367c89a`):
+- **Server:** `http://felt-llm:8080` on `edge`. It's an OpenAI-compatible
+  llama.cpp server running with `--jinja` and `--reasoning off`, and the
+  model alias is `felt`.
+- **Measured through felt-core's container:** a tool call takes ~1 s (e.g.
+  `get_weather {"when":"tomorrow"}`), and a short in-character reply comes
+  back directly.
+
+**Config** (pydantic-settings, add to `.env.example`):
+- `local_llm_url: str | None = "http://felt-llm:8080"`
+- `local_llm_model: str = "felt"`
+- `local_llm_timeout_s: float = 60`
+- `local_first: bool = True`, the single switch. `False` = today's
+  Ollama/cloud behaviour, untouched: that's the rollback.
+
+**`local_llm.py`** (new):
+- `async chat(messages, *, max_tokens, temperature=0.8, tools=None, json_schema=None, config) -> LocalReply(text, tool_calls, prompt_n, cache_n)`
+- It sends `model`, `messages`, `max_tokens` and `temperature`, `tools`
+  when given, and `response_format` (`json_schema`) when given. Images go in
+  as OpenAI `image_url` data-URI parts inside a user message's `content`
+  list.
+- It reads `choices[0].message.content` / `.tool_calls`, and
+  `timings.prompt_n` / `cache_n`.
+- Raises `LocalLLMUnavailable` on connection, timeout or 5xx.
+
+**With `local_first=True`:**
+1. **Chat (`brain/orchestrator.chat`):**
+   - Keep the pending-email "yes", presence fast path, skill guards and
+     weather precompute fast path exactly as they are.
+   - Replace router + privacy + reply with **one** local call: system =
+     `personality_prompt(tone, message, config)` (plus the
+     facts/music-taste context the local path already adds), then history,
+     then the user message; `tools` built from the registry (`name`,
+     `description`, `parameters_schema`); max_tokens 160.
+   - On a tool call: run guards, `run_skill`, then **a second local call**
+     on the same prefix, appending the assistant tool_call message plus a
+     `{"role":"tool", ...}` result, to phrase the reply. It replaces
+     `_phrase_skill_result` on this path.
+   - With no tool call, the text is the reply.
+   - **No privacy check on these turns:** nothing leaves the LAN.
+   - If `LocalLLMUnavailable`: fall back to today's path (router + privacy
+     + cloud/Ollama), logged at WARNING.
+2. **Screen reactions (`react_to_screen`):**
+   - Local first: same system prompt and instruction, image as a data URI,
+     `response_format` json_schema `{seen, line, emotion(enum)}`.
+   - On `LocalLLMUnavailable` or a parse failure twice, use the current
+     cloud call.
+   - Metrics route label `local`.
+3. **`process_screen_context`, event lines (`events.py`), skill phrasing,
+   email summary:** every call to `local_reply` / `_ollama_chat` goes
+   through `local_llm.chat` when `local_first`. Their cloud-first logic
+   flips to local-first, with the cloud as the fallback only after the
+   privacy check.
+4. **`privacy.is_safe_for_cloud`:** when `local_first`, it uses
+   `local_llm.chat` (max_tokens 4, temperature 0) instead of Ollama. It now
+   runs only where data would leave: the cloud fallbacks, and web_search /
+   delegate_research queries if they already call it.
+5. **Diary writer and self-memory (`diary.py`):** local first, with the
+   cloud as fallback. Keep the material gathering exactly as it is (making
+   the diary private is a later item).
+
+**Tests:**
+- `local_llm.chat` payload shape (tools, json_schema, image);
+- chat: a local reply with no tool, and a tool call → skill → phrasing (two
+  calls, the second carrying the tool message);
+- `LocalLLMUnavailable` → the old path;
+- screen reaction local, then the cloud fallback;
+- privacy uses `local_llm` when `local_first`;
+- `local_first=False` leaves every old test green.
+
+**Deploy:** felt-core CI → auto-deploy. The server `.env` needs no change:
+the defaults point at felt-llm.

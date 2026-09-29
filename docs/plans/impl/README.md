@@ -66,7 +66,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-23](WP-18-23-assets-world.md#wp-23) | Desktop world: platforms, ledges, falls, riding windows | WP-22, WP-21 | L | ✅ 09-27 (all 5 slices; slice 5 "good enough" after the seated-loop fix `b9e4bba`) |
 | **Phase 6: life features** (Mario's picks; ★ = his priority) |||||
 | [WP-25](WP-25-31-life-features.md#wp-25) | Proactive channel: server → desktop pushes | WP-09 | S–M | ✅ 09-27 (live: claimed in 0.4 s, expired never delivered; audio pre-synth `db0b5cb`) |
-| [WP-26](WP-25-31-life-features.md#wp-26) | ★ The diary: day-to-day continuity | WP-07, WP-15, WP-25 | M | 🔎 built + deployed 09-28 (with personality P4); awaiting first real morning |
+| [WP-26](WP-25-31-life-features.md#wp-26) | ★ The diary: day-to-day continuity | WP-07, WP-15, WP-25 | M | ✅ 09-30: entries written for 09-27 and 09-28 on their next mornings, 5 self-memories formed (diary writer now local on felt-llm) |
 | [WP-27](WP-25-31-life-features.md#wp-27) | ★ Wardrobe: ties Tier A + Tier C together (outfit definitions, triggers, model swap) | WP-33, WP-21, WP-15 | L | ☐ (Tier A automated first; Tier C outfits from Mario) |
 | [WP-28](WP-25-31-life-features.md#wp-28) | Screen-matched lighting + contact shadow | WP-07 | M | ☐ |
 | [WP-29](WP-25-31-life-features.md#wp-29) | Path of Exile 2 companion (loot prices, wiki RAG) | WP-07, WP-06 | M | ☐ |

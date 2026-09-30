@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outfit Review</title>
+<style>
+  :root {
+    --bg: #15171a; --panel: #1c1f23; --line: #2e3238; --text: #e8e6e1; --dim: #8b9098;
+    --accent: #f2d21b; --keep: #58c78a; --reject: #e0565b; --pending: #8b9098;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 14px/1.4 "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  #app { display: grid; grid-template-columns: 1fr 340px; height: 100%; }
+  #stage { position: relative; min-width: 0; }
+  canvas#view { display: block; width: 100%; height: 100%; }
+  #hud { position: absolute; left: 16px; top: 14px; font-family: var(--mono); font-size: 12px;
+    color: var(--dim); letter-spacing: .08em; text-transform: uppercase; pointer-events: none; }
+  #hud b { color: var(--accent); font-weight: 600; }
+  #loading { position: absolute; inset: 0; display: none; place-items: center; font-family: var(--mono);
+    color: var(--accent); letter-spacing: .2em; background: rgba(21,23,26,.35); }
+  #views { position: absolute; left: 16px; bottom: 16px; display: flex; gap: 6px; }
+  aside { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column;
+    padding: 18px; gap: 16px; overflow-y: auto; }
+  .label { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .14em;
+    text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  h1 { margin: 0; font-size: 18px; font-weight: 600; word-break: break-word; }
+  .badge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+    padding: 2px 8px; border: 1px solid currentColor; text-transform: uppercase; }
+  .s-pending { color: var(--pending); } .s-approved { color: var(--keep); } .s-rejected { color: var(--reject); }
+  .info { color: var(--dim); font-size: 13px; white-space: pre-wrap; }
+  button, select { font: inherit; color: var(--text); background: #25292e; border: 1px solid var(--line);
+    padding: 7px 10px; cursor: pointer; }
+  button:hover, select:hover { border-color: var(--dim); }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .cut { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+  .decide { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .decide button { padding: 14px 8px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  #keep { border-color: var(--keep); color: var(--keep); }
+  #reject { border-color: var(--reject); color: var(--reject); }
+  #keep.on { background: var(--keep); color: #0d1f15; } #reject.on { background: var(--reject); color: #2a0b0c; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  kbd { font-family: var(--mono); font-size: 10px; color: var(--dim); border: 1px solid var(--line); padding: 0 4px; }
+  select { width: 100%; }
+  #grid { position: absolute; inset: 0; background: var(--bg); display: none; overflow-y: auto; padding: 22px 26px 90px; z-index: 5; }
+  #grid h2 { font-family: var(--mono); font-size: 13px; letter-spacing: .16em; text-transform: uppercase;
+    margin: 22px 0 10px; display: flex; gap: 10px; align-items: center; }
+  #grid h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); cursor: pointer; text-align: left; padding: 0; }
+  .card:hover { border-color: var(--accent); }
+  .card img, .card .noimg { width: 100%; aspect-ratio: 3/5; object-fit: cover; display: block; background: #202428; }
+  .card .noimg { display: grid; place-items: center; color: var(--dim); font-family: var(--mono); font-size: 11px; }
+  .card .cap { padding: 6px 8px; font-size: 12px; word-break: break-all; border-top: 2px solid var(--line); }
+  .card.approved .cap { border-top-color: var(--keep); } .card.rejected .cap { border-top-color: var(--reject); }
+  #gridbar { position: fixed; left: 0; right: 340px; bottom: 0; padding: 14px 26px; background: var(--panel);
+    border-top: 1px solid var(--line); display: none; gap: 12px; align-items: center; z-index: 6; }
+  #gridbar .grow { flex: 1; color: var(--dim); font-size: 13px; }
+  #finalize { border-color: var(--accent); color: var(--accent); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 10px 18px; }
+  #finalize:disabled { opacity: .4; cursor: default; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #25292e;
+    border: 1px solid var(--accent); padding: 10px 16px; display: none; z-index: 9; max-width: 70vw; }
+  .help { font-size: 12px; color: var(--dim); line-height: 1.8; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="view"></canvas>
+    <div id="hud"><b id="hud-title">—</b> &nbsp;·&nbsp; <span id="hud-pos"></span></div>
+    <div id="loading">LOADING</div>
+    <div id="views">
+      <button data-view="front" class="cut">Front <kbd>1</kbd></button>
+      <button data-view="back" class="cut">Back <kbd>2</kbd></button>
+      <button data-view="side" class="cut">Side <kbd>3</kbd></button>
+      <button data-view="face" class="cut">Face <kbd>4</kbd></button>
+    </div>
+    <div id="grid"></div>
+  </div>
+  <aside>
+    <div>
+      <div class="label"><span>Item</span><span id="counter"></span></div>
+      <h1 id="name">—</h1>
+      <div style="margin-top:8px"><span id="state" class="badge s-pending">pending</span></div>
+      <div id="info" class="info" style="margin-top:10px"></div>
+    </div>
+    <div class="decide">
+      <button id="keep" class="cut">Keep <kbd>K</kbd></button>
+      <button id="reject" class="cut">Reject <kbd>R</kbd></button>
+    </div>
+    <div class="row">
+      <button id="prev">◀ Prev</button>
+      <button id="next">Next ▶</button>
+    </div>
+    <div>
+      <div class="label"><span>Animation</span><span><kbd>Space</kbd> pause</span></div>
+      <select id="anim"></select>
+      <div class="row" style="margin-top:8px">
+        <button id="play">Pause</button>
+        <select id="speed">
+          <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <div class="label"><span>Scene</span></div>
+      <div class="row">
+        <button id="bg">Light background</button>
+        <button id="gridbtn">Grid <kbd>G</kbd></button>
+      </div>
+    </div>
+    <div class="help">
+      Left-drag rotate · right-drag pan · wheel zoom<br>
+      <kbd>←</kbd>/<kbd>→</kbd> previous / next · <kbd>K</kbd> keep · <kbd>R</kbd> reject<br>
+      After the last pending item the grid opens: recheck anything, then Finalize.
+    </div>
+  </aside>
+</div>
+<div id="gridbar"><span class="grow" id="gridsum"></span><button id="backtoview">Back to viewer</button><button id="finalize" class="cut">Finalize</button></div>
+<div id="toast"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+  "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.5.5/lib/three-vrm.module.min.js",
+  "@pixiv/three-vrm-animation": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm-animation@3.5.5/lib/three-vrm-animation.module.min.js"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
+import { VRMAnimationLoaderPlugin, createVRMAnimationClip } from "@pixiv/three-vrm-animation";
+
+const $ = (id) => document.getElementById(id);
+const api = async (url, body) => {
+  const r = await fetch(url, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+};
+const toast = (msg, ms = 3500) => { const t = $("toast"); t.textContent = msg; t.style.display = "block"; clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = "none", ms); };
+
+// ---- three.js scene -------------------------------------------------------
+const canvas = $("view");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+const scene = new THREE.Scene();
+const BG_DARK = new THREE.Color(0x202328), BG_LIGHT = new THREE.Color(0xe9e9ec);
+scene.background = BG_DARK;
+const camera = new THREE.PerspectiveCamera(28, 1, 0.05, 50);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.screenSpacePanning = true;
+const sun = new THREE.DirectionalLight(0xffffff, Math.PI);
+sun.position.set(1, 1.6, 1.4);
+scene.add(sun, new THREE.HemisphereLight(0xffffff, 0x444444, 0.6));
+const floor = new THREE.Mesh(new THREE.CircleGeometry(0.45, 48), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 }));
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+const VIEWS = {
+  front: { pos: [0, 0.9, 4.3], target: [0, 0.82, 0] },
+  back:  { pos: [0, 0.9, -4.3], target: [0, 0.82, 0] },
+  side:  { pos: [4.3, 0.9, 0], target: [0, 0.82, 0] },
+  face:  { pos: [0, 1.38, 0.9], target: [0, 1.33, 0] },
+};
+function setView(v) {
+  const { pos, target } = VIEWS[v];
+  camera.position.set(...pos);
+  controls.target.set(...target);
+  controls.update();
+}
+setView("front");
+
+function resize() {
+  const { clientWidth: w, clientHeight: h } = canvas.parentElement;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(canvas.parentElement);
+
+const loader = new GLTFLoader();
+loader.register((p) => new VRMLoaderPlugin(p));
+loader.register((p) => new VRMAnimationLoaderPlugin(p));
+
+let vrm = null, mixer = null, playing = true, speed = 1;
+const animCache = new Map();
+
+async function loadVrm(url) {
+  const gltf = await loader.loadAsync(url);
+  const v = gltf.userData.vrm;
+  VRMUtils.removeUnnecessaryVertices(gltf.scene);
+  VRMUtils.combineSkeletons(gltf.scene);
+  v.scene.traverse((o) => { o.frustumCulled = false; });
+  return v;
+}
+
+async function applyAnim() {
+  if (!vrm) return;
+  mixer?.stopAllAction();
+  mixer = null;
+  const path = $("anim").value;
+  vrm.humanoid.resetNormalizedPose();
+  if (path) {
+    let va = animCache.get(path);
+    if (!va) {
+      const g = await loader.loadAsync("/anim/" + encodeURI(path));
+      va = g.userData.vrmAnimations[0];
+      animCache.set(path, va);
+    }
+    mixer = new THREE.AnimationMixer(vrm.scene);
+    mixer.clipAction(createVRMAnimationClip(va, vrm)).play();
+    mixer.update(0);
+  }
+  vrm.update(0);
+  vrm.springBoneManager?.reset();
+}
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop((t) => {
+  timer.update(t);
+  const dt = Math.min(timer.getDelta(), 0.1);
+  controls.update();
+  if (mixer && playing) mixer.update(dt * speed);
+  vrm?.update(playing ? dt * speed : 0);
+  renderer.render(scene, camera);
+});
+
+// Front snapshot for the grid, cropped to a 3:5 portrait around her.
+function snapshot() {
+  const saved = { pos: camera.position.clone(), target: controls.target.clone() };
+  setView("front");
+  renderer.render(scene, camera);
+  const w = canvas.width, h = canvas.height, cw = Math.round(h * 0.6);
+  const c = document.createElement("canvas");
+  c.width = 300; c.height = 500;
+  c.getContext("2d").drawImage(canvas, (w - cw) / 2, 0, cw, h, 0, 0, 300, 500);
+  camera.position.copy(saved.pos);
+  controls.target.copy(saved.target);
+  controls.update();
+  return c.toDataURL("image/webp", 0.85);
+}
+
+// ---- review state --------------------------------------------------------
+let state = { items: [] }, current = null, loadToken = 0;
+const byName = (n) => state.items.find((i) => i.name === n);
+const pendingNames = () => state.items.filter((i) => i.state === "pending").map((i) => i.name);
+
+async function refresh() {
+  state = await api("/api/state");
+  $("hud-title").textContent = state.title;
+}
+
+function fmtInfo(info) {
+  if (!info || !Object.keys(info).length) return "";
+  return Object.entries(info).filter(([k]) => k !== "dest" && k !== "title")
+    .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v) : v}`).join("\n");
+}
+
+function renderSide() {
+  const it = current && byName(current);
+  $("name").textContent = it ? (it.info?.title || it.name) : "Nothing to review";
+  $("info").textContent = it ? fmtInfo(it.info) + (it.info?.title ? `\nfile: ${it.name}` : "") : "";
+  const st = it ? it.state : "pending";
+  $("state").textContent = st; $("state").className = "badge s-" + st;
+  $("keep").classList.toggle("on", st === "approved");
+  $("reject").classList.toggle("on", st === "rejected");
+  const n = state.items.length, idx = it ? state.items.indexOf(it) + 1 : 0;
+  $("counter").textContent = n ? `${idx} / ${n}` : "";
+  const p = pendingNames().length;
+  $("hud-pos").textContent = `${p} pending · ${state.items.filter((i) => i.state === "approved").length} kept · ${state.items.filter((i) => i.state === "rejected").length} rejected`;
+}
+
+async function open(name) {
+  current = name;
+  hideGrid();
+  renderSide();
+  const it = byName(name);
+  if (!it) return;
+  const token = ++loadToken;
+  $("loading").style.display = "grid";
+  try {
+    const v = await loadVrm(`/files/${it.state}/${encodeURIComponent(it.name)}?t=${it.mtime}`);
+    if (token !== loadToken) { VRMUtils.deepDispose(v.scene); return; }
+    if (vrm) { scene.remove(vrm.scene); VRMUtils.deepDispose(vrm.scene); }
+    vrm = v;
+    scene.add(vrm.scene);
+    await applyAnim();
+  } catch (e) {
+    toast("Couldn't load " + name + ": " + e.message, 6000);
+  } finally {
+    if (token === loadToken) $("loading").style.display = "none";
+  }
+}
+
+async function decide(to) {
+  const it = current && byName(current);
+  if (!it || !vrm) return;
+  const target = it.state === to ? "pending" : to;  // pressing the active one again undoes it
+  try {
+    await api("/api/thumb", { name: it.name, data: snapshot() });
+    await api("/api/decide", { name: it.name, to: target });
+  } catch (e) { return toast("Failed: " + e.message, 6000); }
+  const wasPending = it.state === "pending";
+  await refresh();
+  renderSide();
+  if (target === "pending" || !wasPending) return;
+  const next = pendingNames()[0];
+  if (next) open(next); else showGrid();
+}
+
+function step(d) {
+  if (!state.items.length) return;
+  const i = Math.max(0, state.items.findIndex((x) => x.name === current));
+  open(state.items[(i + d + state.items.length) % state.items.length].name);
+}
+
+// ---- grid -------------------------------------------------------------
+function showGrid() {
+  const g = $("grid");
+  const sec = (title, st) => {
+    const list = state.items.filter((i) => i.state === st);
+    if (!list.length) return "";
+    return `<h2 class="s-${st}">${title} · ${list.length}</h2><div class="cards">` + list.map((i) =>
+      `<button class="card ${st}" data-name="${encodeURIComponent(i.name)}">` +
+      (i.thumb ? `<img loading="lazy" alt="" src="/thumbs/${encodeURIComponent(i.name.replace(/\.vrm$/i, ".webp"))}?t=${i.thumb}">` : `<div class="noimg">not viewed</div>`) +
+      `<div class="cap">${(i.info?.title || i.name).replace(/[<&]/g, (c) => ({ "<": "&lt;", "&": "&amp;" })[c])}</div></button>`).join("") + "</div>";
+  };
+  g.innerHTML = sec("Pending", "pending") + sec("Approved", "approved") + sec("Rejected", "rejected") ||
+    `<h2>Empty</h2><p class="help">Nothing in ${state.root}\\pending.</p>`;
+  g.style.display = "block";
+  const a = state.items.filter((i) => i.state === "approved").length;
+  $("gridsum").textContent = `${a} approved → ${state.dest || "(no destination set in batch.json)"}`;
+  $("finalize").disabled = !a || !state.dest;
+  $("gridbar").style.display = "flex";
+}
+function hideGrid() { $("grid").style.display = "none"; $("gridbar").style.display = "none"; }
+$("grid").addEventListener("click", (e) => {
+  const c = e.target.closest(".card");
+  if (c) open(decodeURIComponent(c.dataset.name));
+});
+
+$("finalize").onclick = async () => {
+  const a = state.items.filter((i) => i.state === "approved").length;
+  if (!confirm(`Move ${a} approved outfit(s) to\n${state.dest}?`)) return;
+  try {
+    const r = await api("/api/finalize", {});
+    toast(`Moved ${r.moved.length}` + (r.skipped.length ? ` · skipped ${r.skipped.length}: ${r.skipped.map((s) => s.name + " (" + s.why + ")").join("; ")}` : ""), 8000);
+  } catch (e) { toast("Finalize failed: " + e.message, 6000); }
+  await refresh();
+  showGrid();
+};
+
+// ---- controls ---------------------------------------------------------
+$("keep").onclick = () => decide("approved");
+$("reject").onclick = () => decide("rejected");
+$("prev").onclick = () => step(-1);
+$("next").onclick = () => step(1);
+$("gridbtn").onclick = () => ($("grid").style.display === "block" ? hideGrid() : showGrid());
+$("backtoview").onclick = hideGrid;
+$("play").onclick = () => { playing = !playing; $("play").textContent = playing ? "Pause" : "Play"; };
+$("speed").onchange = (e) => { speed = +e.target.value; };
+$("anim").onchange = () => { applyAnim(); try { localStorage.setItem("anim", $("anim").value); } catch {} };
+$("bg").onclick = () => {
+  const light = scene.background === BG_DARK;
+  scene.background = light ? BG_LIGHT : BG_DARK;
+  $("bg").textContent = light ? "Dark background" : "Light background";
+};
+document.querySelectorAll("[data-view]").forEach((b) => b.onclick = () => setView(b.dataset.view));
+addEventListener("keydown", (e) => {
+  if (e.target.tagName === "SELECT") return;
+  const k = e.key.toLowerCase();
+  if (k === "k" || k === "enter") decide("approved");
+  else if (k === "r" || k === "delete") decide("rejected");
+  else if (k === "arrowleft") step(-1);
+  else if (k === "arrowright") step(1);
+  else if (k === "g") $("gridbtn").click();
+  else if (k === " ") { e.preventDefault(); $("play").click(); }
+  else if ("1234".includes(k)) setView(["front", "back", "side", "face"][+k - 1]);
+  else return;
+});
+
+setInterval(() => fetch("/api/ping", { method: "POST" }).catch(() => {}), 5000);
+fetch("/api/ping", { method: "POST" });
+
+// ---- start --------------------------------------------------------------
+const anims = await api("/api/anims");
+const groups = {};
+for (const a of anims) (groups[a.includes("/") ? a.slice(0, a.lastIndexOf("/")) : "(root)"] ??= []).push(a);
+let saved = null; try { saved = localStorage.getItem("anim"); } catch {}
+$("anim").innerHTML = `<option value="">T-pose (no animation)</option>` + Object.entries(groups).map(([g, list]) =>
+  `<optgroup label="${g}">` + list.map((a) => `<option value="${a}">${a.slice(a.lastIndexOf("/") + 1).replace(/\.vrma$/, "")}</option>`).join("") + "</optgroup>").join("");
+$("anim").value = saved && anims.includes(saved) ? saved : (anims.find((a) => /idle\/idle01/.test(a)) || "");
+await refresh();
+const first = pendingNames()[0] || state.items[0]?.name;
+if (first) open(first); else { renderSide(); showGrid(); }
+</script>
+</body>
+</html>

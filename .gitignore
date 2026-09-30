@@ -31,3 +31,10 @@
 
 # Voice A/B listening rounds (test renders, not keepers)
 /Sounds/ab-test/
+
+# Review app batches (tools/outfits/review): generated VRMs derived from paid assets - never tracked
+/review/
+
+# Outfit tooling caches
+/tools/outfits/.preview_shaders/
+/tools/outfits/__pycache__/

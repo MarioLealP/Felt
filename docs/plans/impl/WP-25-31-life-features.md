@@ -563,6 +563,22 @@ server (Path of Exile 2 wiki RAG; see `runbooks/poe2-rag.md`).
 that includes a real price within the normal cooldown. A wiki question gets a
 RAG-grounded answer.
 
+**Built 2026-09-30** (felt-core `685fdf8`, infra `f406355`), adapted to fully local:
+- **The exe** is `pathofexilesteam.exe` (1000+ reactions already logged).
+- **Screen reactions:** `brain/poe_reactions.py` gives any `pathofexile*`
+  app a PoE-aware instruction and schema, which adds `items: [{name, kind}]`.
+  Up to 2 unique/currency items are priced with `poe_price_check`, called
+  directly; unique names are snapped to the trade cache with difflib. Then
+  one short felt-llm call writes her line with the price. So a normal
+  reaction is one call, a priced one two. Normal cooldown.
+- **Wiki:** the `poe2_wiki` skill calls poe2-rag's new `/api/search`
+  (retrieval only), because `/api/ask` answers with cloud Gemini through
+  ninerouter. The passages go to felt-llm like any other tool result. No
+  router examples are needed any more: one call with native tools
+  (WP-36), and the skill description steers it away from web_search.
+- **Needs Mario's live check:** hover a unique or currency tooltip in PoE2
+  (cooldown permitting), and ask her a mechanic question.
+
 ---
 
 ## WP-30

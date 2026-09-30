@@ -22,8 +22,13 @@ BATCH = Path("/mnt/e/Felt/review/wardrobe")
 
 def main():
     sets = {s["id"]: s for s in json.loads((SETS / "sets.json").read_text())}
-    felt = json.loads((SETS / "felt_pass.json").read_text())
+    felt = json.loads((SETS / "felt_rank.json").read_text())
     picks = felt["wardrobe"]["picks"]
+    ranked = list(felt["scores"])
+    # The one-at-a-time pass (superseded, but its "when I'd wear it" is still
+    # a nice note where it exists).
+    old = SETS / "felt_pass.json"
+    occasions = {k: v.get("occasion") for k, v in json.loads(old.read_text())["sets"].items()} if old.exists() else {}
     (BATCH / "pending").mkdir(parents=True, exist_ok=True)
     (BATCH / "batch.json").write_text(json.dumps({
         "title": f"Felt's wardrobe picks ({len(picks)} of {len(sets)})",
@@ -31,15 +36,15 @@ def main():
         "hint": f"Felt: {felt['wardrobe']['why']}",
     }, indent=1))
     for sid in picks:
-        s, r = sets[sid], felt["sets"][sid]
+        s = sets[sid]
         vrm = BATCH / "pending" / f"{sid}.vrm"
         if not vrm.exists():
             build(s, vrm)
         pieces = [Path(p["rel"]).stem + ("" if p["look"] == "original" else f" [{p['look']}]") for p in s["pieces"]]
         (BATCH / "pending" / f"{sid}.json").write_text(json.dumps({
-            "title": f"{sid} - Felt {r['rating']}/10",
-            "felt": r["comment"],
-            "occasion": r["occasion"],
+            "title": f"{sid} - Felt's #{ranked.index(sid) + 1} of {len(ranked)}",
+            "felt": " / ".join(dict.fromkeys(felt["comments"].get(sid, []))),
+            **({"occasion": occasions[sid]} if occasions.get(sid) else {}),
             "pieces": pieces,
             "styles": s["styles"],
         }, indent=1))

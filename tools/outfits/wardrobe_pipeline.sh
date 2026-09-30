@@ -13,7 +13,7 @@ while pgrep -f "python design_styles.py|python tag_pieces.py" >/dev/null; do sle
 # Anything that errored gets one more go.
 $PY design_styles.py
 $PY tag_pieces.py
-log "sets";        $PY make_sets.py --n 200 --append
+[ -f /mnt/e/Felt/review/wardrobe-sets/sets.json ] || { log "sets"; $PY make_sets.py --n 200; }
 log "renders";     $PY render_sets.py
 log "felt pass";   $PY felt_pass.py
 log "review batch"; $PY build_review.py

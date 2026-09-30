@@ -435,6 +435,47 @@ after a swap.
 
 ---
 
+### Parked for polish (2026-09-30): generated mix-and-match outfits
+
+Mario: "park it, leave it to polish". Tier C (16 VRoid outfits) and 10
+Tier-A recolour variants are live. What exists for the polish pass:
+
+- **Pipeline (umbrella `tools/outfits/`):**
+  - `name_parts.py`: a watcher that auto-names VRoid part exports.
+  - `combine.py`: splices garments onto a base.
+  - `patterns.py`: styles fabric per garment.
+  - `design_styles.py`: Felt designs 3 looks per piece.
+  - `tag_pieces.py`, `fit.py` (the geometric poke check) and `make_sets.py`.
+  - `render_sets.py` and `felt_pass.py` (Felt ranks sets in groups of four).
+  - `build_review.py` and the review app `tools/outfits/review/`.
+- **Data:**
+  - 98 named pieces in `E:\Felt\Model\OutfitBuilderNamed\`, with their
+    catalog, `styles.json`, `tags.json` and `fit.json`;
+  - 144 sets and their renders in `E:\Felt\review\wardrobe-sets\`.
+- **Learned the hard way:**
+  1. **Feet: shoe exports must be the base.** Every VRoid shoe export raises
+     her skeleton by 1.4 to 4.5 cm and reposes and re-meshes the feet.
+     Splicing a shoe onto the flat-footed undies base mangles the feet as
+     soon as the mesh is skinned. Static pyrender renders never skin, so
+     they hid it. Fix, verified in the three-vrm viewer: base = the shoe
+     export itself (undies + shoe, right skeleton and feet), with the other
+     garments spliced on. Still to build into `combine.py`:
+     - restyling the base's own shoe material;
+     - painting socks relative to the plain undies' skin texture, not the
+       shoe base's.
+  2. **Styling per piece, then mixing by rules, gives incoherent outfits.**
+     Mario's review: patterns on shoes and socks, matching camo or gradient
+     twins, a grey fancy top + skirt + fishnets, 9/15 dresses. Next approach:
+     style at the outfit level, where Felt composes whole outfits from the
+     catalog with one palette, and hard rules apply: at most one patterned
+     piece, solid shoes, socks solid or striped. Try a batch of ~20 before
+     scaling.
+  3. **Felt rating outfits one at a time isn't a filter** (98/98 "wear",
+     95 of them 8/10). Ranking in groups of four works.
+  4. For WP-28 (lighting), check skinning-sensitive things in the animated
+     viewer, not in bind-pose renders: the review app's `?item=&view=feet`
+     plus headless Edge with its own `--user-data-dir`.
+
 ## WP-28
 
 ### Screen-matched lighting + contact shadow

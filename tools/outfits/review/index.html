@@ -89,6 +89,7 @@
       <button data-view="back" class="cut">Back <kbd>2</kbd></button>
       <button data-view="side" class="cut">Side <kbd>3</kbd></button>
       <button data-view="face" class="cut">Face <kbd>4</kbd></button>
+      <button data-view="feet" class="cut">Feet <kbd>5</kbd></button>
     </div>
     <div id="media"><div class="tag" id="media-tag"></div><div class="line" id="media-line"></div>
       <audio id="audio" controls preload="auto"></audio>
@@ -191,6 +192,7 @@ const VIEWS = {
   back:  { pos: [0, 0.9, -4.3], target: [0, 0.82, 0] },
   side:  { pos: [4.3, 0.9, 0], target: [0, 0.82, 0] },
   face:  { pos: [0, 1.38, 0.9], target: [0, 1.33, 0] },
+  feet:  { pos: [0.5, 0.3, 1.1], target: [0, 0.1, 0] },
 };
 function setView(v) {
   const { pos, target } = VIEWS[v];
@@ -458,7 +460,7 @@ addEventListener("keydown", (e) => {
     if (it?.kind === "audio") { const a = $("audio"); a.paused ? a.play() : a.pause(); }
     else $("play").click();
   }
-  else if ("1234".includes(k)) setView(["front", "back", "side", "face"][+k - 1]);
+  else if ("12345".includes(k)) setView(["front", "back", "side", "face", "feet"][+k - 1]);
   else return;
 });
 
@@ -474,8 +476,10 @@ $("anim").innerHTML = `<option value="">T-pose (no animation)</option>` + Object
   `<optgroup label="${g}">` + list.map((a) => `<option value="${a}">${a.slice(a.lastIndexOf("/") + 1).replace(/\.vrma$/, "")}</option>`).join("") + "</optgroup>").join("");
 $("anim").value = saved && anims.includes(saved) ? saved : (anims.find((a) => /idle\/idle01/.test(a)) || "");
 await refresh();
-const first = pendingNames()[0] || state.items[0]?.name;
-if (first) open(first); else { renderSide(); showGrid(); }
+// ?item=<file>&view=<preset>: open one item in one view (headless checks, links).
+const q = new URLSearchParams(location.search);
+const first = (q.get("item") && byName(q.get("item")) ? q.get("item") : null) || pendingNames()[0] || state.items[0]?.name;
+if (first) { await open(first); if (VIEWS[q.get("view")]) setView(q.get("view")); } else { renderSide(); showGrid(); }
 </script>
 </body>
 </html>

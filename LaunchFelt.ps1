@@ -1,6 +1,9 @@
 Write-Host "Stopping running Felt instances..."
 Get-WmiObject Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -match "felt_animation" -or $_.CommandLine -match "felt-tray" -or $_.CommandLine -match "felt_tray" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Stop-Process -Name "FeltOverlay" -ErrorAction SilentlyContinue
+# The overlay can also run as the stock Godot.exe with --main-pack FeltOverlay.pck
+# (Smart App Control blocks the exported exe) - stop only that one, never an editor.
+Get-WmiObject Win32_Process -Filter "Name='Godot.exe'" | Where-Object { $_.CommandLine -match "FeltOverlay.pck" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Start-Sleep -Seconds 1
 
 Write-Host "Starting Felt Animation (also launches the overlay)..."

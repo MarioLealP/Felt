@@ -1,4 +1,4 @@
-"""Outfit review app - local server (stdlib only; run with Windows Python).
+r"""Outfit review app - local server (stdlib only; run with Windows Python).
 
 A review batch is a folder:
     <batch>/pending/*.vrm      to look at (optional <name>.json sidecar: title, info, dest)

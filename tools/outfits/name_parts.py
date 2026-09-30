@@ -47,7 +47,7 @@ from render_preview import render_views  # noqa: E402
 
 TYPES = ["top", "bottom", "dress", "shoes", "socks", "acc"]
 _TYPED = re.compile(rf"^({'|'.join(TYPES)})_", re.I)
-DEFAULT_DIR = Path("/mnt/e/Felt/Model/OutfitBuilder")
+DEFAULT_DIR = Path("/mnt/e/Felt/Model/OutfitBuilder/Tops")
 
 _SCHEMA = {
     "type": "object",

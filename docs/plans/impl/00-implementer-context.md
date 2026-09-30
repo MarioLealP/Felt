@@ -45,10 +45,16 @@ implementation" section.
   batches that Mario curates by ear. Laugh and chuckle are banned outright
   ("horrendous", 2026-09-25).
 - **Screen-capture blocklist** (enforced by process/window *before* any
-  pixels are grabbed, never by prompting a model): **Discord, all web
-  browsers, File Explorer, WhatsApp, Telegram, Phone Link**, plus KeePassXC and
-  banking. If nothing allowed is visible, there's no screen reaction.
-- **Cloud privacy line.** Fetching data always happens locally. Result *text*
+  pixels are grabbed, never by prompting a model): **Discord, WhatsApp,
+  Telegram, Phone Link, KeePassXC, banking windows (by title) and private
+  browser windows (InPrivate / Incognito / Private Browsing, by title)**. If
+  nothing allowed is visible, there's no screen reaction. Browsers and File
+  Explorer were unblocked on 2026-09-30 once Felt went fully local (Mario:
+  "open the browser with everything that doesn't sound bank, also private
+  browser windows"). What stays blocked is what she could say out loud:
+  other people's messages, secrets, money. WP-28's ambient-light sampling
+  (a handful of averaged colours, never stored or sent) ignores the list.
+- **(Superseded 2026-09-29 by WP-36: Felt is fully local, no cloud AI. The next two rules are history.)** **Cloud privacy line.** Fetching data always happens locally. Result *text*
   may go to Gemini/Gemma to be phrased. Email, calendar, alarms, shopping list
   and music are fine for the cloud. Documents/Obsidian, remembered facts and
   phone location are never sent. Anything else goes through the local

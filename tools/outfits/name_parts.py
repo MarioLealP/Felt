@@ -71,6 +71,8 @@ FOLDER_TYPES = {
     "shoe": "shoes", "shoes": "shoes", "footwear": "shoes",
     "sock": "socks", "socks": "socks", "legwear": "socks", "tights": "socks",
     "acc": "acc", "accessory": "acc", "accessories": "acc",
+    # Mario's folder names (2026-09-30)
+    "legs": "bottom", "neck_accessory": "acc", "neck accessories": "acc", "arm accessories": "acc", "arm_accessory": "acc",
 }
 _POLL_S = 3
 _STABLE_S = 6       # unchanged this long = VRoid finished writing
@@ -303,8 +305,8 @@ def process(path: Path, base_path: Path) -> None:
     img = closeup(path, iso, info["lo"], info["hi"])
     iso.unlink()
     known = next((FOLDER_TYPES[p.lower()] for p in reversed(rel.parts) if p.lower() in FOLDER_TYPES), None)
-    if not info["mesh"]:
-        known = "socks"  # skin paint is always legwear
+    if not info["mesh"] and known is None:
+        known = "socks"  # skin paint outside a category folder: legwear
     ans = ask_llm(img, info["facts"], known)
     kind = known or (ans["type"] if ans["type"] in TYPES else "acc")
     (NAMED / rel).mkdir(parents=True, exist_ok=True)

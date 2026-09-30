@@ -13,7 +13,7 @@ simplify skin elsewhere (the shorts export came with lower-detail feet),
 and those must not become holes.
 
 CLI:  python combine.py OUT.vrm BASE.vrm PART.vrm[:#rrggbb] [PART.vrm[:#rrggbb] ...]
-      (":#rrggbb" multiply-tints that part's white fabric)
+      (":#rrggbb" recolours that part - patterns.apply_style, solid)
 """
 
 import copy
@@ -27,6 +27,7 @@ import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent))
+from patterns import apply_style, mean_color  # noqa: E402
 from vrm_textures import read_glb, write_glb  # noqa: E402
 
 _CT = {5121: np.uint8, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}
@@ -181,6 +182,24 @@ def parse_color(text):
     return [int(text[i : i + 2], 16) / 255 for i in (0, 2, 4)]
 
 
+_STYLE_CACHE = Path.home() / ".cache/felt-outfits/styled"
+
+
+def _styled_texture(data: bytes, style: dict, seed: int) -> bytes:
+    """apply_style on an encoded texture, cached on disk by (texture, style)
+    - building hundreds of outfits restyles the same pieces over and over."""
+    key = hashlib.sha1(data + json.dumps(style, sort_keys=True).encode() + str(seed).encode()).hexdigest()
+    f = _STYLE_CACHE / f"{key}.png"
+    if f.exists():
+        return f.read_bytes()
+    img = np.asarray(Image.open(io.BytesIO(data)).convert("RGBA"))
+    buf = io.BytesIO()
+    Image.fromarray(apply_style(img, style, seed=seed)).save(buf, "PNG")
+    _STYLE_CACHE.mkdir(parents=True, exist_ok=True)
+    f.write_bytes(buf.getvalue())
+    return buf.getvalue()
+
+
 def _texture_refs(obj, key=""):
     """Every textureInfo dict (has 'index') under a *Texture key."""
     if isinstance(obj, dict):
@@ -246,37 +265,37 @@ class Combiner:
         return out_idx
 
     # -- materials -------------------------------------------------------
-    def _copy_material(self, part, mi, tint=None):
+    def _copy_material(self, part, mi, style=None):
         mat = copy.deepcopy(part.js["materials"][mi])
         colour_refs = set()
-        if tint:
+        if style:
             bc = mat.get("pbrMetallicRoughness", {}).get("baseColorTexture")
             sm = mat.get("extensions", {}).get("VRMC_materials_mtoon", {}).get("shadeMultiplyTexture")
             colour_refs = {id(r) for r in (bc, sm) if r}
             mt = mat.get("extensions", {}).get("VRMC_materials_mtoon", {})
             if "shadeColorFactor" in mt:
-                mt["shadeColorFactor"] = [c * t for c, t in zip(mt["shadeColorFactor"], tint)]
+                # Shadow tone follows the new colour at the old shadow's depth.
+                old = mt["shadeColorFactor"]
+                depth = 0.299 * old[0] + 0.587 * old[1] + 0.114 * old[2]
+                mt["shadeColorFactor"] = [float(v) for v in np.clip(mean_color(style) * depth * 1.1, 0, 1)]
         tex_map = {}
         for ref in _texture_refs(mat):
             key = (ref["index"], id(ref) in colour_refs)
             if key not in tex_map:
-                tex_map[key] = self._copy_texture(part, ref["index"], tint if key[1] else None)
+                tex_map[key] = self._copy_texture(part, ref["index"], style if key[1] else None)
             ref["index"] = tex_map[key]
         self.out.js["materials"].append(mat)
         return len(self.out.js["materials"]) - 1
 
-    def _copy_texture(self, part, t, tint=None):
+    def _copy_texture(self, part, t, style=None):
         src = part.js["textures"][t]
         data = part.image_bytes(src["source"])
-        if tint:
-            img = np.asarray(Image.open(io.BytesIO(data)).convert("RGBA"))
-            buf = io.BytesIO()
-            Image.fromarray(tint_rgba(img, tint)).save(buf, "PNG")
-            data = buf.getvalue()
+        if style:
+            data = _styled_texture(data, style, t)
         h = hashlib.sha1(data).hexdigest()
         if h not in self.img_hash:
             img = {k: v for k, v in part.js["images"][src["source"]].items() if k != "bufferView"}
-            if tint:
+            if style:
                 img["mimeType"] = "image/png"
             img["bufferView"] = self.out.add_view(data)
             self.out.js["images"].append(img)
@@ -313,7 +332,9 @@ class Combiner:
         return new
 
     # -- garments --------------------------------------------------------
-    def add_part(self, path, label, tint=None):
+    def add_part(self, path, label, style=None):
+        """`style`: a patterns.py spec ({"pattern", "colors", "scale"}) for
+        this part's garment, or None to keep it as exported."""
         part = Glb(path)
         out_idx = self._add_nodes(part)
         pnames = [n.get("name") for n in part.js["nodes"]]
@@ -350,13 +371,13 @@ class Combiner:
                         if name == "POSITION":
                             garment_pos.append(data)
                 ind = self.out.add_acc(remap.astype(np.uint32), "SCALAR", 34963)
-                prim = {"mode": 4, "indices": ind, "attributes": attrs, "material": self._copy_material(part, p["material"], tint)}
+                prim = {"mode": 4, "indices": ind, "attributes": attrs, "material": self._copy_material(part, p["material"], style)}
                 omesh = self.out.js["meshes"][onode["mesh"]]
                 assert not omesh["primitives"][0].get("targets"), "morph-target mesh: garment can't join it"
                 if "extras" in omesh["primitives"][0]:
                     prim["extras"] = copy.deepcopy(omesh["primitives"][0]["extras"])
                 omesh["primitives"].append(prim)
-        painted = self._paint_skin(part, tint)
+        painted = self._paint_skin(part, style)
         assert garment_pos or painted, f"{path}: nothing the base lacks (no garment, no skin paint)"
         springs = self._copy_springs(part, out_idx)
         culled = self._cull_skin(part, np.concatenate(garment_pos)) if garment_pos else 0
@@ -369,7 +390,7 @@ class Combiner:
         t = g.js["materials"][p["material"]]["pbrMetallicRoughness"]["baseColorTexture"]["index"]
         return np.asarray(Image.open(io.BytesIO(g.image_bytes(g.js["textures"][t]["source"]))).convert("RGBA")).copy()
 
-    def _paint_skin(self, part, tint=None):
+    def _paint_skin(self, part, style=None):
         """Legwear (socks, tights) is painted on the skin texture, not a mesh:
         carry over whatever the part's skin texture changed vs the base."""
         tex = self._skin_texture(part)
@@ -377,8 +398,8 @@ class Combiner:
         assert tex.shape == ref.shape, "skin texture size differs"
         mask = np.abs(tex.astype(int) - ref.astype(int)).max(-1) > 2
         if mask.any():
-            if tint:
-                tex = tint_rgba(tex, tint)
+            if style:
+                tex = apply_style(tex, style, region=mask)
             self.skin_tex[mask] = tex[mask]
             self.skin_tex_dirty = True
         return int(mask.sum())
@@ -445,7 +466,8 @@ def main(argv):
     c = Combiner(base)
     for p in parts:
         path, _, colour = p.partition(":#")
-        c.add_part(path, Path(path).stem.removeprefix("Felt_"), parse_color(colour) if colour else None)
+        style = {"pattern": "solid", "colors": ["#" + colour]} if colour else None
+        c.add_part(path, Path(path).stem.removeprefix("Felt_"), style)
     c.write(out, Path(out).stem)
 
 

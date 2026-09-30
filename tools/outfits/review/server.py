@@ -16,7 +16,8 @@ own .vrma animations from the Godot overlay's library, and calls:
     GET  /api/state            batch title/dest + every item with its state
     GET  /api/anims            the .vrma library (relative paths)
     GET  /files/<state>/<name> a VRM;  GET /anim/<path> a .vrma;  GET /thumbs/<name>
-    POST /api/decide {name, to}   move between pending/approved/rejected
+    POST /api/decide {name, to}   move between pending/approved/rejected/fix
+    POST /api/comment {name, text} Mario's note, saved as "mario" in the sidecar
     POST /api/thumb  {name, data} save a snapshot (data: URL)
     POST /api/finalize            move approved/* to each item's dest
     POST /api/ping                heartbeat; the server exits ~45 s after the
@@ -43,7 +44,7 @@ from urllib.parse import unquote, urlparse
 HERE = Path(__file__).parent
 REVIEW_ROOT = Path(r"E:\Felt\review")  # one sub-folder per batch; gitignored in the umbrella repo
 ANIM_DIR = Path(r"E:\Felt\felt-character-assets\felt-godot-overlay\animations\library")
-STATES = ("pending", "approved", "rejected")
+STATES = ("pending", "approved", "rejected", "fix")  # fix = "close, see my comment"
 # What a batch can hold: 3D models, audio clips, images.
 KINDS = {".vrm": "vrm", ".wav": "audio", ".mp3": "audio", ".ogg": "audio",
          ".png": "image", ".jpg": "image", ".jpeg": "image", ".webp": "image"}
@@ -102,6 +103,19 @@ class Batch:
                 if side.exists():
                     shutil.move(str(side), str(self.root / to / side.name))
         return to
+
+    def comment(self, name: str, text: str):
+        with self.lock:
+            state, path = self.find(name)
+            if path is None:
+                raise FileNotFoundError(name)
+            side = path.with_suffix(".json")
+            info = json.loads(side.read_text(encoding="utf-8")) if side.exists() else {}
+            if text.strip():
+                info["mario"] = text.strip()
+            else:
+                info.pop("mario", None)
+            side.write_text(json.dumps(info, indent=1, ensure_ascii=False), encoding="utf-8")
 
     def finalize(self):
         default_dest = self.meta().get("dest")
@@ -202,6 +216,9 @@ def make_handler(batch: Batch):
                     return self._json({"ok": True})
                 if url == "/api/decide":
                     return self._json({"state": batch.decide(body["name"], body["to"])})
+                if url == "/api/comment":
+                    batch.comment(body["name"], body.get("text", ""))
+                    return self._json({"ok": True})
                 if url == "/api/thumb":
                     name = Path(body["name"]).stem
                     data = body["data"].split(",", 1)[1]

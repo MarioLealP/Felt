@@ -68,7 +68,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-25](WP-25-31-life-features.md#wp-25) | Proactive channel: server → desktop pushes | WP-09 | S–M | ✅ 09-27 (live: claimed in 0.4 s, expired never delivered; audio pre-synth `db0b5cb`) |
 | [WP-26](WP-25-31-life-features.md#wp-26) | ★ The diary: day-to-day continuity | WP-07, WP-15, WP-25 | M | ✅ 09-30: entries written for 09-27 and 09-28 on their next mornings, 5 self-memories formed (diary writer now local on felt-llm) |
 | [WP-27](WP-25-31-life-features.md#wp-27) | ★ Wardrobe: ties Tier A + Tier C together (outfit definitions, triggers, model swap) | WP-33, WP-21, WP-15 | L | 🟡 Tier C live 09-30 (16 VRM outfits, whole-model swap, date/night/daily/ambient/bikini rules; accepted by Mario: "all perfect"); Tier A recolours left |
-| [WP-28](WP-25-31-life-features.md#wp-28) | Screen-matched lighting + contact shadow | WP-07 | M | ☐ |
+| [WP-28](WP-25-31-life-features.md#wp-28) | Screen-matched lighting + contact shadow | WP-07 | M | 🔎 built 09-30 (tray `6098b45`, animation `837b64c`, overlay `8e45dc7`); needs Mario's look: bright window vs dark game, the shadow |
 | [WP-29](WP-25-31-life-features.md#wp-29) | Path of Exile 2 companion (loot prices, wiki RAG) | WP-07, WP-06 | M | ☐ |
 | [WP-30](WP-25-31-life-features.md#wp-30) | Hobbies while Mario is AFK | WP-21, WP-17, WP-26 | M | ☐ |
 | [WP-31](WP-25-31-life-features.md#wp-31) | Calendar heads-up | WP-25 | S | ☐ |

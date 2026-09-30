@@ -472,8 +472,20 @@ what's behind her makes her look like she's *in* the scene.
   the transparent window.
 
 **Accept**: over a bright white window vs a dark game she visibly picks up
-the scene's tint without looking odd; the blob shadow grounds her; with a
-browser behind her, the lighting goes neutral (and the logs show it skipped).
+the scene's tint without looking odd; the blob shadow grounds her; ~~with a
+browser behind her, the lighting goes neutral~~ (dropped 2026-09-30: Felt is fully local,
+Mario loosened the filter; the sampling never leaves felt-tray anyway).
+
+**Built 2026-09-30.** felt-tray `ambient.py` (her box from felt-animation `GET
+/ambient/char_rect`, grown 50 %, one HALFTONE StretchBlt to 64x64, her box
+masked, average / dominant bright / luminance, sent on change) ->
+felt-animation `POST /ambient_light` -> overlay `{"ambient_light"}`. The
+overlay reports `{"char_rect"}` every 0.5 s while she moves. The shadow is a
+camera-facing ellipse on her floor line behind her feet: the views are
+straight-on orthographic, so a floor decal would be edge-on and invisible.
+Only its top half shows at the monitor's bottom edge. Knobs:
+`FELT_AMBIENT_LIGHT_ENABLED`, `FELT_AMBIENT_LIGHT_S`; in main.gd `AMB_*`,
+`SHADOW_ALPHA`, `SHADOW_HEIGHT_M`.
 
 ---
 

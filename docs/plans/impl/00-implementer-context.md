@@ -86,13 +86,13 @@ implementation" section.
 |---|---|
 | Desktop (Windows 11, AMD RX 6700, 3440×1440 primary + 1920×1080 at x=3440,y=357) | this machine. Felt's local pieces run here. |
 | Felt umbrella | `E:\Felt\` (git repo for docs/scripts). Each component is its own git repo inside it (gitignored by the umbrella). `F:\workspace\Projects\<repo>` are **junctions** to these, same files. |
-| felt-core (brain/API) | code `E:\Felt\felt-core`; **runs on the server** `clockmost` (192.168.1.110:8420) in Docker. |
+| felt-core (brain/API) | code `E:\Felt\felt-core`; **runs on the server** `clockmost` (192.168.10.110:8420) in Docker. |
 | felt-animation (behaviour, lipsync, drives the overlay) | `E:\Felt\felt-animation`, desktop, port 8421. |
 | felt-tray (hotkeys, mic, tray, watcher, playback) | `E:\Felt\felt-tray`, desktop. |
 | felt-vision (local llava describer) | `E:\Felt\felt-vision`, desktop, port 8080. Being superseded by WP-06. |
 | Godot overlay (the avatar) | `E:\Felt\felt-character-assets\felt-godot-overlay\` (`main.gd`), exported to `build\windows\FeltOverlay.exe`. |
 | Animation library | `E:\Felt\Animations` (junction). Folder path = tag, e.g. `emotion/happy/*.vrma`. |
-| felt-voice (STT + TTS + RVC) | Nitro5 laptop `ssh clockmost-nitro5` (192.168.1.104), `felt-voice.service`. |
+| felt-voice (STT + TTS + RVC) | Nitro5 laptop `ssh clockmost-nitro5` (192.168.10.104), `felt-voice.service`. |
 | Ollama for felt-core | Nitro5 `:11434` (router/privacy `qwen2.5:1.5b`, local chat `qwen2.5:3b` at `num_ctx` 4096 since 2026-09-25, downsized so the 6 GB GPU fits the voice stack; the router runs on CPU). |
 | Ollama for desktop pieces | desktop `127.0.0.1:11434`. |
 
@@ -148,7 +148,7 @@ extend this protocol. Keep it additive and document new messages in
     shows `…:<your 12-char sha>` and `healthy`. The deploy log is
     `/var/log/clockmost-deploy.log`.
   - Verify the behaviour: `curl` the changed endpoint at
-    `http://192.168.1.110:8420`, and run
+    `http://192.168.10.110:8420`, and run
     `docker logs --since 5m felt-core-felt-core-1`.
   - Secrets (Gemini key, etc.) are in that project's sops `secrets.env`. Don't
     print or commit them. New *non-secret* settings go in felt-core's

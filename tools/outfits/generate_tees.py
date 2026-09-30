@@ -12,7 +12,8 @@ import shutil
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageChops
 
-COMFYUI_URL = "http://192.168.1.104:8188"
+# The laptop's ComfyUI - from the environment, never an IP in the repo (Mario's rule).
+COMFYUI_URL = os.environ["FELT_COMFYUI_URL"]
 TEES_DIR = Path("E:/Felt/Assets/tees")
 TOOLS_DIR = Path("E:/Felt/tools/outfits")
 BASE_TEE = TOOLS_DIR / "base_tee.png"

@@ -17,9 +17,9 @@ inference from those documents.
 
 | Machine | OS / hardware | Role |
 |---|---|---|
-| **Desktop** (`CLOCKMOST`, `192.168.1.74`) | Windows 11 Pro, AMD RX 6700, 3440×1440 primary + 1920×1080 secondary at `x=3440,y=357` | Where Mario is. Runs the avatar overlay, the desktop shell, screen/input capture, and a desktop-local Ollama. Smart App Control (SAC) is on — see `ENGINEERING-RULES.md` §6. |
-| **Nitro5 laptop** (`clockmost-nitro5`, `192.168.1.104`) | Linux, 6 GB VRAM GPU, login shell **fish** | The GPU node: voice (STT/TTS/RVC) and felt-core's own local-chat Ollama share this one card. Not production-grade — stopping/restarting services here for a batch job is fine (`00-implementer-context.md`). |
-| **clockmost server** (`192.168.1.110`, `clockmost.com`) | AlmaLinux, Docker Compose, Caddy + Authentik SSO | Runs felt-core (the brain) plus sibling self-hosted services it calls (ntfy, Zabbix, drive-rag, poe2rag, Home Assistant, Gitea). Deploy is a **vendored-copy** flow, not a direct push (§3). |
+| **Desktop** (`CLOCKMOST`, `192.168.10.74`) | Windows 11 Pro, AMD RX 6700, 3440×1440 primary + 1920×1080 secondary at `x=3440,y=357` | Where Mario is. Runs the avatar overlay, the desktop shell, screen/input capture, and a desktop-local Ollama. Smart App Control (SAC) is on — see `ENGINEERING-RULES.md` §6. |
+| **Nitro5 laptop** (`clockmost-nitro5`, `192.168.10.104`) | Linux, 6 GB VRAM GPU, login shell **fish** | The GPU node: voice (STT/TTS/RVC) and felt-core's own local-chat Ollama share this one card. Not production-grade — stopping/restarting services here for a batch job is fine (`00-implementer-context.md`). |
+| **clockmost server** (`192.168.10.110`, `clockmost.com`) | AlmaLinux, Docker Compose, Caddy + Authentik SSO | Runs felt-core (the brain) plus sibling self-hosted services it calls (ntfy, Zabbix, drive-rag, poe2rag, Home Assistant, Gitea). Deploy is a **vendored-copy** flow, not a direct push (§3). |
 
 ## 2. Services → ports → launch
 

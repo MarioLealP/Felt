@@ -116,3 +116,21 @@ sudo systemctl restart felt-voice
 Rollback: `FELT_VOICE_TTS_ENGINE=chatterbox` and `FELT_VOICE_RVC_PITCH=0` in
 `~/felt-voice/.env`, then restart felt-voice. The previous `.env` is saved
 as `.env.bak-chatterbox-20260929`.
+
+## Mood strength (2026-09-30, felt-voice `d743e7d`)
+
+- **Symptom (Mario):** with moods on, she "always sounds like she's
+  exclaiming something".
+- **Cause:** the emotion vectors went to IndexTTS raw. IndexTTS mixes
+  `presets × sum + reference voice × (1 − sum)`, and amused summed to 0.9,
+  so 90% of the delivery was a stock emotion preset. Amused is also the
+  most-used mood (59 of the last ~110 lines).
+- **Fix:** felt-indextts now passes each vector through IndexTTS's own
+  `normalize_emo_vec`, which biases down surprised and calm and caps the
+  sum at 0.8, then scales it by **0.6**. Mario picked 0.6 by ear from now /
+  100% / 60% / 35% takes of all eight moods ("60% for normal mood"). Amused
+  now sums to 0.43.
+- Settings: `FELT_INDEXTTS_EMOTION_NORMALIZE` (default true) and
+  `FELT_INDEXTTS_EMOTION_STRENGTH` (default 0.6). Both `/v1/tts` and `/tts`
+  accept per-request `emotion_strength` and `emotion_normalize` overrides
+  for A/B tests.

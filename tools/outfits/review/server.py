@@ -1,10 +1,14 @@
 r"""Outfit review app - local server (stdlib only; run with Windows Python).
 
 A review batch is a folder:
-    <batch>/pending/*.vrm      to look at (optional <name>.json sidecar: title, info, dest)
+    <batch>/pending/*          to look at: .vrm, audio (.wav/.mp3/.ogg) or images
+                               (optional <name>.json sidecar: title, info, dest)
     <batch>/approved/, <batch>/rejected/   where Keep / Reject move them
     <batch>/.thumbs/<name>.webp            front snapshots the page posts back
-    <batch>/batch.json         {"title": ..., "dest": <folder approved VRMs go to>}
+    <batch>/refs/              reference files an item's sidecar "reference" names
+                               (e.g. the neutral take a mood clip is compared with)
+    <batch>/batch.json         {"title", "dest": <folder approved items go to> or null,
+                                "hint": shown in the grid, e.g. when Claude reads the decisions}
     <batch>/finalized.log      what Finalize moved where
 
 The page (index.html) views each VRM with three.js + three-vrm, plays Felt's
@@ -40,11 +44,15 @@ HERE = Path(__file__).parent
 REVIEW_ROOT = Path(r"E:\Felt\review")  # one sub-folder per batch; gitignored in the umbrella repo
 ANIM_DIR = Path(r"E:\Felt\felt-character-assets\felt-godot-overlay\animations\library")
 STATES = ("pending", "approved", "rejected")
+# What a batch can hold: 3D models, audio clips, images.
+KINDS = {".vrm": "vrm", ".wav": "audio", ".mp3": "audio", ".ogg": "audio",
+         ".png": "image", ".jpg": "image", ".jpeg": "image", ".webp": "image"}
 _IDLE_EXIT_S = 45
 
 mimetypes.add_type("model/gltf-binary", ".vrm")
 mimetypes.add_type("model/gltf-binary", ".vrma")
 mimetypes.add_type("image/webp", ".webp")
+mimetypes.add_type("audio/wav", ".wav")
 
 
 class Batch:
@@ -70,12 +78,12 @@ class Batch:
     def items(self):
         out = []
         for s in STATES:
-            for p in sorted((self.root / s).glob("*.vrm")):
+            for p in sorted(f for f in (self.root / s).iterdir() if f.suffix.lower() in KINDS):
                 side = p.with_suffix(".json")
                 info = json.loads(side.read_text(encoding="utf-8")) if side.exists() else {}
                 thumb = self.root / ".thumbs" / (p.stem + ".webp")
                 out.append({
-                    "name": p.name, "state": s, "info": info,
+                    "name": p.name, "state": s, "info": info, "kind": KINDS[p.suffix.lower()],
                     "thumb": int(thumb.stat().st_mtime) if thumb.exists() else None,
                     "mtime": p.stat().st_mtime,
                 })
@@ -99,7 +107,7 @@ class Batch:
         default_dest = self.meta().get("dest")
         moved, skipped = [], []
         with self.lock:
-            for p in sorted((self.root / "approved").glob("*.vrm")):
+            for p in sorted(f for f in (self.root / "approved").iterdir() if f.suffix.lower() in KINDS):
                 side = p.with_suffix(".json")
                 info = json.loads(side.read_text(encoding="utf-8")) if side.exists() else {}
                 dest = info.get("dest") or default_dest
@@ -165,7 +173,7 @@ def make_handler(batch: Batch):
                     return self._file(HERE / "index.html")
                 if url == "/api/state":
                     m = batch.meta()
-                    return self._json({"title": m.get("title", batch.root.name), "dest": m.get("dest"),
+                    return self._json({"title": m.get("title", batch.root.name), "dest": m.get("dest"), "hint": m.get("hint"),
                                        "root": str(batch.root), "items": batch.items()})
                 if url == "/api/anims":
                     return self._json(anim_list())
@@ -176,6 +184,8 @@ def make_handler(batch: Batch):
                     return self._file(safe_join(batch.root / state, name))
                 if url.startswith("/anim/"):
                     return self._file(safe_join(ANIM_DIR, url[len("/anim/"):]))
+                if url.startswith("/refs/"):  # reference clips/images items compare against (sidecar "reference")
+                    return self._file(safe_join(batch.root / "refs", url[len("/refs/"):]))
                 if url.startswith("/thumbs/"):
                     return self._file(safe_join(batch.root / ".thumbs", url[len("/thumbs/"):]))
                 return self._json({"error": "not found"}, 404)
@@ -229,8 +239,15 @@ def main():
             sys.exit(f"no batch under {REVIEW_ROOT}")
         root = max(batches, key=lambda p: max(f.stat().st_mtime for f in [p, *p.rglob("*")]))
     batch = Batch(root)
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(batch))
-    url = f"http://127.0.0.1:{args.port}/"
+    for port in range(args.port, args.port + 20):  # the next free one if taken
+        try:
+            server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(batch))
+            break
+        except OSError:
+            continue
+    else:
+        sys.exit(f"no free port in {args.port}-{args.port + 19}")
+    url = f"http://127.0.0.1:{port}/"
     print(f"reviewing {batch.root} at {url}")
     threading.Thread(target=watchdog, args=(batch, server), daemon=True).start()
     if not args.no_browser and sys.platform == "win32":

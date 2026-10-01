@@ -280,6 +280,10 @@ def main():
     ap.add_argument("--no-browser", action="store_true")
     args = ap.parse_args()
     root = args.batch
+    if root is not None and not root.is_dir() and (REVIEW_ROOT / root).is_dir():
+        root = REVIEW_ROOT / root  # a bare batch name, e.g. "wp33-tees"
+    if root is not None and not (root / "pending").is_dir():
+        sys.exit(f"no batch at {root} (expected a pending/ folder)")
     if root is None:
         batches = [p for p in REVIEW_ROOT.glob("*") if (p / "pending").is_dir()]
         if not batches:

@@ -265,3 +265,10 @@ of 30 pattern tees is also pending in `review/wp33-tees`, whenever Mario wants
 it. It's built with `tools/outfits/make_pattern_tees.py`, using the outfits
 pattern engine (stripes, gingham, dots, plaid, checker, camo, fades, chambray,
 plus Halloween/Xmas colourways). Keeps from it get added to `tees_approved.json`.
+
+**Batch 2 finalized 2026-10-01 21:48:** Mario kept 11 more (18 in
+rotation): cat, pumpkin and star on heather grey / pastel blue / white, plus
+plaid_grey, plaid_red and stripes_grey_wide. Everything else was rejected
+(fades, dots, checkers, camo, gingham, the other prints).
+Polish idea, not built: `roll_tee` is uniform random, so a pumpkin can come up
+in June. The spec's season/holiday tag weighting would fix that.

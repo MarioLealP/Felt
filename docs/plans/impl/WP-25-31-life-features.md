@@ -652,6 +652,24 @@ the diary mentions it the next day.
 **Accept**: a test event 12 min out produces the 10-min heads-up on time
 (spoken plus a bubble), including while she's "away".
 
+**Notes from implementation (2026-10-01):**
+- felt-core `e5ddf11` (local only, not pushed): `calendar_headsup.py`, a
+  lifespan loop (off when Calendar isn't connected). It polls all calendars
+  every 5 min for the next 2 h and gives each stage its own timer, so T−10
+  is on time rather than up to 5 min late. A late first sighting (8 min out)
+  sends only the urgent one.
+- Re-fetches the event (`google_calendar.get_event`) right before phrasing:
+  deleted/cancelled → dropped; moved → dropped, and the next poll
+  reschedules it under a new key (dedupe = event id + start + stage, kept in
+  `settings`, so restarts don't repeat).
+- Skips all-day events (no morning mention yet) and events Mario declined.
+- Phrased by her local model (WP-36: no cloud), with game context from the
+  WP-26 event log (unstopped `game_start` → "he's in the middle of X"). Plain
+  "heads up, X in N minutes." if felt-llm is down.
+- Expiry: urgent expires at event start; the 30-min one after 15 min.
+- **Accept check still to do** after deploy: test event 12 min out → the
+  30-min line now, the urgent one 2 min later, also while she's away.
+
 ### WP-27 build spec (2026-09-30): Tier-C VRM outfits
 
 **Mario's decisions (2026-09-30):**

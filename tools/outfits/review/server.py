@@ -19,6 +19,10 @@ own .vrma animations from the Godot overlay's library, and calls:
     POST /api/decide {name, to}   move between pending/approved/rejected/fix
     POST /api/comment {name, text} Mario's note, saved as "mario" in the sidecar
     POST /api/thumb  {name, data} save a snapshot (data: URL)
+    POST /api/fit {name, fit}     WP-32: an accessory's tuned bone/size/pos/rot
+An accessory item is a .glb whose sidecar names "base" (a VRM in refs/) and
+"fit" {bone, size, fit_mode, rotate, pos, rot} - the page shows it on her,
+attached the way the overlay's props.gd does.
     POST /api/finalize            move approved/* to each item's dest
     POST /api/ping                heartbeat; the server exits ~45 s after the
                                   window closes (no pings)
@@ -46,7 +50,7 @@ REVIEW_ROOT = Path(r"E:\Felt\review")  # one sub-folder per batch; gitignored in
 ANIM_DIR = Path(r"E:\Felt\felt-character-assets\felt-godot-overlay\animations\library")
 STATES = ("pending", "approved", "rejected", "fix")  # fix = "close, see my comment"
 # What a batch can hold: 3D models, audio clips, images.
-KINDS = {".vrm": "vrm", ".wav": "audio", ".mp3": "audio", ".ogg": "audio",
+KINDS = {".vrm": "vrm", ".glb": "accessory", ".wav": "audio", ".mp3": "audio", ".ogg": "audio",
          ".png": "image", ".jpg": "image", ".jpeg": "image", ".webp": "image"}
 _IDLE_EXIT_S = 45
 
@@ -115,6 +119,24 @@ class Batch:
                 info["mario"] = text.strip()
             else:
                 info.pop("mario", None)
+            side.write_text(json.dumps(info, indent=1, ensure_ascii=False), encoding="utf-8")
+
+    def fit(self, name: str, fit: dict):
+        """WP-32: an accessory's tuned fit (bone, size, pos, rot) from the
+        page's nudge panel, saved as "fit" in the sidecar."""
+        with self.lock:
+            state, path = self.find(name)
+            if path is None:
+                raise FileNotFoundError(name)
+            side = path.with_suffix(".json")
+            info = json.loads(side.read_text(encoding="utf-8")) if side.exists() else {}
+            info["fit"] = {
+                **info.get("fit", {}),
+                "bone": str(fit["bone"]),
+                "size": float(fit["size"]),
+                "pos": [round(float(v), 4) for v in fit["pos"]],
+                "rot": [round(float(v), 1) for v in fit["rot"]],
+            }
             side.write_text(json.dumps(info, indent=1, ensure_ascii=False), encoding="utf-8")
 
     def finalize(self):
@@ -218,6 +240,9 @@ def make_handler(batch: Batch):
                     return self._json({"state": batch.decide(body["name"], body["to"])})
                 if url == "/api/comment":
                     batch.comment(body["name"], body.get("text", ""))
+                    return self._json({"ok": True})
+                if url == "/api/fit":
+                    batch.fit(body["name"], body["fit"])
                     return self._json({"ok": True})
                 if url == "/api/thumb":
                     name = Path(body["name"]).stem

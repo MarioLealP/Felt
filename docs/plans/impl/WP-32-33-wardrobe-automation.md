@@ -76,6 +76,42 @@ pre-approved ("we have lots of space and more variety is good").
 with a front render and fitted offsets; `CREDITS.md` complete; a Booth
 shortlist file for Mario (`Assets/booth-shortlist.md`).
 
+**Notes from implementation (2026-10-01):**
+- **Sourced (poly.pizza, scripted, no login):** 18 new GLBs in
+  `Assets/{head,neck,body,hand}/`: witch hat, Santa hat, beanie, cat beanie,
+  cap, cat ears, bunny ears, hair flower (hibiscus), round glasses, choker,
+  necklace, backpack, crossbody bag (purse), handheld console (Switch),
+  notebook (as the sketchbook), ice cream, lantern, gift box. 84–1232 tris
+  each, so no decimation needed. Together with the WP-21 props (headphones,
+  sunglasses, umbrella, mug, book, phone, controller, snack bag) that's 26.
+  The first sketchbook pick had 35 scenes in million-unit coordinates and
+  was swapped.
+- **Licences:** 3 CC0, 15 CC-BY 3.0, all credited in `Assets/CREDITS.md`.
+- **No usable free match** for hair bow, nightcap, beret, knit scarf,
+  earmuffs or flower crown. These are in `Assets/booth-shortlist.md` (free
+  first, VN3 licence noted), plus free VRoid texture packs for Tier C.
+- **Fit check moved to the review app, not overlay screenshots.** It got a
+  `.glb` "accessory" item kind:
+  - her `felt.vrm` from `refs/` with the accessory attached to a humanoid
+    bone, using `props.gd`'s exact rules (size by height or longest side,
+    bottom-centre origin, YXZ degrees in the bone's rest frame);
+  - a Fit panel (bone / size / pos / rot) that nudges live and saves to the
+    sidecar (`POST /api/fit`);
+  - a `head` camera view;
+  - `?fit=<json>` for headless tuning.
+- **Measured:** her head top is +0.21 m above the head bone (the first
+  guesses were buried in her hair). The fits were tuned over three headless
+  sweeps (`scratch/wp32/sweep.py`); head and neck items sit right.
+  Hand-item grips are only rough, because the real grip depends on each
+  clip in the overlay.
+- **Left:**
+  - Mario reviews `review/wp32-accessories` (Keep / Fix + nudge / Reject);
+  - approved fits go into `felt-animation/props.json` (catalogue entries
+    with `grip.<Bone>`) and the GLBs into `props/models/`, then a live
+    check in the overlay;
+  - MToon-style shading comes free via `felt_prop.gdshader` once they're
+    props.
+
 ---
 
 ## WP-33

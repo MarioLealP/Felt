@@ -76,6 +76,10 @@
   #media .tag { font-family: var(--mono); font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
   #media audio { width: min(640px, 90%); }
   #media img { max-width: 100%; max-height: 80%; object-fit: contain; }
+  #fitbox { display: none; }
+  #fitbox .xyz { display: grid; grid-template-columns: 34px 1fr 1fr 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
+  #fitbox input { width: 100%; font: 12px var(--mono); color: var(--text); background: #25292e; border: 1px solid var(--line); padding: 5px 6px; }
+  #fitbox .k { font: 11px var(--mono); color: var(--dim); text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -112,6 +116,17 @@
     <div>
       <div class="label"><span>Comment</span><span id="saved"></span></div>
       <textarea id="comment" placeholder="What's off, or what would fix it? (saved automatically)"></textarea>
+    </div>
+    <div id="fitbox">
+      <div class="label"><span>Fit (on her)</span><span id="fitsaved"></span></div>
+      <div class="xyz"><span class="k">bone</span><select id="fit-bone" style="grid-column: span 2">
+        <option>Head</option><option>Neck</option><option>Chest</option><option>UpperChest</option>
+        <option>RightHand</option><option>LeftHand</option><option>Hips</option></select>
+        <input id="fit-size" type="number" step="0.01" title="size (m)"></div>
+      <div class="xyz"><span class="k">pos</span><input id="fit-px" type="number" step="0.005"><input id="fit-py" type="number" step="0.005"><input id="fit-pz" type="number" step="0.005"></div>
+      <div class="xyz"><span class="k">rot</span><input id="fit-rx" type="number" step="5"><input id="fit-ry" type="number" step="5"><input id="fit-rz" type="number" step="5"></div>
+      <button id="fit-save" style="width:100%">Save fit</button>
+      <div class="help">pos in metres from the bone (x her left→right, y up, z forward) · rot in degrees · size = height (or longest side) in metres</div>
     </div>
     <div class="row">
       <button id="prev">◀ Prev</button>
@@ -193,6 +208,7 @@ const VIEWS = {
   side:  { pos: [4.3, 0.9, 0], target: [0, 0.82, 0] },
   face:  { pos: [0, 1.38, 0.9], target: [0, 1.33, 0] },
   feet:  { pos: [0.5, 0.3, 1.1], target: [0, 0.1, 0] },
+  head:  { pos: [0.55, 1.45, 1.75], target: [0, 1.36, 0] },  // WP-32: hats/ears/glasses, 3/4 from her left
 };
 function setView(v) {
   const { pos, target } = VIEWS[v];
@@ -214,7 +230,8 @@ const loader = new GLTFLoader();
 loader.register((p) => new VRMLoaderPlugin(p));
 loader.register((p) => new VRMAnimationLoaderPlugin(p));
 
-let vrm = null, mixer = null, playing = true, speed = 1;
+let vrm = null, vrmUrl = null, mixer = null, playing = true, speed = 1;
+let acc = null;  // WP-32: the accessory's grip group, attached to one of her bones
 const animCache = new Map();
 
 async function loadVrm(url) {
@@ -258,9 +275,9 @@ renderer.setAnimationLoop((t) => {
 });
 
 // Front snapshot for the grid, cropped to a 3:5 portrait around her.
-function snapshot() {
+function snapshot(view = "front") {
   const saved = { pos: camera.position.clone(), target: controls.target.clone() };
-  setView("front");
+  setView(view);
   renderer.render(scene, camera);
   const w = canvas.width, h = canvas.height, cw = Math.round(h * 0.6);
   const c = document.createElement("canvas");
@@ -271,6 +288,81 @@ function snapshot() {
   controls.update();
   return c.toDataURL("image/webp", 0.85);
 }
+
+// ---- WP-32 accessories: attached the way the overlay's props.gd does it ----
+// The model is rotated by fit.rotate, scaled so its height (or longest side,
+// fit_mode "max") is fit.size m, and moved so its bottom-centre is the origin;
+// that sits under a grip at fit.pos / fit.rot (degrees, YXZ like Godot's
+// Basis.from_euler) in the bone's rest frame. three-vrm's normalized bones
+// are exactly that frame (identity at rest, world-aligned, +z = her front).
+const boneKey = (b) => b.charAt(0).toLowerCase() + b.slice(1);
+const DEG = THREE.MathUtils.degToRad;
+function buildAccessory(model, fit) {
+  model.traverse((o) => { o.frustumCulled = false; });
+  model.rotation.set(...(fit.rotate || [0, 0, 0]).map(DEG), "YXZ");
+  const inner = new THREE.Group();
+  inner.add(model);
+  inner.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(model), size = box.getSize(new THREE.Vector3());
+  const measure = fit.fit_mode === "max" ? Math.max(size.x, size.y, size.z) : size.y;
+  const s = (fit.size || 0.2) / Math.max(measure, 1e-5), c = box.getCenter(new THREE.Vector3());
+  inner.scale.setScalar(s);
+  inner.position.set(-c.x * s, -box.min.y * s, -c.z * s);
+  const grip = new THREE.Group();
+  grip.add(inner);
+  grip.userData = { model, fit: { ...fit } };
+  return grip;
+}
+function placeAccessory() {
+  if (!acc || !vrm) return;
+  const f = acc.userData.fit;
+  const bone = vrm.humanoid.getNormalizedBoneNode(boneKey(f.bone || "Head"));
+  if (!bone) return toast("No bone " + f.bone + " on this model");
+  if (acc.parent !== bone) { acc.parent?.remove(acc); bone.add(acc); }
+  acc.position.set(...(f.pos || [0, 0, 0]));
+  acc.rotation.set(...(f.rot || [0, 0, 0]).map(DEG), "YXZ");
+}
+function dropAccessory() {
+  if (!acc) return;
+  acc.parent?.remove(acc);
+  acc.traverse((o) => { o.geometry?.dispose(); });
+  acc = null;
+}
+const FIT_INPUTS = ["px", "py", "pz", "rx", "ry", "rz"];
+function fitToPanel(f) {
+  $("fit-bone").value = f.bone || "Head";
+  $("fit-size").value = f.size ?? 0.2;
+  (f.pos || [0, 0, 0]).forEach((v, i) => $("fit-p" + "xyz"[i]).value = v);
+  (f.rot || [0, 0, 0]).forEach((v, i) => $("fit-r" + "xyz"[i]).value = v);
+}
+function panelToFit() {
+  if (!acc) return;
+  const f = acc.userData.fit, oldSize = f.size;
+  f.bone = $("fit-bone").value;
+  f.size = +$("fit-size").value || f.size;
+  f.pos = ["x", "y", "z"].map((a) => +$("fit-p" + a).value || 0);
+  f.rot = ["x", "y", "z"].map((a) => +$("fit-r" + a).value || 0);
+  if (f.size !== oldSize) {  // re-fit the model at the new size
+    const { model } = acc.userData;
+    dropAccessory();
+    acc = buildAccessory(model, f);
+  }
+  placeAccessory();
+}
+FIT_INPUTS.forEach((k) => $("fit-" + k).addEventListener("input", panelToFit));
+$("fit-size").addEventListener("input", panelToFit);
+$("fit-bone").addEventListener("change", panelToFit);
+$("fitbox").addEventListener("keydown", (e) => e.stopPropagation());
+$("fit-save").onclick = async () => {
+  const it = current && byName(current);
+  if (!it || !acc) return;
+  try {
+    await api("/api/fit", { name: it.name, fit: acc.userData.fit });
+    it.info = { ...(it.info || {}), fit: { ...acc.userData.fit } };
+    $("fitsaved").textContent = "saved";
+    setTimeout(() => ($("fitsaved").textContent = ""), 1500);
+  } catch (e) { toast("Save failed: " + e.message, 6000); }
+};
 
 // ---- review state --------------------------------------------------------
 let state = { items: [] }, current = null, loadToken = 0;
@@ -314,7 +406,9 @@ async function open(name) {
   const url = `/files/${it.state}/${encodeURIComponent(it.name)}?t=${it.mtime}`;
   const media = $("media"), audio = $("audio"), image = $("image");
   audio.pause();
-  if (it.kind !== "vrm") {
+  const is3d = it.kind === "vrm" || it.kind === "accessory";
+  $("fitbox").style.display = it.kind === "accessory" ? "block" : "none";
+  if (!is3d) {
     media.style.display = "flex";
     $("views").style.display = "none";
     $("media-tag").textContent = [it.info?.mood, it.info?.level].filter(Boolean).join(" · ");
@@ -334,12 +428,30 @@ async function open(name) {
   $("views").style.display = "flex";
   $("loading").style.display = "grid";
   try {
-    const v = await loadVrm(url);
-    if (token !== loadToken) { VRMUtils.deepDispose(v.scene); return; }
-    if (vrm) { scene.remove(vrm.scene); VRMUtils.deepDispose(vrm.scene); }
-    vrm = v;
-    scene.add(vrm.scene);
-    await applyAnim();
+    dropAccessory();
+    // An accessory shows on its sidecar's base VRM (refs/), kept loaded
+    // between accessory items so stepping through them is instant.
+    const vrmSrc = it.kind === "accessory" ? "/refs/" + encodeURIComponent(it.info?.base || "felt.vrm") : url;
+    if (vrmSrc !== vrmUrl || !vrm) {
+      const v = await loadVrm(vrmSrc);
+      if (token !== loadToken) { VRMUtils.deepDispose(v.scene); return; }
+      if (vrm) { scene.remove(vrm.scene); VRMUtils.deepDispose(vrm.scene); }
+      vrm = v; vrmUrl = vrmSrc;
+      scene.add(vrm.scene);
+      await applyAnim();
+    }
+    if (it.kind === "accessory") {
+      const g = await new GLTFLoader().loadAsync(url);
+      if (token !== loadToken) return;
+      // ?fit=<json> overrides the sidecar's fit (headless tuning passes).
+      let qfit = {}; try { qfit = JSON.parse(new URLSearchParams(location.search).get("fit") || "{}"); } catch {}
+      const fit = { bone: "Head", size: 0.2, pos: [0, 0, 0], rot: [0, 0, 0], ...(it.info?.fit || {}), ...qfit };
+      acc = buildAccessory(g.scene, fit);
+      placeAccessory();
+      fitToPanel(fit);
+      const v = new URLSearchParams(location.search).get("view");
+      if (!VIEWS[v]) setView(/Head|Neck/.test(fit.bone) ? "head" : "front");
+    }
   } catch (e) {
     toast("Couldn't load " + name + ": " + e.message, 6000);
   } finally {
@@ -349,11 +461,12 @@ async function open(name) {
 
 async function decide(to) {
   const it = current && byName(current);
-  if (!it || (it.kind === "vrm" && !vrm)) return;
+  const is3d = it && (it.kind === "vrm" || it.kind === "accessory");
+  if (!it || (is3d && !vrm)) return;
   const target = it.state === to ? "pending" : to;  // pressing the active one again undoes it
   try {
     await saveComment();
-    if (it.kind === "vrm") await api("/api/thumb", { name: it.name, data: snapshot() });
+    if (is3d) await api("/api/thumb", { name: it.name, data: snapshot(it.kind === "accessory" && /Head|Neck/.test(acc?.userData.fit.bone || "") ? "head" : "front") });
     await api("/api/decide", { name: it.name, to: target });
   } catch (e) { return toast("Failed: " + e.message, 6000); }
   const wasPending = it.state === "pending";
@@ -381,7 +494,7 @@ function showGrid() {
       `<button class="card ${st}" data-name="${encodeURIComponent(i.name)}">` +
       (i.kind === "image" ? `<img loading="lazy" alt="" src="/files/${i.state}/${encodeURIComponent(i.name)}?t=${i.mtime}">`
         : i.kind === "audio" ? `<div class="noimg">♪ ${esc([i.info?.mood, i.info?.level].filter(Boolean).join(" · ") || "audio")}</div>`
-        : i.thumb ? `<img loading="lazy" alt="" src="/thumbs/${encodeURIComponent(i.name.replace(/\.vrm$/i, ".webp"))}?t=${i.thumb}">` : `<div class="noimg">not viewed</div>`) +
+        : i.thumb ? `<img loading="lazy" alt="" src="/thumbs/${encodeURIComponent(i.name.replace(/\.(vrm|glb)$/i, ".webp"))}?t=${i.thumb}">` : `<div class="noimg">not viewed</div>`) +
       `<div class="cap">${esc(i.info?.title || i.name)}</div>` + (i.info?.mario ? `<div class="note">✎ ${esc(i.info.mario)}</div>` : "") + `</button>`).join("") + "</div>";
   };
   g.innerHTML = sec("Pending", "pending") + sec("Approved", "approved") + sec("Needs fix", "fix") + sec("Rejected", "rejected") ||

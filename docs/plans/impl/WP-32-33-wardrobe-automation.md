@@ -112,6 +112,30 @@ shortlist file for Mario (`Assets/booth-shortlist.md`).
   - MToon-style shading comes free via `felt_prop.gdshader` once they're
     props.
 
+**Done 2026-10-01** (felt-animation `b0ce07f`, overlay `205c4dc`):
+- **Mario's review:** 12 kept (witch hat, Santa hat, cap, cat ears, bunny
+  ears, hair flower, round glasses, choker, necklace, backpack, crossbody bag,
+  ice cream) and 6 rejected (beanie, cat beanie, gift box, handheld console,
+  lantern, sketchbook). His **saved fits** went into `props.json` as they
+  are (Mario: "use the fit not the comment").
+- **Slots, one item each** (Mario: the backpack combines with hats, but never
+  the backpack with the side bag, or the Santa hat with the witch hat):
+  hat (hats + ear headbands) | hair | face (incl. sunglasses) | neck | bag.
+- **When she wears them** (`accessories.py`):
+  - With an outfit, for as long as it's on: Halloween witch hat, Christmas
+    Santa hat, sport cap, night-outing choker, lace-dress necklace, China
+    hair flower (`outfits.json`).
+  - Ambient: every 3 min there's a 12% chance she puts one on in a free slot
+    for 20–90 min. Tags pick it: cute (happy or affectionate), summer (sunny
+    daytime), evening (after 18:00) or casual.
+  - Outfit pieces always win their slot.
+- **Verified live:** night outing put the choker on, sport the cap, and
+  switching back swapped them. Fits were checked on her in the overlay (witch
+  hat, Santa hat, glasses, cat ears, crossbody bag).
+- **Left for polish:** the ice cream is a hand prop with no trigger yet (a
+  sunny-day snack would fit). Headphones (music) can stack with hats; that
+  looks fine so far.
+
 ---
 
 ## WP-33

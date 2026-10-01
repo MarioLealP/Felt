@@ -298,3 +298,16 @@ On this machine: Steam libraries `C:\Program Files (x86)\Steam` and
 added as a games.toml root (Endfield/GRYPHLINK, FFXIV, WoW, Factorio).
 `games.exe` (the GRYPHLINK launcher window) is in games.toml `ignore`.
 Commit `31405ce` in felt-animation, 388 tests passing.
+
+**2026-10-01 review, done on evidence:** across 9 days of logs, every
+WP-17 signal fires (game_start/stop 33/10, afk 24, mash 3, call
+lively/quiet 348/326) except `gpu_hot`. That was dead because the reader
+needed LibreHardwareMonitor running elevated, which was never set up on
+the Windows install. Mario picked option A: `signals/gpu.py` now reads
+AMD's ADL (`atiadlxx.dll`, PMLog sensor 8 = edge) in user mode, with LHM
+as the fallback (felt-animation `7d06191`). The RX 6700 sits at ~82 °C in
+games, so hot is ≥ 85 °C sustained for 10 s, at most once per 30 min. The
+reaction row's `gesture/fan` clip never existed (Mario: "I don't think we
+have a fan herself emote"), so she drinks from her water bottle instead
+(`reaction:water_bottle`, the drink_water clip). felt-core's line was
+changed to match (`d1dd4c0`).

@@ -7,7 +7,7 @@ host, `GET /v1/history` returned 200, so anyone who could reach it could read or
 delete conversation history, the diary and self-memories, and push screen or
 context events. Voice audio and screen context also cross the LAN unencrypted.
 
-**Stopgap in place:** a `DOCKER-USER` drop on the server
+**Stopgap (retired 2026-10-01, see Progress):** a `DOCKER-USER` drop on the server
 (`ops/sbin/lan-port-scope.sh` in clockmost-infra) lets only the desktop (`.74`)
 and the laptop (`.104`) reach 8420 from the LAN. It does **not** cover malware
 on the desktop itself. (Other containers can no longer reach her: since
@@ -42,5 +42,25 @@ on the desktop itself. (Other containers can no longer reach her: since
 - 2026-10-01: `https://felt.clockmost.com` is live (Caddy → `felt-core:8420`
   over `front-felt`; infra `20b96c6`, `73083f8`, `0efeec2`). No SSO and no
   tunnel entry. It resolves on the LAN via the pihole wildcard.
-- Next: create the token → set it in sops plus the client `.env` files → move
-  the clients to the HTTPS URL → close `:8420`.
+- 2026-10-01: Mario generated the token into the three client `.env` files
+  (the agent's permission system blocks secret-store writes). The tray,
+  felt-animation and the dashboard (rebuilt) now use `https://felt.clockmost.com`.
+  Verified: zero direct `:8420` requests, all traffic arrives via Caddy.
+- 2026-10-01: `:8420` unpublished (infra `17ee255`). Removed its
+  `lan-port-scope.sh` entry (installed and rerun) and the stale firewalld
+  `.74 → 8420` rich rule.
+- 2026-10-01: `/shopping-list` phone page (Mario: "SSO whenever possible";
+  "still VPN only"). Caddy `@felt_sso` puts forward-auth on `/shopping-list`
+  and `/v1/shopping-list*` (Authentik app `felt`, Admins), infra `363b306`.
+  felt-core skips its token check for exactly those method+path pairs only
+  (`_SSO_GATED`, `127e8c2`). Safe because Caddy is the only way in.
+- 2026-10-01: **enforced.** Mario ran the `FELT_API_TOKEN` sops set via
+  `bin/secrets` (infra `3276c38`). Verified: no token → `/v1/history` 401,
+  `/openapi.json` 200 (healthcheck), `/shopping-list` → 302 SSO, and 11/11
+  client requests authorized over 70 s with 0 rejected. The CORS preflight
+  allows `authorization`. No client uses `/v1/chat/ws`.
+
+**✅ Done 2026-10-01.** Live check left: shopping list on the phone (SSO login).
+Rotating the token = regenerate it into the three client `.env` files + `bin/secrets set`
+on the server (secret-store writes need Mario; the agent's permission
+system blocks them), then rebuild the dashboard and restart Felt.

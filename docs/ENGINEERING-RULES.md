@@ -242,8 +242,10 @@ uv run pre-commit run --all-files   # run every hook without committing
 felt-character-assets (from `felt-godot-overlay/`): `uvx --from
 "gdtoolkit==4.*" gdlint .` (report-only — see its own CI job and
 `gdlintrc`'s `excluded_directories`). **Never run `gdformat` on
-`main.gd`/`props.gd`** until WP-35's split lands (it would clash with
-the split and the `wp35-partial` stash).
+`main.gd`/`props.gd`** without a headless before/after check: WP-35's split
+landed 2026-10-01 (`components/*.gd`), and every move there was verified with
+`scratch/wp35/run.sh` + the TCP drives; reuse them. (The old `wp35-partial`
+stash is superseded and can be dropped.)
 
 A new setting always ships with its `.env.example` key in the **same**
 commit (rule 6); the local `check-env-example` pre-commit hook (where

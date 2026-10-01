@@ -86,3 +86,70 @@ felt-animation is optional. **Size:** M–L. **Depends on:** WP-20.
   open.
 - The overlay's behaviour is unchanged by the shared-code refactor:
   before/after screenshots, plus the walk measured with no backward frames.
+
+## Notes from implementation (2026-10-01)
+
+**The split (felt-character-assets `2fccbea`..`37d7f9b`).** `main.gd` went
+from 3563 to 1264 lines. Nine components in `felt-godot-overlay/components/`:
+
+| file | what | LOC |
+|---|---|---|
+| `clip_library.gd` | library scan, rest-corrected VRMA retarget, in-place cycles, gait symmetrise, blend times | 415 |
+| `layer_mixer.gd` | WP-20 AnimationTree, A/B slots, cross-fades, upper mask, tag classes, finish detection | 256 |
+| `pose_layer.gd` | FeltPoseModifier: gaze, nod, listening tilt, beat bob | 313 |
+| `face.gd` | lipsync visemes, blink, expression mapping, region compositor | 474 |
+| `speech_bubble.gd` | WP-09 bubble | 137 |
+| `screen_light.gd` | WP-28 lighting + contact shadow | 137 |
+| `body_motion.gd` | walk, feet/hips clamps, support, gravity, hop, climb, ledge sit | 490 |
+| `wardrobe.gd` | WP-27 outfit swap + WP-33 garments | 164 |
+| `debug_tools.gd` | screenshots, bone probes, debug yaw | 115 |
+
+- **What stays in `main.gd`:** the window and per-monitor views, the scene
+  build, the relay listener and dispatcher, clip choice and what happens
+  after a clip finishes. That's what the overlay host is for.
+- **Policy vs mechanism:** the layer mixer reports a finished base clip,
+  and `main.gd` decides what plays next.
+- **Coupling:** body motion, wardrobe and debug tools are moved as-is and
+  reach overlay state through a typed `host` reference. The rest are clean
+  APIs.
+- **Verification, every step:**
+  - a headless startup log diffed against the pre-split run (same 169
+    clips and 94 tags, same per-clip retarget numbers);
+  - TCP drives on `-- --port=8799` (new: a second instance runs beside
+    live Felt), compared with the original `main.gd`:
+    - layers (full-body wave, migrate onto a walk, upper clap, hit
+      override, sitting talk): identical states and finished notices;
+    - pose (gaze modes, listen, nod, beat): head, neck and eyes within
+      0.1°;
+    - movement (walk, run, fall, hop, ledge sit/stand, climb): same
+      notices;
+    - outfits (Maid mid-wave and back): same;
+    - face, bubble and lighting messages: no script errors.
+  - Only the random idle pick ever differed.
+  - Harness: `scratch/wp35/{run.sh,layertest.sh,posetest.sh,movetest.sh,outfittest.sh,facetest.sh,drive*.py}`.
+- **The live overlay still runs its old exported `.pck`.** The split
+  reaches her on the next overlay export.
+
+**The studio (`5b60041`, launcher `E:\Felt\Felt Studio.bat`).**
+- `studio.gd` **extends** `main.gd`, so it's the same code path as the
+  overlay with no fork. It overrides only:
+  - the window (normal, opaque, 1600×900);
+  - the side views, relay listener and supervisor (all off, so it never
+    touches live Felt);
+  - the gaze viewer (the orbit camera);
+  - the loop rule (a Loop checkbox, so walks loop in place).
+- **UI:**
+  - orbit camera (drag / wheel) with Front, Side, Back and Overlay-view
+    presets;
+  - a searchable tag/clip tree showing each tag's layer class;
+  - Play / Loop / Pause / Idle and speed 0.1–2×;
+  - Keep / Broken / Needs fix plus a note, written to
+    `animations/library/REVIEW.json`;
+  - a screenshot button (saves to `E:\Felt\scratch\studio\`).
+- **Combos:** play a base (idle/sitting, or a walk with Loop), then a
+  gesture. `_play_tag` routes it to the upper layer exactly as live.
+- **Unattended check:** `-- --play=<tag> --shot=<png>`.
+- **Skipped (ponytail; add on request):** scrub bar, GIF/WebM capture, bone
+  overlay and sliding-feet warning, locomotion across the grid, face,
+  outfit and procedural panels, send-to-live.
+

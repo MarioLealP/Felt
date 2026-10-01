@@ -10,6 +10,7 @@ A review batch is a folder:
     <batch>/batch.json         {"title", "dest": <folder approved items go to> or null,
                                 "hint": shown in the grid, e.g. when Claude reads the decisions}
     <batch>/finalized.log      what Finalize moved where
+    <batch>/finalized.json     no-dest batches: Finalize records the keeps here
 
 The page (index.html) views each VRM with three.js + three-vrm, plays Felt's
 own .vrma animations from the Godot overlay's library, and calls:
@@ -141,14 +142,14 @@ class Batch:
 
     def finalize(self):
         default_dest = self.meta().get("dest")
-        moved, skipped = [], []
+        moved, skipped, recorded = [], [], []
         with self.lock:
             for p in sorted(f for f in (self.root / "approved").iterdir() if f.suffix.lower() in KINDS):
                 side = p.with_suffix(".json")
                 info = json.loads(side.read_text(encoding="utf-8")) if side.exists() else {}
                 dest = info.get("dest") or default_dest
                 if not dest:
-                    skipped.append({"name": p.name, "why": "no destination (batch.json 'dest')"})
+                    recorded.append(p.stem)  # no dest: the keep is the result, Claude acts on it
                     continue
                 d = Path(dest)
                 d.mkdir(parents=True, exist_ok=True)
@@ -164,7 +165,11 @@ class Batch:
                 with open(self.root / "finalized.log", "a", encoding="utf-8") as log:
                     log.write(f"{datetime.datetime.now():%Y-%m-%d %H:%M}\t{p.name}\t{target}\n")
                 moved.append({"name": p.name, "to": str(target)})
-        return {"moved": moved, "skipped": skipped}
+            if recorded:
+                stamp = f"{datetime.datetime.now():%Y-%m-%d %H:%M}"
+                (self.root / "finalized.json").write_text(
+                    json.dumps({"finalized": stamp, "approved": recorded}, indent=1), encoding="utf-8")
+        return {"moved": moved, "skipped": skipped, "recorded": recorded}
 
 
 def anim_list():

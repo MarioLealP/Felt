@@ -502,7 +502,7 @@ function showGrid() {
   g.style.display = "block";
   const a = state.items.filter((i) => i.state === "approved").length;
   $("gridsum").textContent = state.hint || `${a} approved → ${state.dest || "(no destination set in batch.json)"}`;
-  $("finalize").disabled = !a || !state.dest;
+  $("finalize").disabled = !a;
   $("gridbar").style.display = "flex";
 }
 function hideGrid() { $("grid").style.display = "none"; $("gridbar").style.display = "none"; }
@@ -513,10 +513,10 @@ $("grid").addEventListener("click", (e) => {
 
 $("finalize").onclick = async () => {
   const a = state.items.filter((i) => i.state === "approved").length;
-  if (!confirm(`Move ${a} approved outfit(s) to\n${state.dest}?`)) return;
+  if (!confirm(state.dest ? `Move ${a} approved item(s) to\n${state.dest}?` : `Finalize ${a} approved item(s)?\nClaude picks them up from here.`)) return;
   try {
     const r = await api("/api/finalize", {});
-    toast(`Moved ${r.moved.length}` + (r.skipped.length ? ` · skipped ${r.skipped.length}: ${r.skipped.map((s) => s.name + " (" + s.why + ")").join("; ")}` : ""), 8000);
+    toast((r.recorded?.length ? `Finalized ${r.recorded.length} keeps` : `Moved ${r.moved.length}`) + (r.skipped.length ? ` · skipped ${r.skipped.length}: ${r.skipped.map((s) => s.name + " (" + s.why + ")").join("; ")}` : ""), 8000);
   } catch (e) { toast("Finalize failed: " + e.message, 6000); }
   await refresh();
   showGrid();

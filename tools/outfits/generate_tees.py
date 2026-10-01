@@ -10,7 +10,7 @@ import urllib.request
 import uuid
 import shutil
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont, ImageChops
+from PIL import Image, ImageChops
 
 # The laptop's ComfyUI - from the environment, never an IP in the repo (Mario's rule).
 COMFYUI_URL = os.environ["FELT_COMFYUI_URL"]
@@ -213,41 +213,8 @@ BASE_COLORS = {
     "pastel_yellow": (255, 240, 155, 255),
 }
 
-TEXT_PRINTS = [
-    ("felt", "felt.", (0, 0, 0, 200)),
-    ("404", "404 sleep\nnot found", (200, 50, 50, 255)),
-    ("gg", "gg", (255, 255, 255, 200)),
-    ("brb", "brb", (100, 100, 100, 200)),
-]
-
-
-def make_text_tee(base: Image.Image, text: str, text_color: tuple, front_rect: dict) -> Image.Image:
-    """Render text onto the chest area."""
-    result = base.copy()
-    draw = ImageDraw.Draw(result)
-    w, h = result.size
-    
-    u_min = front_rect["u_min"] * w
-    u_max = front_rect["u_max"] * w
-    v_min = (1.0 - front_rect["v_max"]) * h
-    v_max = (1.0 - front_rect["v_min"]) * h
-    cx = (u_min + u_max) / 2
-    cy = (v_min + v_max) / 2
-    
-    # Auto-invert text on dark shirts
-    bg_sample = result.getpixel((int(cx), int(cy)))
-    if bg_sample[0] < 100 and bg_sample[1] < 100 and bg_sample[2] < 100:
-        text_color = (255, 255, 255, 200)
-    
-    try:
-        font = ImageFont.truetype("arialbd.ttf", 72)
-    except OSError:
-        font = ImageFont.load_default()
-    
-    bbox = draw.textbbox((0, 0), text, font=font)
-    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    draw.text((cx - tw / 2, cy - th / 2), text, font=font, fill=text_color)
-    return result
+# No text prints, ever (Mario 2026-10-01: "never do text, they always look
+# horrible") - all 32 were rejected in the WP-33 review.
 
 
 def main():
@@ -286,16 +253,6 @@ def main():
         colored = recolor_base(base, color)
         colored.save(TEES_DIR / f"{cname}_plain.png")
         count += 1
-    
-    # Step 5: Text tees
-    print(f"\n=== Text tees ===")
-    for cname, color in BASE_COLORS.items():
-        colored = recolor_base(base, color)
-        for tname, text, tcol in TEXT_PRINTS:
-            out = TEES_DIR / f"{cname}_txt_{tname}.png"
-            img = make_text_tee(colored, text, tcol, front_rect)
-            img.save(out)
-            count += 1
     
     print(f"\n=== Done: {count} tees in {TEES_DIR} ===")
 

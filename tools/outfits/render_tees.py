@@ -58,7 +58,7 @@ def main():
     (BATCH / "batch.json").write_text(json.dumps({
         "title": f"WP-33 daily tees ({len(pngs)})",
         "dest": None,
-        "hint": "Keep = it goes into her daily tee rotation. Claude writes tees_approved.json from your keeps - just close the window.",
+        "hint": "Keep = it goes into her daily tee rotation. Finalize when done - Claude writes tees_approved.json from your keeps.",
     }, indent=1))
     base = Glb(BASE)
     for png in pngs:

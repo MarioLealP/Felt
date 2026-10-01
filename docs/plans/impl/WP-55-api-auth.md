@@ -32,3 +32,15 @@ on the desktop itself. (Other containers can no longer reach her: since
 - An unauthenticated request to any data route returns 401.
 - Every client works over `https://felt.clockmost.com`.
 - `:8420` is no longer published on the host.
+
+## Progress
+- 2026-10-01: token check is in felt-core (`FELT_API_TOKEN`; it does nothing
+  while unset). The exemptions are only the OpenAPI/docs pages (the healthcheck
+  probes `/openapi.json`) and CORS preflights. The websocket accepts the
+  header or `?token=`. The clients (tray, felt-animation, dashboard) send
+  `FELT_CORE_TOKEN` / `VITE_FELT_CORE_TOKEN` when it's set.
+- 2026-10-01: `https://felt.clockmost.com` is live (Caddy → `felt-core:8420`
+  over `front-felt`; infra `20b96c6`, `73083f8`, `0efeec2`). No SSO and no
+  tunnel entry. It resolves on the LAN via the pihole wildcard.
+- Next: create the token → set it in sops plus the client `.env` files → move
+  the clients to the HTTPS URL → close `:8420`.

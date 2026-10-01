@@ -242,3 +242,10 @@ Regenerate replacements for the rejects in a later batch.
 ### Not done / unverified
 * Waiting on Mario to use `gallery.html` to approve a set of tees and save them to `E:\Felt\Assets\tees\tees_approved.json`.
 * "She can mention it" dialog not implemented as it relies on `felt_presence` / dialog features not fully integrated in `felt-animation` standalone yet.
+
+**WP-33 tees reviewed 2026-10-01:** Mario kept 7 plain tees (all but
+sage_green) and rejected all 32 text tees: "never do text, they always look
+horrible". `Assets/tees/tees_approved.json` now holds those 7, and
+`generate_tees.py` no longer makes text prints. The review app's Finalize now
+also works on batches with no `dest` (it records the keeps in
+`<batch>/finalized.json`); before this it was greyed out.

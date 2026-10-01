@@ -57,3 +57,6 @@ item says what's still off and where to start.
     compared.
 - **WP-19 sounds deep dive**: see README. Covers laugh/giggle sources, a
   breath-preserving converter, and `ooh`/`mm-hm` mappings.
+- **WP-30 hobby clips**: reading uses the seated idle (no real reading clip),
+  napping has no lying-down clip, and doodling is left out (no sketchbook
+  prop). Source clips per WP-18's list or felt-t2a-studio.

@@ -70,7 +70,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-27](WP-25-31-life-features.md#wp-27) | ★ Wardrobe: ties Tier A + Tier C together (outfit definitions, triggers, model swap) | WP-33, WP-21, WP-15 | L | ✅ Tier C live 09-30 (16 VRM outfits + 10 recolour variants, date/night/daily/ambient/bikini rules; "all perfect"). Generated mix-and-match outfits **parked for polish** (see WP doc: shoe-as-base feet fix, outfit-level styling) |
 | [WP-28](WP-25-31-life-features.md#wp-28) | Screen-matched lighting + contact shadow | WP-07 | M | 🔎 built 09-30 (tray `6098b45`, animation `837b64c`, overlay `8e45dc7`); needs Mario's look: bright window vs dark game, the shadow |
 | [WP-29](WP-25-31-life-features.md#wp-29) | Path of Exile 2 companion (loot prices, wiki RAG) | WP-07, WP-06 | M | 🔎 built 09-30 (felt-core `685fdf8`, infra `f406355`); needs Mario's live check in PoE2 |
-| [WP-30](WP-25-31-life-features.md#wp-30) | Hobbies while Mario is AFK | WP-21, WP-17, WP-26 | M | ☐ |
+| [WP-30](WP-25-31-life-features.md#wp-30) | Hobbies while Mario is AFK | WP-21, WP-17, WP-26 | M | 🔎 built 10-01 (animation `754ec1d`, tray `aaebcd6` live on desktop; core `30bba1e` pushed, **not promoted**: CI tag bump still on old IP); needs Mario's away check |
 | [WP-31](WP-25-31-life-features.md#wp-31) | Calendar heads-up | WP-25 | S | ☐ |
 | [WP-32](WP-32-33-wardrobe-automation.md#wp-32) | Wardrobe Tier A: source accessories and clothing assets online (+ Booth shortlist for Mario) | none | M | ☐ |
 | [WP-33](WP-32-33-wardrobe-automation.md#wp-33) | ★ Wardrobe Tier A: a new tee every day (UV print areas, ≥ 60 tees, review gallery, daily pick) | none | M | 🔎 needs review |

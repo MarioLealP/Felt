@@ -608,6 +608,27 @@ WP-21 (props), WP-17 (AFK signal), WP-26 (diary events).
 **Accept**: leave the PC for 15+ min; on return she's visibly mid-hobby, and
 the diary mentions it the next day.
 
+**Notes from implementation (2026-10-01):**
+- felt-animation `754ec1d`: `hobbies.py` director. After 10 min idle she
+  picks a hobby every 5–20 min (never the same twice): reading (book, seated
+  idle), handheld gaming (controller), napping (blanket + pillow, eyes closed,
+  weighted up late at night / low energy), tidying (only with clutter),
+  stretching / looking around. On return she's caught mid-hobby, puts props
+  away and stands. The hobby goes to the diary and the welcome-back event.
+  Stray book removed from the `afk_start` reaction.
+- felt-core `30bba1e`: first-person diary line + optional hobby mention in
+  the welcome-back line (whitelisted hobby names only).
+- felt-tray `aaebcd6`: periodic screen captures skipped after 10 min without
+  input (`GetLastInputInfo`); focus change / Look still capture.
+- **Not deployed server-side:** felt-core CI built the image, but its tag
+  bump still pushes to `192.168.1.110` (Actions secrets `INFRA_REPO_URL` /
+  `INFRA_KNOWN_HOSTS` need updating, values in the WP-29 session); the manual
+  promote is waiting for Mario.
+- **Gap:** no real reading / lying-down clips and no sketchbook prop, so
+  reading uses the seated idle and doodling is left out (POLISH-BACKLOG).
+- Live: first launch after the change logged `hobbies: stretching for 18 min`
+  while Mario was out.
+
 ---
 
 ## WP-31

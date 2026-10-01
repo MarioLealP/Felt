@@ -249,3 +249,10 @@ horrible". `Assets/tees/tees_approved.json` now holds those 7, and
 `generate_tees.py` no longer makes text prints. The review app's Finalize now
 also works on batches with no `dest` (it records the keeps in
 `<batch>/finalized.json`); before this it was greyed out.
+
+**WP-33 closed 2026-10-01.** Mario: "no need for 60 tees", so the ≥ 60 target
+and the ComfyUI graphic-print batch are dropped. An optional second batch
+of 30 pattern tees is pending in `review/wp33-tees`, whenever Mario wants
+it. It's built with `tools/outfits/make_pattern_tees.py`, using the outfits
+pattern engine (stripes, gingham, dots, plaid, checker, camo, fades, chambray,
+plus Halloween/Xmas colourways). Keeps from it get added to `tees_approved.json`.

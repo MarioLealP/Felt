@@ -60,3 +60,8 @@ item says what's still off and where to start.
 - **WP-30 hobby clips**: reading uses the seated idle (no real reading clip),
   napping has no lying-down clip, and doodling is left out (no sketchbook
   prop). Source clips per WP-18's list or felt-t2a-studio.
+- **Seasonal tee weighting** (2026-10-01, WP-33; Mario: "keep the other on
+  polish"): `wardrobe.roll_tee` picks uniformly from `tees_approved.json`, so
+  the pumpkin tees can come up in June. The spec's season/holiday tag weights
+  (Halloween in October, snowflakes in December) were never built. Approach:
+  name-based or sidecar tags, out-of-season tees weighted to zero.

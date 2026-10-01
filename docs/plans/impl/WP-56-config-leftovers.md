@@ -13,10 +13,15 @@ Everything already fixed is listed at the bottom.
    `a383fc9`): nothing read it since WP-36. Removed `FELT_OLLAMA_URL`,
    `FELT_OLLAMA_MODEL` and the also-dead `FELT_ROUTER_MODEL` with
    `sops unset`, so the file was never decrypted to disk.
-2. **drive-rag still answers through Gemini Flash via ninerouter.** That's a cloud
-   call, which contradicts the "Felt is fully local" rule. felt-core itself
-   dropped its Gemini/ninerouter keys (WP-36 D''). Either point drive-rag at
-   felt-llm, or accept it as the one documented exception.
+2. ~~**drive-rag still answers through Gemini Flash via ninerouter.**~~ **Done 10-01**
+   (Mario: "Switch it"; infra `e8a6cd9`). It now answers via felt-llm
+   (`http://felt-llm:8080/v1`, model alias `felt`) over `felt`. It left the
+   `llm` network; its only secret, the ninerouter key, is gone: `secrets.env`,
+   the deploy hook and the leftover decrypted `.env` were all removed.
+   Verified end to end: 6 sources, a correct answer, 39 s. felt-core's
+   `search_documents` timeout went from 60 to 120 s (`8b670e6`). There is no
+   cloud AI left in Felt's stack. Optional: revoke drive-rag's key in
+   ninerouter if it was a per-client key.
 3. ~~**Stale comment in `projects/felt-llm/compose.yaml`:** "Rollback: docker
    compose down (felt-core falls back to the cloud)". There's no cloud fallback
    any more.~~ **Done 10-01** (`a383fc9`).

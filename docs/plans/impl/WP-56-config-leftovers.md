@@ -39,8 +39,21 @@ Everything already fixed is listed at the bottom.
    - **SearXNG (her `web_search` skill, `http://searxng:8080`):** there is **no
      SearXNG anywhere in the infra repo** and no container, so web search was
      dead before the split too. It was probably never redeployed after the
-     2026-08 rebuild. Decision for Mario: deploy one (on `felt`), or retire the
-     skill.
+     2026-08 rebuild. ~~Decision for Mario: deploy one (on `felt`), or retire
+     the skill.~~
+   - **Deployed 10-01** (infra `53bd808` + `270b199`). Researched first: plain
+     SearXNG beats the alternatives at her volume. AgentSearch (SearXNG plus
+     injection scrubbing) is a single-maintainer project, a supply-chain risk;
+     paid search APIs add keys for nothing.
+   - **Placement**, per Mario ("shouldn't be smack dab in the middle of all the
+     AI stuff"): its own project and its own `search` network, which only
+     felt-core joins. It is **not** on `felt`, has no Caddy route, no host port
+     and no UI, because it parses arbitrary web pages.
+   - Pinned `searxng/searxng:2026.9.30-a9d990033`; caps dropped except
+     CHOWN/SETGID/SETUID; read-only settings; limiter off (one client); Tor
+     engines removed; secret in sops.
+   - **Verified:** felt-core gets 20 results, and a chat "look it up" question
+     came back with the current PoE2 patch (0.5.5).
 
 ## Already fixed (for the record)
 - Her LAN URLs (voice, desktop agent, HA, ComfyUI) were still on 192.168.1.x

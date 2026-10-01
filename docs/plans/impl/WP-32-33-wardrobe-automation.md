@@ -251,8 +251,17 @@ also works on batches with no `dest` (it records the keeps in
 `<batch>/finalized.json`); before this it was greyed out.
 
 **WP-33 closed 2026-10-01.** Mario: "no need for 60 tees", so the ≥ 60 target
-and the ComfyUI graphic-print batch are dropped. An optional second batch
-of 30 pattern tees is pending in `review/wp33-tees`, whenever Mario wants
+is dropped. He did want the graphic prints too, so 12 ComfyUI prints
+(Animagine XL) went onto white / heather grey / pastel blue: 36 tees. Notes:
+- Voice was paused on the Nitro5 during generation (6 GB VRAM). ComfyUI was
+  reached over an SSH tunnel, because the Nitro5's ufw only lets the server
+  reach :8188.
+- The background is cut out by an edge flood fill on near-pure white (the
+  old >215 threshold ate cream fills). Line-art gaps are sealed first.
+- A negative prompt keeps out the tiny t-shirts and dark squares the model
+  drew for "t-shirt print".
+Both batches wait in `review/wp33-tees`. A second batch
+of 30 pattern tees is also pending in `review/wp33-tees`, whenever Mario wants
 it. It's built with `tools/outfits/make_pattern_tees.py`, using the outfits
 pattern engine (stripes, gingham, dots, plaid, checker, camo, fades, chambray,
 plus Halloween/Xmas colourways). Keeps from it get added to `tees_approved.json`.

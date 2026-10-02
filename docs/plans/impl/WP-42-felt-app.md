@@ -247,4 +247,13 @@ Mockups go through the review app before phase A's UI is built.
   message boxes, her asides written in by animation with a hand-drawn arrow,
   memory card dropping in on washi tape, her portrait leaning on the page and
   bobbing, a "she's writing…" pen scribble instead of typing dots.
+- **2026-10-02, round 3 → 4.** Round 3 "much better"; no gradients ("clean
+  solid background or texture maybe"). Out as references: Persona ("not a fan")
+  and anything Windows-XP/Emily-is-Away ("i dont wanna suffer on that again").
+  Gemini's chat-UI search (themes, VN/game chats, companion apps, motion) gave
+  round 4: a screenplay page (speaker names left of the margin line), Felt
+  marking up Mario's lines (circling words in raspberry ink + a handwritten
+  comment), ink-doodle reactions in the margin, held-back lines struck through
+  with marker, her status written at the top, taped-in polaroid snapshots,
+  messages settling with a small spring. Solid textured desk, no gradients.
 

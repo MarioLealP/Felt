@@ -211,4 +211,13 @@ Mockups go through the review app before phase A's UI is built.
   Felt picked three (navy, sage, raspberry, salmon, lilac-white), Claude agreed.
   Three style directions (cosy journal / night in / her messenger) went to the
   review app for Mario.
+- **2026-10-02, look round 2.** Ink & Paper "still feel AI as hell" (Mario).
+  Gemini's wide search (tools + references + four concepts) → Mario picked
+  concept 3, "her room" (a home screen that is her room, objects open the
+  sections), built as a clickable canvas
+  (https://claude.ai/artifact/Y6qBn74uSRULbWb6SbzC1B, fonts Mochiy Pop One /
+  Zen Maru Gothic / Klee One). Verdict: "The room itself i hate it, the other
+  stuff is alright" — the corkboard feed, alerts, chat and diary screens are OK;
+  the room home is out. The PDA concept is out too (Felt: it makes her feel
+  old). Mario is exploring in Google Stitch in parallel, from an open brief.
 

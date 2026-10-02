@@ -130,3 +130,30 @@ never an alarm.
 - A deliberately broken health check → auto-revert to the previous tag,
   plus an ntfy urgent alert.
 - No app code is left vendored in clockmost-infra for migrated apps.
+
+## Phase 2 notes (2026-10-02)
+- **herosiege-filter:** the source was already in
+  `Benylin/hero-siege-filter` (public; its branch is `master`).
+  - Added `.gitea/workflows/ci.yml`: frontend fmt, lint, types and tests,
+    then deploy. The deploy writes the `_build.json` stamp first.
+  - Infra now runs `git.clockmost.com/benylin/herosiege-filter:<sha>`
+    (`4b943d8`); the vendored `app/` was dropped (`9f0405a`).
+  - Gotchas: `master` not `main`; a `printf '{"sha": ...}'` step needs a
+    `run: |` block scalar (Gitea logs "ignore invalid workflow" and runs
+    nothing).
+- **drive-rag, poe2rag:** their only source was the copy vendored in infra
+  (poe2-rag's original repo was lost in the desktop migration).
+  - Created private `Benylin/drive-rag` and `Benylin/poe2rag` via
+    push-to-create, from `git archive` of the vendored trees.
+  - CI: an import check (no unit tests yet), then deploy.
+  - Infra switched to the registry images (`540c229`) and dropped `app/`
+    (`2bfaa54`). Both healthy, and felt-core reaches both.
+- **Shared `deploy.sh`** got an optional `DOCKERFILE` (default `./Dockerfile`,
+  `Benylin/ci-workflows` `9c05cad`). hero-siege-filter builds `app/Dockerfile`.
+- **Why it matters:** on 10-02 00:46 a hand-merged Renovate bump to the
+  vendored drive-rag/poe2rag deps failed its *local* build on the server
+  (auto-revert `d80f57e`). Renovate should now run in the app repos instead.
+  Not set up yet.
+- **clockmost-console:** its project folder is empty; nothing to migrate.
+- **caddy:** not migrated, pending Mario's call. Its "source" is stock Caddy
+  plus three xcaddy plugins, no code of ours.

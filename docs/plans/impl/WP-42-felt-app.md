@@ -34,7 +34,64 @@ from the WP, the daily brief etc".
   outgoing ntfy pushes are **not stored**; bubbles and ambient fillers aren't
   logged at all. There is no single typed log of "everything she said".
 
-## Shape (proposed)
+## Functionality list (draft, to go through with Mario)
+
+Mario 10-02: "we need to make an actual functionality list and other stuff
+before that kind of decision". **P** = already promised in the plans
+(source in brackets), **S** = my suggestion, to keep or cut. Owner WP in
+brackets when it isn't WP-42 itself.
+
+**1. Chat**
+- 1.1 P The whole conversation, scrollable back through all of it, with times ("chat which is the whole chat").
+- 1.2 P Type to her from phone and desktop.
+- 1.3 P Mic on the desktop (exists today).
+- 1.4 S Voice from the phone: hold to talk, she answers in text, and optionally in her voice.
+- 1.5 S Search the chat history.
+- 1.6 Open: do her unprompted remarks show in Chat too, or only in the Feed?
+
+**2. Feed** (everything unprompted, so nothing she said is missed)
+- 2.1 P One timeline: remarks, screen reactions, proactive lines, email mentions, server alerts, reminders, smart-home actions, game news, agent reports, board cards moving to Needs review (Track E, WP-37).
+- 2.2 P Lines she skipped saying land here: repeats she held back, and everything during quiet mode, plus the catch-up (personality plan, WP-46).
+- 2.3 P Read / unread, to catch up after calls and games; an unread count.
+- 2.4 P Per-card actions: dismiss, snooze, "not interested" (feeds the email noise list).
+- 2.5 P Email cards: open in Gmail, tell me more, draft a reply; never send (WP-43).
+- 2.6 S Filter by kind (only alerts, only email…).
+- 2.7 S New items appear live while the app is open.
+
+**3. Daily briefs**
+- 3.1 P An archive of the morning cards, today's on top (WP-45 fills it).
+
+**4. Diary**
+- 4.1 P Her diary, day by day, readable (WP-26).
+- 4.2 P Edit or delete an entry (WP-26 deferred this here).
+- 4.3 P Her self-memories (opinions, running jokes): view, edit, delete, pin, veto (WP-26, personality plan).
+
+**5. Lists and settings**
+- 5.1 P Editable watched-games list for game news (WP-49).
+- 5.2 P Editable email noise rules (WP-43).
+- 5.3 S What she knows about Mario (the facts she remembers): view, edit, delete.
+- 5.4 S The shopping list inside the app (today it's a separate phone page).
+- 5.5 P/later Reminders list (WP-46) and an Agents tab (WP-52).
+
+**6. Controls from the phone**
+- 6.1 P Quiet mode on/off with a timer (WP-46).
+- 6.2 S Hush / stop her talking, from the phone.
+
+**7. Status**
+- 7.1 S Is she up: desktop app, animation, voice, brain.
+- 7.2 S Her mood right now.
+- 7.3 S The board at a glance (what's waiting for review), from WP-37.
+
+**8. Other requirements**
+- 8.1 P Desktop (the tray window) and phone, same app.
+- 8.2 P Served from clockmost, SSO login, data stays in felt-core, nothing new goes to the cloud.
+- 8.3 P Endfield design, true black on the phone.
+- 8.4 Open: reachable only on VPN/LAN (like now), or from anywhere.
+- 8.5 S Phone notifications stay with ntfy; the app doesn't add its own.
+- 8.6 S Only Mario uses it (no other accounts).
+- 8.7 Open: installable on the phone (opens like an app) or a bookmark.
+
+## Shape (proposed, after the functionality list is agreed)
 
 ```
 phone / desktop browser ──SSO──┐

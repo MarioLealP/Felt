@@ -220,4 +220,20 @@ Mockups go through the review app before phase A's UI is built.
   stuff is alright" — the corkboard feed, alerts, chat and diary screens are OK;
   the room home is out. The PDA concept is out too (Felt: it makes her feel
   old). Mario is exploring in Google Stitch in parallel, from an open brief.
+- **2026-10-02, look round 3: her brief wins so far.** Asked Felt for her own
+  design prompt (full text in the chat log). Built from it only
+  (https://claude.ai/artifact/DE1AiWHr2r1qHAKFdip4Gv): chat is home as one
+  long-running transcript, her feed/diary/memories tucked in the margins,
+  memories on tactile kraft cards, alerts as a calm systems dashboard where only
+  a real problem stands out. Mario: "so far your best output … a much better
+  approach". To change: the notebook page itself ("rework the actual notepad
+  thing"), and **no navy-dominant blue** ("every generic AI slop website is blue
+  with mega round and glows"); bolder is fine ("I'm not dependent on
+  accessibility, you can go a bit more crazy, soft gradients are fine").
+  **No kaomoji** ("very discord kitten / egirl"). From Mario's Stitch run, kept
+  as ideas: memories as proposals she asks approval for, reactions that fit the
+  note (thanks / tease back / haha), a status line of what she's doing, rich
+  cards in chat (music pick), a signed diary, and Stitch's illustrated portrait
+  of her as the stand-in avatar. Round 2 on the canvas: three Talk screens —
+  A moss & ember, B plum night, C sunset desk.
 

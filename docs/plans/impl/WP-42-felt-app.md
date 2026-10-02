@@ -265,4 +265,13 @@ Mockups go through the review app before phase A's UI is built.
 - **2026-10-02, Talk screen settled (look):** R5 A page + **sticky-flag tabs**
   (Mario: "Stick flags for sure"); her floating portrait on the page removed
   ("yeet the floating icon of her"). Canvas board `r6/Tabs.dc.html`.
+- **2026-10-02, round 7: the whole app in the settled look.** Talk final:
+  spiral rings across the top (Mario: "swap the side holes to the top thing"),
+  a soft raspberry rule above the writing line ("make the line softer"),
+  sticky flags, no portrait. Carried to Margins, Diary (signed entry, tucked
+  memory card), Things she's decided (kraft cards on washi tape; proposals she
+  asks permission for), Systems (plain rows with status dots, the one real
+  problem circled in raspberry ink with handwritten actions — no boxes), and a
+  desktop **open-notebook spread** (conversation left page, margins + systems
+  right page, spiral down the middle). Canvas row "Round 7".
 

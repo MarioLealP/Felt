@@ -25,7 +25,7 @@ evidence-first reporting rules, and the prompt to paste. Delegated WPs end in
 
 ## Status
 
-**The board is the source of truth from 2026-10-02:** project FELT on https://plane.clockmost.com (WP-37). This table is kept until the README is generated from the board.
+**The board is the source of truth from 2026-10-02:** project FELT on https://plane.clockmost.com (WP-37). This table is history: from now on status lives on the board, not here.
 
 **Order (Mario, 2026-09-26): follow the WP numbers.** The one exception is WP-34 (packaging), which goes last because it bundles everything.
 
@@ -60,7 +60,7 @@ Audit + fixes of WP-01…19: [`AUDIT-2026-09-24.md`](AUDIT-2026-09-24.md).
 | [WP-20](WP-18-23-assets-world.md#wp-20) | AnimationTree layering | WP-14, WP-18 | L | ✅ (Mario live-reviewed 09-26: good enough) |
 | [WP-21](WP-18-23-assets-world.md#wp-21) | Props system, chest, dissolve FX, clean-house key | WP-20 | L | ✅ (Mario 09-26: done, a bit janky, polish much later; see POLISH-BACKLOG.md) |
 | [WP-22](WP-18-23-assets-world.md#wp-22) | Follow-window overlay + multi-monitor + supersampling | WP-20 | L | ✅ (Mario 09-26: working; gaming fps and a 2 h session go in the performance pass, POLISH-BACKLOG.md) |
-| [WP-37](../felt-usefulness-plan-2026-09-26.md#final-wp-list-after-the-2026-09-26-discussion) | The board: **Plane** at https://plane.clockmost.com (open source, VPN-only, Sign in with Gitea) + ticket template + every WP and the polish pile migrated + Felt read-only board skill + README from the board + metrics | none | M | 🟡 10-02: Plane live, board built (69 tickets, `tools/board/`); Felt skill, generated README and metrics left |
+| [WP-37](WP-37-board.md) | The board: **Plane** at https://plane.clockmost.com (open source, VPN-only, Sign in with Gitea), ticket template, every WP + the polish pile migrated, Felt read-only `board_status` skill, metrics script | none | M | 🔎 needs review (10-02): board live (69 tickets), Felt reads it, metrics run. No generated README (pushback: the board is the truth). Open: delete the throwaway Gitea key |
 | [WP-38](WP-38-architecture-audit.md) | Architecture audit: system map (`docs/ARCHITECTURE.md`) + engineering rules + ranked, merged cleanup list (pulled forward ahead of WP-23, 09-26) | none | M | ✅ 10-01 on evidence: the cleanup list shipped through WP-39/40 (spot-checked: change_shirt gone, the tray README is current); ARCHITECTURE.md is in use |
 | [WP-39](WP-39-tooling.md) | Repo tooling: ruff/pyright/pre-commit + Gitea Actions CI (felt-core, felt-animation, felt-tray, felt-vision), gdlint report-only (felt-character-assets), felt-dashboard verified, WP-38's `.env.example`/README gap items | WP-38 | L | ✅ 10-01 on evidence: CI runs and deploys (felt-core promoted twice on 10-01; Mario 10-01: "CI is fixed"); ty/ruff gates in use |
 | [WP-40](WP-40-god-file-splits.md) | God-file splits: felt-animation server.py (2150 LOC) → runtime/behavior/loops/routers/app; felt-core brain.py → brain/ package (deployed); felt-tray capture split + HushState race fix + FeltAnimationClient; dashboard lint | WP-39 | L | ✅ 10-01 on evidence: the split modules (runtime/behavior/loops/routers, brain/ package) have been live for a week; HushState fix shipped |

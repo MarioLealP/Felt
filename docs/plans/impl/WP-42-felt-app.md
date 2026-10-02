@@ -307,4 +307,11 @@ Mockups go through the review app before phase A's UI is built.
   judge on the phone.
 - **2026-10-02, mockups end here.** Mario: "we got a general idea, as we
   build each page we talk better". Each page is refined during its build.
+- **2026-10-02, ink plays once** (Mario: "Ink should only hit once, i dont want
+  to see her scribble the same word every time i reopen the app"). A mark
+  animates the first time it's seen, then renders already drawn; seen-state is
+  stored per mark.
+- **2026-10-02, build tickets** on the board as sub-issues of WP-42: 42.1 ink
+  spike (Ready) → 42.2 foundation → 42.3 the log + Margins → 42.4 shared diary
+  → 42.5 Systems/ntfy/Lists/controls → 42.6 Tauri apps.
 

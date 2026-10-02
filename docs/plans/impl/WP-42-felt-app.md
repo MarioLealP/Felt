@@ -289,4 +289,9 @@ Mockups go through the review app before phase A's UI is built.
     (`{type: circle|underline|strike, quote, note}`) via felt-llm's json schema;
     the app locates the quote in Mario's message; rate-limited so it stays rare;
   - polaroids = real snapshots from her WP-07 screen captures (allowed apps only).
+- **2026-10-02, decision 1: hosting = A, the app's own container** (Mario: "We
+  go with A, microservices is always the call"). felt-dashboard's CI builds a
+  static image (WP-53 deploy.sh); Caddy serves it at felt.clockmost.com/app;
+  data comes from felt-core under SSO-gated `/v1/app/*`. UI deploys never
+  restart felt-core.
 

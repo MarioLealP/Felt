@@ -236,4 +236,15 @@ Mockups go through the review app before phase A's UI is built.
   cards in chat (music pick), a signed diary, and Stitch's illustrated portrait
   of her as the stand-in avatar. Round 2 on the canvas: three Talk screens —
   A moss & ember, B plum night, C sunset desk.
+- **2026-10-02, round 2 rejected, round 3.** Mario: "It's even worse, I liked
+  the notebook, just need a bit of work … don't box messages … animations
+  always make and break websites, mistral ai website is one of the best".
+  Mood board (screenshots in `E:\Felt\review\moodboard\`, also on the
+  canvas): Mistral, Josh Comeau, Teenage Engineering, Kinopio, Poolsuite, Rauno.
+  Common thread: no boxes, one living characterful element, restraint, motion.
+  Round 3 = the round-1 notebook reworked: warm near-black desk (no navy), a
+  dark paper page with faint rules and the raspberry margin line kept, no
+  message boxes, her asides written in by animation with a hand-drawn arrow,
+  memory card dropping in on washi tape, her portrait leaning on the page and
+  bobbing, a "she's writing…" pen scribble instead of typing dots.
 

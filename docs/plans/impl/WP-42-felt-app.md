@@ -256,4 +256,10 @@ Mockups go through the review app before phase A's UI is built.
   comment), ink-doodle reactions in the margin, held-back lines struck through
   with marker, her status written at the top, taped-in polaroid snapshots,
   messages settling with a small spring. Solid textured desk, no gradients.
+- **2026-10-02, round 5 → 6.** Mario on round 4: the page looked like "a
+  background with a random notebook bit over it". Round 5 made the whole screen
+  the notebook (A: binding down the left + index tabs on the right; B: top
+  spiral + handwritten footer). Mario: "more on R5A land, we might have to
+  rework the tabs". Round 6 = R5 A with three tab kinds side by side: sticky
+  flags (right edge), ribbon bookmarks (from the top), divider tabs (bottom).
 

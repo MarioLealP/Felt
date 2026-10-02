@@ -47,16 +47,18 @@ brackets when it isn't WP-42 itself.
 - 1.3 P Mic on the desktop (exists today).
 - 1.4 S Voice from the phone: hold to talk, she answers in text, and optionally in her voice.
 - 1.5 S Search the chat history.
-- 1.6 Open: do her unprompted remarks show in Chat too, or only in the Feed?
+- 1.6 ✅ Chat stays clean: only the conversation. Her unprompted remarks go to the Feed only (Mario 10-02: "only feed, keep actual chat clean").
 
-**2. Feed** (everything unprompted, so nothing she said is missed)
-- 2.1 P One timeline: remarks, screen reactions, proactive lines, email mentions, server alerts, reminders, smart-home actions, game news, agent reports, board cards moving to Needs review (Track E, WP-37).
-- 2.2 P Lines she skipped saying land here: repeats she held back, and everything during quiet mode, plus the catch-up (personality plan, WP-46).
-- 2.3 P Read / unread, to catch up after calls and games; an unread count.
-- 2.4 P Per-card actions: dismiss, snooze, "not interested" (feeds the email noise list).
+**2. Feed and Alerts — two separate places** (Mario 10-02: "might not be
+the best idea to have poe2 comment mixed with btw the server caught fire and
+Russian knows your credit card")
+- 2.1 **Feed = her chatter:** remarks, screen reactions, things she brings up on her own, game news, email "btw"s, board cards waiting for review, agent reports.
+- 2.2 P Lines she held back (repeats, everything during quiet mode) land in the Feed, plus the catch-up line.
+- 2.3 P Read / unread with an unread count.
+- 2.4 P Card actions: dismiss, snooze, "not interested" (feeds the email noise list).
 - 2.5 P Email cards: open in Gmail, tell me more, draft a reply; never send (WP-43).
-- 2.6 S Filter by kind (only alerts, only email…).
-- 2.7 S New items appear live while the app is open.
+- 2.6 S Filter by kind. 2.7 S New items appear live.
+- 2.8 **Alerts = a separate tab, never mixed with chatter:** server, PC and security alerts (Zabbix, Wazuh, backups, failed deploys), newest and most severe on top, each stays until acknowledged. ntfy stays the push system; the app is where they're read and acknowledged. Open: whether alerts belong in the app at all.
 
 **3. Daily briefs**
 - 3.1 P An archive of the morning cards, today's on top (WP-45 fills it).
@@ -86,10 +88,26 @@ brackets when it isn't WP-42 itself.
 - 8.1 P Desktop (the tray window) and phone, same app.
 - 8.2 P Served from clockmost, SSO login, data stays in felt-core, nothing new goes to the cloud.
 - 8.3 P Endfield design, true black on the phone.
-- 8.4 Open: reachable only on VPN/LAN (like now), or from anywhere.
+- 8.4 ✅ LAN/VPN only (Mario 10-02).
 - 8.5 S Phone notifications stay with ntfy; the app doesn't add its own.
 - 8.6 S Only Mario uses it (no other accounts).
-- 8.7 Open: installable on the phone (opens like an app) or a bookmark.
+- 8.7 ✅ Real apps, not a bookmark (Mario 10-02: "Apk and desktop executable so can be used on Linux on laptop"):
+  an Android APK, a Linux executable for the laptop, and Windows (where the
+  tray's Felt window already is). Rethink, see below.
+
+### 8.7 rethought: one app, three wrappers
+
+- **Tauri 2** builds an Android APK, a Linux app and a Windows exe from the
+  same web app, so there is one codebase, not three.
+- **Each is a thin shell that opens the server-hosted app** (on VPN/LAN). UI
+  updates arrive from the server, nothing to reinstall; login is the normal SSO
+  page once inside the app (it remembers). The APK is sideloaded, signed with
+  our own key.
+- **Windows desktop:** Smart App Control blocks unsigned executables there
+  (the open WP-34 decision), so on Windows the tray's existing Felt window shows
+  the same hosted app instead of a new exe. The Linux laptop and the phone get
+  the Tauri builds.
+- Away from home the phone/laptop need the VPN on (8.4).
 
 ## Shape (proposed, after the functionality list is agreed)
 

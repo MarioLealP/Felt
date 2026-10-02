@@ -155,5 +155,6 @@ never an alarm.
   (auto-revert `d80f57e`). Renovate should now run in the app repos instead.
   Not set up yet.
 - **clockmost-console:** its project folder is empty; nothing to migrate.
-- **caddy:** not migrated, pending Mario's call. Its "source" is stock Caddy
-  plus three xcaddy plugins, no code of ours.
+- **caddy:** stays a local build, permanently. Mario 2026-10-02: "Do not
+  touch caddy". Its "source" is stock Caddy plus three xcaddy plugins, no
+  code of ours, and a bad CI image would take every site down at once.

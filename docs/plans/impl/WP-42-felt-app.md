@@ -58,7 +58,7 @@ Russian knows your credit card")
 - 2.4 P Card actions: dismiss, snooze, "not interested" (feeds the email noise list).
 - 2.5 P Email cards: open in Gmail, tell me more, draft a reply; never send (WP-43).
 - 2.6 S Filter by kind. 2.7 S New items appear live.
-- 2.8 **Alerts = a separate tab, never mixed with chatter:** server, PC and security alerts (Zabbix, Wazuh, backups, failed deploys), newest and most severe on top, each stays until acknowledged. ntfy stays the push system; the app is where they're read and acknowledged. Open: whether alerts belong in the app at all.
+- 2.8 ✅ **Alerts = a separate tab, never mixed with chatter** (Mario 10-02: "A"): server, PC and security alerts (Zabbix, Wazuh, backups, failed deploys), most severe on top, each stays until acknowledged. History and acknowledgements live in felt-core (it already logs every ntfy alert; ntfy itself keeps 48 h).
 
 **3. Daily briefs**
 - 3.1 P An archive of the morning cards, today's on top (WP-45 fills it).
@@ -89,7 +89,7 @@ Russian knows your credit card")
 - 8.2 P Served from clockmost, SSO login, data stays in felt-core, nothing new goes to the cloud.
 - 8.3 P Endfield design, true black on the phone.
 - 8.4 ✅ LAN/VPN only (Mario 10-02).
-- 8.5 S Phone notifications stay with ntfy; the app doesn't add its own.
+- 8.5 ✅ **The Felt app replaces the ntfy app on the phone** (Mario 10-02: "ntfy still on server shooting, but we receive on phone using Felt app, perfect"). ntfy stays the server-side pipe (Zabbix, Wazuh, scripts, Felt keep publishing to it). The app subscribes to ntfy directly, so alerts still arrive when Felt is down, and notifies by tier: urgent = loud, high = normal, default = tab only, low = history only. Android needs a small native background service (as the ntfy app has) and no battery optimisation for the app; desktop/laptop use normal system notifications.
 - 8.6 S Only Mario uses it (no other accounts).
 - 8.7 ✅ Real apps, not a bookmark (Mario 10-02: "Apk and desktop executable so can be used on Linux on laptop"):
   an Android APK, a Linux executable for the laptop, and Windows (where the

@@ -203,3 +203,12 @@ Mockups go through the review app before phase A's UI is built.
 6. Briefs tab: now as an empty shell, or with WP-45.
 
 ## Decisions log
+
+- **2026-10-02, look: not Endfield.** Mario, after the first mockups: "I dont
+  think Felt fits the endfield theming, but I also dont want shitty generic ui
+  layout". Endfield stays clockmost's language for the server tools; Felt's app
+  gets her own look. Palettes in `docs/identity/palettes/` (Mario's three);
+  Felt picked three (navy, sage, raspberry, salmon, lilac-white), Claude agreed.
+  Three style directions (cosy journal / night in / her messenger) went to the
+  review app for Mario.
+

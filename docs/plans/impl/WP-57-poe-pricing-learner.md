@@ -24,3 +24,11 @@ league start (spoken: "that's like 3 divines, the life + res is what sells it").
 - Where Mario's own judgment comes in (EE2 doesn't expose his stat toggles
   without a fork; maybe a quick "yes/no, that stat matters" reply to her).
 - Rate limits on the trade API alongside EE2's own searches.
+
+## 2026-10-02: phase 2 parked until a session together
+Mario: "Park that, once I'm home, we go around the shop and we price stuff.
+Easier to do together, we make a pool of items". Plan: a live pricing
+session, Mario walking vendors/stash and price-checking with EE2 while we
+talk through which mods matter. Every check lands in the log (phase 1), so
+that session builds the labelled item pool that later guesses get graded
+against. Build the guess pipeline after it, informed by what we learn.

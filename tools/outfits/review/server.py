@@ -165,10 +165,23 @@ class Batch:
                 with open(self.root / "finalized.log", "a", encoding="utf-8") as log:
                     log.write(f"{datetime.datetime.now():%Y-%m-%d %H:%M}\t{p.name}\t{target}\n")
                 moved.append({"name": p.name, "to": str(target)})
-            if recorded:
+            if not default_dest:
+                # review-only batch (e.g. mockups): every decision is the result,
+                # "needs fix" + notes included, so Finalize works without a keep
+                def decided(state):
+                    out = []
+                    for f in sorted((self.root / state).glob("*")):
+                        if f.suffix.lower() in KINDS:
+                            side = f.with_suffix(".json")
+                            info = json.loads(side.read_text(encoding="utf-8")) if side.exists() else {}
+                            out.append({"name": f.stem, "note": info.get("mario")})
+                    return out
+
                 stamp = f"{datetime.datetime.now():%Y-%m-%d %H:%M}"
-                (self.root / "finalized.json").write_text(
-                    json.dumps({"finalized": stamp, "approved": recorded}, indent=1), encoding="utf-8")
+                (self.root / "finalized.json").write_text(json.dumps({
+                    "finalized": stamp, "approved": recorded,
+                    "fix": decided("fix"), "rejected": decided("rejected")}, indent=1), encoding="utf-8")
+                recorded = recorded or [d["name"] for d in decided("fix")]
         return {"moved": moved, "skipped": skipped, "recorded": recorded}
 
 

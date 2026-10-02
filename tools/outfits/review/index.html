@@ -502,7 +502,9 @@ function showGrid() {
   g.style.display = "block";
   const a = state.items.filter((i) => i.state === "approved").length;
   $("gridsum").textContent = state.hint || `${a} approved → ${state.dest || "(no destination set in batch.json)"}`;
-  $("finalize").disabled = !a;
+  // review-only batches (no dest): any decision counts, "needs fix" included
+  const decided = state.items.filter((i) => i.state !== "pending").length;
+  $("finalize").disabled = state.dest ? !a : !decided;
   $("gridbar").style.display = "flex";
 }
 function hideGrid() { $("grid").style.display = "none"; $("gridbar").style.display = "none"; }
@@ -513,7 +515,7 @@ $("grid").addEventListener("click", (e) => {
 
 $("finalize").onclick = async () => {
   const a = state.items.filter((i) => i.state === "approved").length;
-  if (!confirm(state.dest ? `Move ${a} approved item(s) to\n${state.dest}?` : `Finalize ${a} approved item(s)?\nClaude picks them up from here.`)) return;
+  if (!confirm(state.dest ? `Move ${a} approved item(s) to\n${state.dest}?` : `Finalize your decisions?\nClaude picks them up from here.`)) return;
   try {
     const r = await api("/api/finalize", {});
     toast((r.recorded?.length ? `Finalized ${r.recorded.length} keeps` : `Moved ${r.moved.length}`) + (r.skipped.length ? ` · skipped ${r.skipped.length}: ${r.skipped.map((s) => s.name + " (" + s.why + ")").join("; ")}` : ""), 8000);

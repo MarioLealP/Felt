@@ -314,4 +314,9 @@ Mockups go through the review app before phase A's UI is built.
 - **2026-10-02, build tickets** on the board as sub-issues of WP-42: 42.1 ink
   spike (Ready) → 42.2 foundation → 42.3 the log + Margins → 42.4 shared diary
   → 42.5 Systems/ntfy/Lists/controls → 42.6 Tauri apps.
+- **2026-10-02, ink spike (WP-42.1) passed.** https://claude.ai/artifact/7BTf8ePxcWoEnCQ7BQiavu.
+  Mario: "generally looks great"; only "a bit too fast" → pen speed follows the
+  amount of ink (~110 px/s, 0.9–2.4 s), lines/notes ease in slower. To carry
+  into the build: seed also on resize/redraw (Rough Notation re-rolls), store
+  seen marks server-side per mark so "plays once" holds across devices.
 

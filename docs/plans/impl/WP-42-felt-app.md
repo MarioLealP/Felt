@@ -274,4 +274,19 @@ Mockups go through the review app before phase A's UI is built.
   problem circled in raspberry ink with handwritten actions — no boxes), and a
   desktop **open-notebook spread** (conversation left page, margins + systems
   right page, spiral down the middle). Canvas row "Round 7".
+- **2026-10-02, look approved.** Mario on round 7: "It's very very cool, just
+  not 100% sure how we gonna do all the scribbles and stuff natural but i'm all
+  for this". How the ink is made real (to prove in a spike first, before the
+  rest of the build depends on it):
+  - her handwriting = a real font (Klee One), real searchable text;
+  - circles / underlines / strike-throughs / brackets = **Rough Notation**
+    (MIT, on rough.js) anchored to real text spans, animated drawing;
+  - freehand strokes (arrows, signature, writing scribble) = **perfect-freehand**
+    (pressure-like strokes); the signature can be one Mario draws once;
+  - doodles (star, heart, meh) = a small drawn set with random rotation/scale;
+  - randomness seeded by the message id, so a mark looks the same on reload;
+  - what she marks is HER choice: replies may carry optional marks
+    (`{type: circle|underline|strike, quote, note}`) via felt-llm's json schema;
+    the app locates the quote in Mario's message; rate-limited so it stays rare;
+  - polaroids = real snapshots from her WP-07 screen captures (allowed apps only).
 

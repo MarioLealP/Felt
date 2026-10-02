@@ -65,3 +65,9 @@ item says what's still off and where to start.
   the pumpkin tees can come up in June. The spec's season/holiday tag weights
   (Halloween in October, snowflakes in December) were never built. Approach:
   name-based or sidecar tags, out-of-season tees weighted to zero.
+- **ComfyUI on the Nitro5 — parked** (2026-10-02, Mario: "We can park
+  comfyui I don't care enough about it tbh"). `felt-comfyui` is a *user*
+  service with no linger, so it dies when the last SSH session ends and her
+  `generate_image` skill mostly fails. Fix when wanted: `loginctl
+  enable-linger benylin` (mind VRAM contention with voice). Tee generation
+  works around it (SSH tunnel + voice paused, see WP-33).

@@ -294,4 +294,17 @@ Mockups go through the review app before phase A's UI is built.
   static image (WP-53 deploy.sh); Caddy serves it at felt.clockmost.com/app;
   data comes from felt-core under SSO-gated `/v1/app/*`. UI deploys never
   restart felt-core.
+- **2026-10-02, decision 2: where the rest lives.** Five flags: talk ·
+  margins · diary · lists · systems. **The diary is shared** (Mario: "a shared
+  diary, where its my daily brief and her daily note"): each day's page has
+  your morning brief on top and her note about yesterday below. Lists = the
+  5th flag (shopping, games, email noise, about you). Controls (status, quiet
+  mode, hush) = tap her name, a kraft card slides out. Mario: "needs to be
+  tested" — mocked as canvas row "Round 8"; tested for real while building.
+  **Swipe between days** with a page-turn (Mario). Claude's caution: a full
+  3D page curl on every swipe gets tiring and stutters in a phone WebView —
+  build a short paper slide with a light curl shadow (<250 ms) first, then
+  judge on the phone.
+- **2026-10-02, mockups end here.** Mario: "we got a general idea, as we
+  build each page we talk better". Each page is refined during its build.
 

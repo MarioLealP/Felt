@@ -95,6 +95,36 @@ Russian knows your credit card")
   an Android APK, a Linux executable for the laptop, and Windows (where the
   tray's Felt window already is). Rethink, see below.
 
+### Ideas round (10-02) — Mario: "if no mention i agree"
+
+Kept: 1.9 pin/copy, 2.9 👍/👎 on remarks (feeds the personality/variety
+system), 2.10 "while you were away" + mark all read, 2.11 reply to a remark,
+2.12 "handled" on the notification, 2.13 "ask Felt about this alert", 2.14
+link to Zabbix/Wazuh, 7.4 home-screen widget, 7.5 last-loaded view when the
+VPN is off.
+
+- 1.7 ✅ later stage: photo/screenshot → "what's this?" with her local vision
+  first; a Google Lens replacement (text, translate, look-alike search) is the
+  goal but more work (Mario: "I would love if she could replace it").
+- 1.8 ✅ share-to-Felt, implementation to rethink: Android's share menu needs
+  the same small native layer as the background notifications (an intent
+  filter in the Tauri Android plugin), so both are built together.
+- 3.2, 4.4 ✗ cut ("no point").
+- 4.5 ✅ search, **without Elasticsearch**: it's a JVM service wanting ~1–2 GB
+  RAM on a server with ~3 GB free. SQLite's built-in full-text search (FTS5)
+  covers diary + chat + feed for one person at no cost.
+- 5.6 ✅ the shopping list moves into the app. It exists today (skill
+  `shopping_list` + the phone page `felt.clockmost.com/shopping-list`, SSO,
+  WP-55) but Mario didn't know about it, which says it belongs in the app.
+- 6.3 / 6.4 later, not a priority: her on the phone. She lives on one device
+  at a time and walks over from the desktop to the phone when she notices
+  Mario is AFK (Mario's idea).
+- Claude integration → its own plan (WP-58): Mario wants to talk to her and
+  have her hand work to Claude, e.g. an alert arrives and goes to Claude for
+  triage instead of her small model. Mario: "im fully aware it would be the
+  'open' to the cloud, so we need to go through this and decide the plan".
+  WP-42 only needs the Feed to show those reports.
+
 ### 8.7 rethought: one app, three wrappers
 
 - **Tauri 2** builds an Android APK, a Linux app and a Windows exe from the

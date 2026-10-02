@@ -739,3 +739,24 @@ the diary mentions it the next day.
     so none are in git yet.
   - **Optional:** a "brb, changing" line for proper changes (it's a silent
     walk-off now).
+
+**WP-29 v2, 2026-10-01/02: price checks via Exiled Exchange 2's key.**
+Vision failed the live check. The tray sends 768 px frames, which is too
+small to read tooltip names (Mario: "she pointed how much text it is, but
+not the price"). Mario chose to keep **EE2 stock and auto-updating** ("can
+we have EE2 its own thing, and have her learn pricing on the side"): no
+fork, because leagues bring frequent EE2 updates.
+- felt-tray `poe_clipboard.py` (`110e590`): polls the clipboard *sequence
+  number* and reads the contents only when it changes while a PoE window is
+  in front. It only accepts the game's `Item Class:` / `Rarity:` format;
+  anything else is dropped unread. EE2's "restore clipboard" is off on
+  Mario's box, so the item text stays put.
+- felt-animation `POST /poe/item` (`7549e67`): 10 s repeat guard, a silent
+  `poe_item_checked` event-log entry (the WP-57 learning data), then event
+  `poe_item` to felt-core.
+- felt-core (`ed26493`, `76855d4`): `parse_item_text`, uniques and currency
+  priced with `poe_price_check`. She only speaks with a real price and stays
+  silent otherwise (rares: EE2's widget prices those by mods).
+- Verified end to end on 10-02 with a Divine Orb text: priced "~1.00 divine
+  (league: Forbidden Rites)", spoken line, event logged.
+- Left: Mario presses EE2's key on a real unique in game.

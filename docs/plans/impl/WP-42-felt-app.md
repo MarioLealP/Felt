@@ -262,4 +262,7 @@ Mockups go through the review app before phase A's UI is built.
   spiral + handwritten footer). Mario: "more on R5A land, we might have to
   rework the tabs". Round 6 = R5 A with three tab kinds side by side: sticky
   flags (right edge), ribbon bookmarks (from the top), divider tabs (bottom).
+- **2026-10-02, Talk screen settled (look):** R5 A page + **sticky-flag tabs**
+  (Mario: "Stick flags for sure"); her floating portrait on the page removed
+  ("yeet the floating icon of her"). Canvas board `r6/Tabs.dc.html`.
 

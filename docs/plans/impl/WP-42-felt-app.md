@@ -475,3 +475,9 @@ Mockups go through the review app before phase A's UI is built.
   Mario's go-ahead. She talks to Claude, Mario talks to her; for something
   serious Mario joins Claude directly, so each incident's Claude session is
   kept resumable (its session id stored with the incident).
+- **10-03 — Organised by WP** (Mario: "The phone app isn't a priority so
+  unless we on the phone app WP, just leave it to then, slow steady and in
+  order so its well organized"). The alert work lives in WP-44
+  (docs/plans/impl/WP-44-server-care.md: intake + rules, her line), WP-58
+  (the Claude handler) and 42.5 (Systems page, desktop notifications). The
+  phone app stays in 42.6, untouched until then.

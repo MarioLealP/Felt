@@ -517,3 +517,20 @@ Mockups go through the review app before phase A's UI is built.
   Continuing the session from the app = WP-61: not sketchy as such, since that
   Claude stays read-only in its sandbox with the same usage limits; changes
   still go through Mario.
+- **10-03 — 42.5 step 1 built: the Systems page** (felt-core 500774f,
+  13f2bdb, 6e5b59c; felt-dashboard e221c27; infra 2cbb51f). Overview: the six
+  areas with dots, the one needing Mario circled in raspberry ink (drawn once
+  per device) with handled · ask Felt · details; history newest first, her
+  line + Claude's verdict as a note, quiet ones grey. `#systems/<id>`: her
+  lines, Claude's report, his trail (each command + output, collapsible), the
+  raw alerts, `sudo felt-responder-join <session>` with copy, Zabbix/Wazuh
+  links. "ask Felt" opens Talk answering her alert line; she gets the
+  incident's facts and Claude's conclusion with it.
+  - Found and fixed on the way: (1) felt-core trusted the SSO header on the
+    new routes before Caddy gated them - ~20 min, LAN/VPN only, Caddy logs
+    show no use; Caddy now also strips a client-sent X-Authentik-Username
+    everywhere else, so a missing path fails closed. (2) The responder's home
+    was root-owned (chown hit the DynamicUser symlink), so Claude's sessions
+    weren't saved - no trail, nothing to join; fixed. (3) With the push,
+    Claude could close an incident before her first line, which then never
+    came; now she says both in one line.

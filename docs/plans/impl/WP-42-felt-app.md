@@ -634,3 +634,23 @@ Mockups go through the review app before phase A's UI is built.
   job"). Layout fixes from that test: tiles stacked ("The buttons need to be
   stacked on top of each other", 31500cf), then slim one-row tiles so the
   page fits the screen ("make the buttons less tall", 68aa1f3).
+- **10-03 — felt-core-down test, round 1** (Mario: "feel free to shut down
+  felt core"): felt-core stopped 21:08:17 UTC, a TEST alert published; the
+  tray's raw pop-up came ("Yes"). Found: (1) Systems showed 502 - Mario: "system
+  tab should always be up, since its from ntfy itself? How are ntfy gonna
+  arrive if system tab isnt working?"; (2) the alert never reached felt-core
+  at all (sent while it was down).
+  - **Fix (1): Systems falls back to ntfy itself** (felt-dashboard 3ed8a32).
+    Mario chose the ntfy-app way for the login: "Cant the app hold the secret
+    when it becomes an actual app? I mean i have to login to ntfy app, so here
+    would be similar no?" - Settings -> "Server alerts without me", his own
+    receive-only login once per device, kept in that browser (secure storage
+    in the real app, 42.6). No new server secret.
+  - **Fix (2): felt-core catches up** (felt-core f24fc5e): reconnects with
+    `since=<last id>`, caught-up alerts become incidents at their own time.
+- **10-03 — no more Windows toasts** (Mario: "Also we need to kill toast
+  notifications"; felt-tray a6cfa4a): her replies / proactive lines /
+  "Listening..." don't toast (she says them); the tray's own notes (errors,
+  rebind prompts) use the plain pop-up. winotify removed.
+- **10-03 — settings switch row** without the card (Mario: "Switch should be
+  just text with the switch"; d8a0272).

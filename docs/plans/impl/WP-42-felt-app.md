@@ -539,3 +539,9 @@ Mockups go through the review app before phase A's UI is built.
   middle of the screen" -> areas pinned, only the history scrolls; her ink now
   scrolls with its words, which also fixed marks in Talk; felt-dashboard
   2f40f82). Mario: "Looks great, good job".
+- **10-03 — Desktop notifications = the tray's Windows toasts** (Mario:
+  "Option1, since eventually we will have the actual presentation layer in
+  the desktop like on the mockups right?" - yes: the tray window already shows
+  the hosted app, 42.2 d). A toast pops whether or not the app is open; its
+  **details** opens the tray's own Felt window at `#systems/<id>`, **handled**
+  closes the incident. Laptop and phone stay on the ntfy app until 42.6.

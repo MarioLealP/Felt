@@ -57,7 +57,24 @@ already went out at hand-over - Mario 10-03, two pings by design)
    into `ops/felt-responder/secrets.env` (infra d03bc95, never shown in a
    transcript). Claude Code 2.1.288 installed for clockmost-claude
    (~/.local/bin, official installer); a tool-less test call logged in.
-2. The exact read-only allowlist.
+2. The exact read-only allowlist. Sources (Mario 10-03: OpenObserve,
+   Suricata, Trivy, Zabbix, Wazuh; plus the infra git history and deploy
+   logs, checked first since most incidents are our own deploys):
+   - **Zabbix: done** - user `felt-responder` (User role, the atlas's
+     read-only group), API token in `ops/felt-responder/secrets.env`
+     (`ZABBIX_TOKEN`, infra 3908ae4). Sees the 4 hosts and problems; writes
+     refused (tested).
+   - **OpenObserve: done, through a gate** - the OSS edition has no read-only
+     users, so `openobserve-gate` (infra f59a38a, 127.0.0.1:5081) holds the
+     login and passes on only GET /streams and POST /search (SELECT). Mario
+     10-03: gate now; replacing OpenObserve (Loki / VictoriaLogs + Grafana)
+     is a possible separate infra step later.
+   - Suricata: through OpenObserve (`suricata` stream) + its eve files.
+   - Trivy: its report file, for Trivy alerts only.
+   - Wazuh: read-only user, next.
+   - Runs as its own OS user with no sudo, not as clockmost-claude (which has
+     broad NOPASSWD sudo and the docker group) - to decide with the
+     allowlist.
 3. The daily cap.
 4. Until this ships, WP-44 lines for Claude-handled incidents say "Claude is
    looking into it" — fine while lines aren't delivered anywhere; must be

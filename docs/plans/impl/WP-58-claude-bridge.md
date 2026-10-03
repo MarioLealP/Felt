@@ -141,9 +141,23 @@ already went out at hand-over - Mario 10-03, two pings by design)
      cap (now 50, a runaway-loop net) is the limit. felt-core df4507e, infra
      61ffa4a. Usage at the time: 18% session, 74% week. Headless runs default
      to Sonnet.
+   - **Push + pull, deadlines by urgency** (Mario 10-03: "just have a system
+     send it to him directly no? ... both even, push and pull"; "Sounds
+     great"): felt-core rewrites `data/responder-wake` when an incident starts
+     waiting (on intake and on promotion) and `felt-responder.path` starts a
+     round at once - a doorbell, no data, no open port; the timer every 2 min
+     is the backup. A round works through everything waiting (max 5).
+     Missed: unclaimed after 2 / 3 / 5 min (urgent / high / default+low), no
+     report after 8 / 12 min; urgent runs capped at 6 min. felt-core 024fff6,
+     infra d7ee7a0. Tested on a real one (incident 7, the new units tripping
+     Wazuh): rang -> round started within 5 s -> usage 23% / 74% ok ->
+     verdict **expected, high confidence**, files matched commit d7ee7a0
+     byte for byte; 11 s, $0.08. Path unit switched off again after the test.
    - **Timer stays off until the WP-59 exam passes** (Mario 10-03: "wait for
      the exam"). Meanwhile Claude-handled incidents are marked missed after
-     15 min and her follow-up truthfully says Claude couldn't look. Rounds
+     2-5 min and her follow-up truthfully says Claude couldn't look. Rounds
      can still be run by hand: `sudo systemctl start felt-responder.service`.
+     Going live = `systemctl enable --now felt-responder.path
+     felt-responder.timer`.
 7. ~~Until this ships, "Claude is looking into it" isn't true~~ - true once
    the timer is on.

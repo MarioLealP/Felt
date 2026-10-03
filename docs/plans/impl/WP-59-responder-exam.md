@@ -89,3 +89,20 @@ report itself).
   from an address outside the DHCP pool, is most likely our own test - say so,
   still needs-mario; (d) confidence: high when a commit or log states the
   cause outright.
+- 10-03, lessons (a)-(d) into its skills + CLAUDE.md (infra 43865df; Mario:
+  "Sounds good"), **run 2** on the three misses (1 min, $0.75):
+  - 1 honeypot: "touched 35 s after we redeployed it ... looks like our own
+    end-to-end test of the honeypot and ban script, but only Mario can
+    confirm" - needs-mario, asks him, gives the unban command. **Right.**
+  - 4 HA 502: now finds Home Assistant itself unreachable (Caddy timeouts to
+    it from ~3 min before the deploy) and tells Mario to look at the VM.
+    **Right** (the USB-pin root cause was inside the VM, out of its reach).
+  - 6 suricata: commit 2aa1b8d's read-only disable.conf under /etc/suricata
+    crash-looped it, 206c55f fixed it - **right, high confidence**; it treats
+    the later fix commit as "after the alert" (replay framing) and so says
+    needs-mario.
+  - Two sensible suggestions of its own: the deploy health check could wait
+    through a container's start_period (so a crash loop gets auto-reverted)
+    and ignore routes already failing before the deploy.
+  **Result: 10 of 10 known causes right after one round of lessons; the
+  three unknowns plausible, one verified.**

@@ -129,7 +129,18 @@ already went out at hand-over - Mario 10-03, two pings by design)
      alert per round) and those folded into the incident it had already
      called fine - a genuine change in that window would have been absorbed.
      Both fixed.
-   - Daily cap: 20 (Claude's suggestion, never objected to).
+   - **Limit by plan usage, not a count** (Mario 10-03: "instead of cost is
+     capped, can we do the session % limit?"; "both numbers look good"): the
+     runner skips when Claude's usage is past **70% of the 5-hour window or
+     85% of the week** - his own work comes first; the incident is left
+     unclaimed, so it's missed and her follow-up says Claude couldn't look.
+     The percentages come from a tiny tool-less call's `rate_limit_event`
+     (stream-json; undocumented - the docs only promise them to the status
+     line), checked only when GET /v1/incidents/waiting says something
+     waits. If the event ever disappears: logged, and felt-core's daily count
+     cap (now 50, a runaway-loop net) is the limit. felt-core df4507e, infra
+     61ffa4a. Usage at the time: 18% session, 74% week. Headless runs default
+     to Sonnet.
    - **Timer stays off until the WP-59 exam passes** (Mario 10-03: "wait for
      the exam"). Meanwhile Claude-handled incidents are marked missed after
      15 min and her follow-up truthfully says Claude couldn't look. Rounds

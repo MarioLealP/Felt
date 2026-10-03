@@ -407,3 +407,11 @@ Mockups go through the review app before phase A's UI is built.
   includes her remarks, so at the desk the conversation is pushed out by
   her own screen comments; now a one-line fix with `kind`, but it changes
   her behaviour.
+- **10-03 — Her context is the conversation, plus a note of what she said on
+  her own (Mario: "yes and make sure she knows the remarks so she repeats
+  herself less").** Chat reads the last 20 conversation lines (kind chat)
+  plus one system note listing her 6 most recent unprompted lines (remarks,
+  event lines, pushes, mail; last 6 h), so he can bring them up and she
+  doesn't repeat them. Remarks and event lines get the same "already said"
+  list (8 lines), now from every kind of her lines, not only screen remarks.
+  felt-core 7d0f424.

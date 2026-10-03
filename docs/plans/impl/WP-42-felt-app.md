@@ -545,3 +545,24 @@ Mockups go through the review app before phase A's UI is built.
   the hosted app, 42.2 d). A toast pops whether or not the app is open; its
   **details** opens the tray's own Felt window at `#systems/<id>`, **handled**
   closes the incident. Laptop and phone stay on the ntfy app until 42.6.
+- **10-03 — What pops, by level** (Mario: "Sounds good"): urgent = pop-up
+  with sound, stays until closed; high = normal pop-up; default = Systems
+  only; low = history only. For the ones that pop, both of her lines pop
+  (first word + outcome). Exception: an outcome that needs Mario, or "Claude
+  couldn't look", always pops whatever the level.
+- **10-03 — Our own pop-up instead of Windows toasts** (Mario: "we might need a
+  proper notification system like steam has, instead of the toast since
+  windows toasts are kinda finicky and a pain"). A small borderless,
+  always-on-top tray window sliding in bottom-right, drawn by the app itself
+  (a notice page, so it looks like the notebook and deploys with the app),
+  doesn't steal focus, stacks; urgent has a sound and stays, high fades. Limit:
+  shows over windowed / borderless games, not exclusive fullscreen (no hooking
+  into games).
+- **10-03 — Pop-up keys: wanted, combos left open** (Mario: "leave the
+  keybinds themselves open for now, since we will need to be sure they dont
+  over lap windows nor linux keybinds, but the issue with linux is we need to
+  pick the final distro/DE i will be using. Since i dont want to muscle memory
+  keybinds then swap"). Built with no combos bound; buttons by mouse until
+  then. Claude's draft for later: Ctrl+Alt+D details / A ask Felt / K handled
+  / Q close, registered only while a pop-up shows - to be checked, together
+  with her existing Ctrl+Alt set, once the Linux distro/DE is picked.

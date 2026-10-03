@@ -386,3 +386,24 @@ Mockups go through the review app before phase A's UI is built.
   Answering an aside goes straight to /v1/app (silent at the desk) until the
   bridge carries `answering` too. Takes effect on the next tray restart.
   **WP-42.2 → Needs review** on the board.
+- **2026-10-03, WP-42.3 built (Mario: "Keep rolling"; "nothing is mandatory,
+  you can rethink the whole system"; "no need to fear big refactors while app
+  isn't mature").** Rethought the log: instead of a second "feed" table,
+  every line lives in `messages` with a `kind` (chat / remark / event /
+  proactive / email / alarm) plus source_ref and read / dismissed / snoozed.
+  Talk, the Margins, the asides and her own context are filters on one
+  table; the old remark test (matching message text against the remark
+  tables) is gone, used once by the migration (live DB backed up first:
+  data/felt.db.pre-kinds-20261003). Pushes, new-mail lines and alarms, which
+  used to vanish (expired queue items, ntfy only), are now her lines and in
+  her history. Margins API (list, unread count, mark read/dismiss/snooze,
+  exact SSO paths); live updates as server-sent notices (the app refetches;
+  no data in the stream); the Margins page (source labels, day breaks, read
+  after 1.5 s on screen, answer her / later 3 h / dismiss, unread on the
+  flag); ink "seen" server-side so a mark plays once across devices. All
+  existing lines were marked read once (1,198) so the count starts at 0.
+  felt-core bd1e579, felt-app 6550955. Not live-checked yet.
+  Found on the way, parked for Mario: her chat context (last 20 lines)
+  includes her remarks, so at the desk the conversation is pushed out by
+  her own screen comments; now a one-line fix with `kind`, but it changes
+  her behaviour.

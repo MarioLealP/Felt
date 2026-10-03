@@ -66,7 +66,9 @@ Until 5, the ntfy app keeps working exactly as now.
   packages-changed and pc-agent (desktop agent quiet = PC off, expected).
   Lines go to the incident and her log as kind "alert" (not the Margins).
   Live: incident 1 (a deploy) got its line. Fix: once she's told an update
-  run, the next update starts a new one. To check with Mario: her wording
-  is samey ("Hey, just a heads up ... you don't need to do a thing").
+  run, the next update starts a new one. Her wording is samey ("Hey, just
+  a heads up ... you don't need to do a thing").
+  Mario 10-03: wording stays as is ("Looks good as is, i dont mind the
+  padding").
   Until WP-58 lands, lines for Claude-handled incidents say "Claude is
   looking into it" before that's true (not delivered anywhere yet).

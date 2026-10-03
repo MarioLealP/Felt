@@ -593,9 +593,10 @@ Mockups go through the review app before phase A's UI is built.
   desktop the keybinds?"). Flags: talk · margins · diary · lists · systems ·
   settings · controls.
   - **lists** = real lists only (shopping now, reminders with WP-46).
-  - **settings** = things tuned about her once in a while: games for news
-    (WP-49), email noise (WP-43), what she remembers about you.
-  - **controls** = her status and mood, quiet mode with a timer, hush/stop,
-    and on the desktop the keybinds (all of them, rebindable there); the
-    phone hides that part. Replaces the "tap her name" card (dropped: one
+  - **settings** = things tuned once in a while: games for news (WP-49),
+    email noise (WP-43), what she remembers about you, and on the desktop
+    the keybinds (all of them, rebindable there; the phone hides them) -
+    Mario: "Actually keybinds go on settings makes more sense".
+  - **controls** = what's flipped often: her status and mood, quiet mode
+    with a timer, hush/stop. Replaces the "tap her name" card (dropped: one
     obvious place beats a hidden gesture).

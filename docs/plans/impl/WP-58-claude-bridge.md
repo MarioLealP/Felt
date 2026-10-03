@@ -50,6 +50,43 @@ already went out at hand-over - Mario 10-03, two pings by design)
 - **When Claude can't answer** (down, cap hit, no report in time): she tells
   Mario "Claude couldn't look at this", so nothing is dropped quietly.
 
+## Privacy line
+
+This is Felt's one opening to the cloud (Mario: "im fully aware it would be
+the 'open' to the cloud"). What reaches Anthropic is everything the server's
+Claude reads while investigating, sent through Mario's own Claude
+subscription, so his claude.ai account's privacy settings govern how it's
+kept.
+
+**Goes out** (only while an incident is being investigated, or when Mario
+joins a session):
+- the incident: the alert titles and messages from ntfy;
+- the infra repo as committed: compose files, configs, scripts, commit
+  history. Secrets in it are sops-encrypted, so only ciphertext;
+- log lines it searches: container logs, Suricata events and the router's
+  syslog (OpenObserve, through the search-only gate). These can contain IP
+  addresses, hostnames, URLs and request paths, and usernames tried on a
+  login;
+- Zabbix problems and metrics, and Wazuh's alert history (file paths,
+  checksums, hostnames, user names on file changes);
+- the host's journal, service status, disk / memory / socket summaries, and
+  the latest Trivy report.
+
+**Never goes out**, enforced by the sandbox rather than by asking nicely:
+- decrypted secrets: `.env` files, sops output, keys and tokens (the
+  sandbox hides `/home`, `/etc/age`, `/etc/clockmost`, `/root`,
+  `/var/lib/docker`; the responder's own read-only logins are never printed);
+- anything of Felt's: her chats with Mario, the diary, her memories, his
+  email and calendar, screen captures, Spotify. They live in felt-core's
+  database under `/home/docker`, which the sandbox can't see;
+- photos (Immich), Drive, and any other app data - same place;
+- the desktop's and the laptop's own files: only alerts *about* them.
+
+**Mario controls it:** the kill switch in the app's settings turns it off
+(nothing is handed over; her follow-up says Claude is switched off), and the
+usage limits (70% session / 85% week) stop it when his own work needs the
+plan.
+
 ## Decisions and progress
 
 1. ~~The auth token~~ **done 10-03** (Mario: "we do setup token"): Mario ran

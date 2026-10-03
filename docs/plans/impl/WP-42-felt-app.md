@@ -614,9 +614,11 @@ Mockups go through the review app before phase A's UI is built.
   - **quiet**: off the screen and silent (cuts her off; unprompted lines
     wait in the Margins). Replaces both hush and the planned quiet mode.
   - Tap = on until turned off; slide = timer snapping to 15m / 30m / 1h /
-    8h; the tile shows the time left.
-  - Default (Claude's, to confirm): urgent server alerts still pop during
-    quiet, like phone DND letting alarms through.
+    8h; the tile shows the time left. On the desktop the mouse wheel over a
+    tile steps the timer too (Mario: "On desktop mouse wheel on top of
+    sliding").
+  - Alerts aren't touched: every server alert pop-up still comes through
+    during quiet (Mario: "No this is for felt, raw ntfy can come through").
   - How: felt-core holds the two switches (the app sets them from anywhere);
     the desktop tray applies them to felt-animation and reports her real
     state and mood back, so the page is right from the phone too.

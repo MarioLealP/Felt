@@ -344,3 +344,25 @@ Mockups go through the review app before phase A's UI is built.
   about every 2 minutes at the desk, so N is often 10+): canvas row "Round 9".
   **Look = B, compact**: 14px handwriting off the ruled lines (Mario: "its
   like a note so doesnt sit nicely on the lines, unlike the normal chat").
+- **2026-10-03, which asides show: she picks, by comparing** (Mario: "go with
+  2", i.e. her choice, not simply the newest). Dry runs on her real 2 Oct
+  remarks, nothing written:
+  - Asked one remark at a time ("worth bringing up?") she said yes to 8/16,
+    then 5/16 with stricter wording, and flipped answers between runs even at
+    temperature 0.2. Likely cause: `personality_prompt()` draws fresh
+    examples and a memory block per call, so each yes/no asks a slightly
+    different her. (Same cause probably keeps felt-llm's prompt cache from
+    reusing the persona; see the 10-03 memory thrash note in
+    runbooks/clockmost-infra.md. To look at separately.)
+  - Asked once, "which one or two of these would you most like him to
+    answer?", over the remarks since his last message: the same two picks 3/3
+    on a 16-remark afternoon and 2/2 on a 23-remark mixed evening. Never a
+    music reaction or a guest notice; always her pushing back or a moment
+    that wants an answer. Reversing the list changed which of the near-equal
+    remarks she chose, but production order is always chronological.
+  - Built as: one comparative call in the background after each new remark
+    (a single remark needs no call), stored, read by Talk. The remark prompt
+    itself is untouched.
+- **Noticed, not in WP-42:** "someone's here" fired 6 times in one evening
+  (2 Oct, 18:27–20:32), nearly verbatim; guest detection re-triggering or
+  the cooldown is too short.

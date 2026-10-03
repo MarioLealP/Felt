@@ -630,3 +630,7 @@ Mockups go through the review app before phase A's UI is built.
   and reports presence, hush and mood every 15 s. The page: the two tiles
   (tap / slide / wheel), what the desktop really says or "the PC's off", each
   part up/down, her mood in words. To test live with Mario.
+- **10-03 — controls tested live** (Mario: "Buttons work great tho good
+  job"). Layout fixes from that test: tiles stacked ("The buttons need to be
+  stacked on top of each other", 31500cf), then slim one-row tiles so the
+  page fits the screen ("make the buttons less tall", 68aa1f3).

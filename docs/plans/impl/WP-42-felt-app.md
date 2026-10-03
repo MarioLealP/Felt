@@ -415,3 +415,12 @@ Mockups go through the review app before phase A's UI is built.
   doesn't repeat them. Remarks and event lines get the same "already said"
   list (8 lines), now from every kind of her lines, not only screen remarks.
   felt-core 7d0f424.
+- **10-03 — Left is hers, right is his, across the whole app** (Mario: "dont
+  do top of the page, just do left side messages are hers, right side are
+  mine for the whole system"; after seeing Talk: "I like it"). Talk: her
+  lines from the margin with the time in the gutter, his right-aligned, 15%
+  short of the margin, time after the words; no FELT/YOU labels (screen
+  readers still get a name). Replaces "brief on top, her note below" for the
+  diary: her note on the left, his brief (WP-45) on the right when it
+  exists. Margins are all hers (left); list items sit on the side of whoever
+  added them. felt-app 7add3b1.

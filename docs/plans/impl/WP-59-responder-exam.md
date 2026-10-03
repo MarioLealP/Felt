@@ -106,3 +106,5 @@ report itself).
     and ignore routes already failing before the deploy.
   **Result: 10 of 10 known causes right after one round of lessons; the
   three unknowns plausible, one verified.**
+- 10-03, **passed - live** (Mario: "Sounds good, turn it on o7"):
+  `systemctl enable --now felt-responder.path felt-responder.timer`.

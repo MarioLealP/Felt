@@ -161,3 +161,9 @@ already went out at hand-over - Mario 10-03, two pings by design)
      felt-responder.timer`.
 7. ~~Until this ships, "Claude is looking into it" isn't true~~ - true once
    the timer is on.
+
+## Live
+
+- 10-03 ~18:53 UTC: push + pull enabled after the WP-59 exam (Mario: "Sounds
+  good, turn it on o7"). Her lines still go nowhere until 42.5; reports
+  collect on the incidents.

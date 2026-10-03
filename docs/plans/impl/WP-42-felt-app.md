@@ -372,3 +372,17 @@ Mockups go through the review app before phase A's UI is built.
   weeks, and old remarks feed the diary, her self-memory and the Margins
   page, so deleting them would make her forget for no space gained. Only
   truly dead rows are cleaned (aside picks from earlier batches).
+- **2026-10-03, asides in Talk shipped (felt-core 571cd61, felt-app
+  930dc68), accepted without a live check** (Mario: "I can't Check rn so feel
+  free to keep building"). To look at on the phone once she has made some
+  remarks: how the two asides sit under the transcript, the "↳ re:" bar.
+- **2026-10-03, tray window on the hosted app (42.2 d, felt-tray b1207d5).**
+  The tray served a local copy of felt-dashboard from localhost, which broke
+  with the app rewrite (it calls /v1/app on its own origin). Now the window
+  loads felt.clockmost.com/app/ (derived from felt-core's URL), keeps its
+  cookies so SSO survives restarts, and exposes one bridge method,
+  `text_chat`, which sends the line via felt-core /v1/text-chat with the
+  tray's token and hands the reply to felt-animation, so she speaks it.
+  Answering an aside goes straight to /v1/app (silent at the desk) until the
+  bridge carries `answering` too. Takes effect on the next tray restart.
+  **WP-42.2 → Needs review** on the board.

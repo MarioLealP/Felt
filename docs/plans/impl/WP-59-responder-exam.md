@@ -20,7 +20,7 @@ to include the honey pot one".
 - Gaps go into its CLAUDE.md / skills, then a second run. Mario reviews the
   scorecard before it goes live.
 
-## The set (causes from the runbooks / WP logs; to confirm with Mario)
+## The set (causes from the runbooks / WP logs; confirmed by Mario 10-03: "Yeah sounds about right")
 
 Times UTC (felt-core's ntfy log). "Exact" = the notes describe this very
 event; "likely" = the notes fit by date and content.
@@ -55,3 +55,8 @@ report itself).
 
 - 10-03: set drafted from the 1,470 stored alerts + a search of the runbooks,
   WP logs and memory for documented causes.
+- 10-03: runner built (infra 72aa659): `felt-responder-exam` replays
+  `ops/felt-responder/exam/cases.json` (the original alerts, pulled from
+  felt-core's ntfy log - no causes in it) through the responder's own
+  investigate() in its sandbox, `felt-responder-exam.service`. Results in
+  /var/lib/felt-responder/exam/. Run 1 started.

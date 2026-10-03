@@ -366,3 +366,9 @@ Mockups go through the review app before phase A's UI is built.
 - **Noticed, not in WP-42:** "someone's here" fired 6 times in one evening
   (2 Oct, 18:27–20:32), nearly verbatim; guest detection re-triggering or
   the cooldown is too short.
+- **2026-10-03, asides expire after 6 hours** (Mario: "yes"). Only the Talk
+  view: remarks stay stored. Mario also offered "do it in general to clean up
+  the database"; Claude pushed back: the whole felt.db is 2.3 MB after three
+  weeks, and old remarks feed the diary, her self-memory and the Margins
+  page, so deleting them would make her forget for no space gained. Only
+  truly dead rows are cleaned (aside picks from earlier batches).

@@ -60,3 +60,32 @@ report itself).
   felt-core's ntfy log - no causes in it) through the responder's own
   investigate() in its sandbox, `felt-responder-exam.service`. Results in
   /var/lib/felt-responder/exam/. Run 1 started.
+- 10-03, **run 1** (13 cases, 7 min, $2.31, usage 29% -> 41% session /
+  75% -> 77% week; 0 refused commands). Scored against the key, spot-checked
+  in the infra git log:
+
+  | # | Its verdict | Score | Note |
+  |---|-------------|-------|------|
+  | 1 honeypot | needs-mario | partial, safe | Router probes right; couldn't identify .201 (our dummy) - asked Mario. Noticed the honeypot had gone live 35 s before but didn't connect it to a test. |
+  | 2 FIM test | expected | right | |
+  | 3 backup disk | needs-mario | right | Drive vanished after the reboots, back ~17:45; honest "couldn't find why" (it was the cable). |
+  | 4 HA 502 revert | expected | partial | Right that the revert wasn't felt-core's fault; missed that the HA VM itself was down (didn't check it - listed under couldnt_check). |
+  | 5 LAN renumber | needs-mario | right | Exact: pihole had taken unbound's 172.31.53.2, the two reverts, the re-apply. |
+  | 6 suricata | fixed-itself | **wrong cause** | Blamed swap pressure during the Wazuh deploy; missed our own commits in the window (2aa1b8d broke it 12:35, 206c55f "fix crash loop" 14:10). |
+  | 7 HA VM | expected | **right - the key was wrong** | New Zabbix HA checks denied by libvirt + Portuguese output, fixed 3 min later (e1686a8 "read-only libvirt, C locale"). Our key said "controlled shutdown test". |
+  | 8 CI canary | expected | right | |
+  | 9 CI line 42 | fixed-itself | right | Fixed by the Gitea secrets change. |
+  | 10 healthcheck | expected | right | |
+  | B1 | fixed-itself | plausible | Edge's RunOnce cleanup entry after an update, removed next morning. |
+  | B2 | expected | plausible | Our 10-minute health check hits the login page at :01; the alert fired 2 s after. No failed logins or bans. |
+  | B3 | expected | **right (verified)** | Revived by hand 09-16 07:17, healthcheck fixed 07:29, torn down 07:56 (git) - the notes only had the 09-08 removal. |
+
+  7 of 10 right (one better than our key), 2 partial, 1 wrong cause. No
+  false "all fine" on a security case: the honeypot went to Mario. Every
+  confidence was "medium", even the exact ones - not calibrated.
+  Lessons: (a) for a container/service, always `git log -- projects/<name>`
+  in the window (case 6); (b) when a check fails on another service, look at
+  that service (case 4); (c) honeypot: a touch minutes after it went live,
+  from an address outside the DHCP pool, is most likely our own test - say so,
+  still needs-mario; (d) confidence: high when a commit or log states the
+  cause outright.

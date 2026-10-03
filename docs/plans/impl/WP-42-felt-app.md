@@ -566,3 +566,14 @@ Mockups go through the review app before phase A's UI is built.
   then. Claude's draft for later: Ctrl+Alt+D details / A ask Felt / K handled
   / Q close, registered only while a pop-up shows - to be checked, together
   with her existing Ctrl+Alt set, once the Linux distro/DE is picked.
+- **10-03 — desktop pop-ups built** (felt-core f52d15f, felt-tray af4fdfd,
+  felt-dashboard bfeffb7; ntfy `desktop-read` login, infra 21a07cd, Mario: "I
+  allow"). felt-core decides what pops (notices.py, the levels table); the
+  tray polls `/v1/notices` every 5 s and shows its own pop-up (popup.py).
+  Changed from "drawn by the app": the pop-up is drawn **locally** by the tray
+  in the notebook look, because a pop-up that loads its page from the server
+  fails exactly when the server is in trouble. Fallback: the tray listens to
+  ntfy itself and pops a raw alert ("straight from the server - Felt didn't
+  answer") only if felt-core is still down 2 min after it arrived. With
+  felt-llm down, urgent/high incidents get a plain line from the same facts,
+  so a model outage never silences them.

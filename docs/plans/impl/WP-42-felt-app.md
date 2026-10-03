@@ -577,3 +577,8 @@ Mockups go through the review app before phase A's UI is built.
   answer") only if felt-core is still down 2 min after it arrived. With
   felt-llm down, urgent/high incidents get a plain line from the same facts,
   so a model outage never silences them.
+- **10-03 — pop-ups approved** after two rounds (Mario: "kinda too crowded"
+  -> a plain column, no title line; "make it from bottom of the screen, and
+  just flex upwards as much as space as it needs" -> each measures itself,
+  sits on the bottom edge, stacks up by real height; felt-tray 942bb50).
+  Sound: "nice and not too loud". Mario: "much better, good job".

@@ -481,3 +481,21 @@ Mockups go through the review app before phase A's UI is built.
   (docs/plans/impl/WP-44-server-care.md: intake + rules, her line), WP-58
   (the Claude handler) and 42.5 (Systems page, desktop notifications). The
   phone app stays in 42.6, untouched until then.
+- **10-03 — The chain: she warns first, then relays the outcome** (Mario:
+  "Double ping, since thats the current model anyway, ntfy hits me, then
+  hits me with the resolved. I want to find out when the fire starts, not
+  when its already on fire, same ntfy system, she just works as the relay").
+  ntfy → her → if it's Claude's she tells Mario straight away ("Claude's on
+  it") and hands it over → Claude investigates → his report comes back to
+  her → she tells Mario the outcome (fine / needs him) → for something that
+  needs him, Mario goes to Claude's session. Two pings by design, like ntfy's
+  alert + RESOLVED today. (Claude had suggested waiting for the verdict to
+  save a ping; Mario chose to hear when the fire starts.)
+- **10-03 — The app must show when it's her that's down** (Mario: "app needs
+  to be able to tell if she told me, or if its felt who is down, i need to
+  get the ntfy itself to tell me"). Requirement for 42.5 / 42.6: a raw alert
+  must never depend on Felt being up. The app gets the raw alerts too and
+  pairs each with her line; one she hasn't relayed in a few minutes shows as
+  the raw alert, marked as not from her, and "felt-core is down" itself
+  comes straight from the server, never through her. Until 42.6 the ntfy
+  app keeps getting every raw alert, so nothing changes now.

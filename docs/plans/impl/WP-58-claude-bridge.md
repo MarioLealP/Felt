@@ -20,8 +20,10 @@ felt-responder (host, user clockmost-claude, polls every 60 s, one at a time)
          ▼
 POST /v1/incidents/{id}/report  {expected, summary, for_mario, proposed_fix, session_id}
          ▼
-felt-core stores it on the incident → her follow-up line (12B words Claude's
-report, same fixed-facts rule as WP-44) → Systems (42.5)
+felt-core stores it on the incident → her follow-up line (the outcome: fine,
+or needs Mario + "go to Claude's session"; her first line, "Claude's on it",
+already went out at hand-over - Mario 10-03, two pings by design)
+(12B words Claude's report, same fixed-facts rule as WP-44) → Systems (42.5)
 ```
 
 - **Runs where:** on the host as `clockmost-claude` (the agent account: infra
@@ -44,6 +46,9 @@ report, same fixed-facts rule as WP-44) → Systems (42.5)
 - **Auth:** Claude Code signs in with Mario's subscription via a long-lived
   token (`claude setup-token`, run once by Mario in his browser). The token
   goes into sops and only the runner gets it (secret write → Mario approves).
+
+- **When Claude can't answer** (down, cap hit, no report in time): she tells
+  Mario "Claude couldn't look at this", so nothing is dropped quietly.
 
 ## Open, to decide with Mario
 

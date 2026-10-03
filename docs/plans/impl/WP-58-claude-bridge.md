@@ -103,7 +103,32 @@ already went out at hand-over - Mario 10-03, two pings by design)
 5. **The exam: WP-59** (Mario: "make a ticket to feed it incidents we had ...
    we can compare its results"): past incidents with known causes, replayed,
    scored, before it goes live.
-6. The daily cap.
-7. Until this ships, WP-44 lines for Claude-handled incidents say "Claude is
-   looking into it" — fine while lines aren't delivered anywhere; must be
-   true before 42.5 shows them.
+6. **Built 10-03** (Mario: "Onwards"; token: "Yes I allow"):
+   - felt-core aebb5c1: responder.py (claim, most urgent first, daily cap 20;
+     report -> `handled` when nothing for Mario; missed after 15 min
+     unclaimed / 20 min unreported), incident_api.py (POST
+     /v1/incidents/handoff and /{id}/report, its own FELT_RESPONDER_TOKEN
+     opens only those two), her follow-up line (outcome, or "Claude couldn't
+     look"). 8eb9667: an incident Claude reported on never absorbs new
+     alerts.
+   - infra f212b94..ce8a683: felt-responder-run (one round per minute),
+     felt-responder-prep (root prestep: clean clone, config from the repo,
+     secrets for the round, files copied only when changed), the sandboxed
+     unit + timer, settings.json (dontAsk + read allowlist),
+     felt-responder-join (Mario resumes a session in the same sandbox).
+   - **First live round = its own install**: Wazuh fired on the new unit
+     files (incident 6). Round 1 ran no commands (git "dubious ownership" in
+     the sandbox; `cd`/`git -C` forms refused) and still said, honestly,
+     needs-mario / low confidence / what it couldn't check. Fixed; round 2:
+     **expected**, every installed file matched the committed version by
+     sha256, it found my short-lived debug unit on its own, medium
+     confidence, 11 turns, 22 s, $0.16. Her follow-up: "Claude says it was
+     just the new felt-responder being installed. No action needed unless you
+     didn't run a test unit recently."
+   - It also exposed a real bug: each round re-copied a watched file (an
+     alert per round) and those folded into the incident it had already
+     called fine - a genuine change in that window would have been absorbed.
+     Both fixed.
+   - Daily cap: 20 (Claude's suggestion, never objected to).
+7. ~~Until this ships, "Claude is looking into it" isn't true~~ - true once
+   the timer is on.

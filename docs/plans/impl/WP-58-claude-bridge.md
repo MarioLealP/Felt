@@ -52,8 +52,11 @@ already went out at hand-over - Mario 10-03, two pings by design)
 
 ## Open, to decide with Mario
 
-1. The auth token (Mario runs `claude setup-token`; Claude stores it via sops
-   with his OK).
+1. ~~The auth token~~ **done 10-03** (Mario: "we do setup token"): Mario ran
+   `claude setup-token` and stored it himself through a hidden-input script
+   into `ops/felt-responder/secrets.env` (infra d03bc95, never shown in a
+   transcript). Claude Code 2.1.288 installed for clockmost-claude
+   (~/.local/bin, official installer); a tool-less test call logged in.
 2. The exact read-only allowlist.
 3. The daily cap.
 4. Until this ships, WP-44 lines for Claude-handled incidents say "Claude is

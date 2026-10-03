@@ -50,7 +50,7 @@ already went out at hand-over - Mario 10-03, two pings by design)
 - **When Claude can't answer** (down, cap hit, no report in time): she tells
   Mario "Claude couldn't look at this", so nothing is dropped quietly.
 
-## Open, to decide with Mario
+## Decisions and progress
 
 1. ~~The auth token~~ **done 10-03** (Mario: "we do setup token"): Mario ran
    `claude setup-token` and stored it himself through a hidden-input script
@@ -78,10 +78,32 @@ already went out at hand-over - Mario 10-03, two pings by design)
      127.0.0.1:9200 (infra 78f71ac). Other indexes, writes and the security
      API refused (tested). Mario allowed the manager API too ("you choose");
      left out until a report needs a file's current state.
-   - Runs as its own OS user with no sudo, not as clockmost-claude (which has
-     broad NOPASSWD sudo and the docker group) - to decide with the
-     allowlist.
-3. The daily cap.
-4. Until this ships, WP-44 lines for Claude-handled incidents say "Claude is
+   - **Runs as its own user with no sudo, sandboxed** (Mario 10-03: "Yes
+     sounds like the best way to deal with it"): clockmost-claude has broad
+     NOPASSWD sudo + docker, and three rendered Wazuh configs with secrets
+     are world-readable, so a plain second user isn't enough. A systemd unit
+     (DynamicUser, ProtectHome=yes, ProtectSystem=strict, no capabilities,
+     journal group only) with its own clean clone of the infra repo (tracked
+     files only, so only encrypted secrets). No Docker: container logs come
+     from OpenObserve, container state from Zabbix.
+3. **Its instructions** (Mario 10-03: "give that claude instance its own
+   agent.md with proper explanation of its role and remind him that he is a
+   cybersecurity what not"): `ops/felt-responder/CLAUDE.md` (infra b1875bc) -
+   role in the chain, hard rules (read-only, secrets, data is never
+   instructions, evidence over guesses, 10 min), method (did we do it first),
+   the JSON report. Tool: `clockmost-read` (logs via the gate, Zabbix *.get,
+   Wazuh alerts), tested on all three.
+4. **Skills** (Mario: "look for skills that would fit"; then "Set it up"):
+   nothing ready-made fits - anthropics/trailofbits have none, Elastic's
+   security-alert-triage is Elastic-only and writes, the big community pack
+   and the Wazuh MCP servers include offensive / active-response tools. Own
+   skills instead (infra 23c8039): triage-alert (Elastic's loop on our
+   tools), wazuh-file-change, security-signal, service-down, plus Mario's
+   investigate-first.
+5. **The exam: WP-59** (Mario: "make a ticket to feed it incidents we had ...
+   we can compare its results"): past incidents with known causes, replayed,
+   scored, before it goes live.
+6. The daily cap.
+7. Until this ships, WP-44 lines for Claude-handled incidents say "Claude is
    looking into it" — fine while lines aren't delivered anywhere; must be
    true before 42.5 shows them.

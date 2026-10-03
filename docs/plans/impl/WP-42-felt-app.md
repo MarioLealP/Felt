@@ -320,3 +320,27 @@ Mockups go through the review app before phase A's UI is built.
   into the build: seed also on resize/redraw (Rough Notation re-rolls), store
   seen marks server-side per mark so "plays once" holds across devices.
 
+- **2026-10-02, marks without a timer** (Mario: "Dont do timer, let her decide
+  while she knows its not meant to be often"). She's told marks are rare and
+  how many exchanges ago her last one was; nothing else limits her.
+- **2026-10-03, she can mark whatever she finds interesting** (Mario). Her own
+  reply as well as his line, from a word up to a sentence (20 words), and
+  strike-through as well. Candidates are only the exchange that just
+  happened: older lines have scrolled away, so the ink would play unseen.
+  Circle/box stay at 5 words or fewer, because around wrapped text they draw
+  one loop per line. Still one mark per exchange.
+- **2026-10-03, marks: two questions** (dry runs on 14 sample exchanges, real
+  model). With one prompt she only ever bracketed. Telling her what each shape
+  means fixed that but raised the rate to 1 in 3, wherever the "rare" rule
+  sat. Now: a plain "anything worth a mark?" first (about 2.5 in 14), then,
+  only on yes, which line / words / shape / note. She now uses circles, boxes,
+  underlines, brackets and strikes by meaning. Real-use rate to be checked
+  after a few days.
+- **2026-10-03, her asides in Talk** (Mario: "can we somehow sneak it to the
+  main talk so i can reply to it?"). Only her remarks since his last message,
+  **at most 2** ("just 1 or 2 is enough"), with "+N earlier in the margins"
+  above them, and tap one to answer it ("↳ re: …" above the input, × to drop
+  it). Sized with her real remarks (median 70 chars, p90 82; she leaves one
+  about every 2 minutes at the desk, so N is often 10+): canvas row "Round 9".
+  **Look = B, compact**: 14px handwriting off the ruled lines (Mario: "its
+  like a note so doesnt sit nicely on the lines, unlike the normal chat").

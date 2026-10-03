@@ -499,3 +499,21 @@ Mockups go through the review app before phase A's UI is built.
   the raw alert, marked as not from her, and "felt-core is down" itself
   comes straight from the server, never through her. Until 42.6 the ntfy
   app keeps getting every raw alert, so nothing changes now.
+- **10-03 — 42.5 order: Systems → notifications → Lists → controls card**
+  (Mario: "onwards to system").
+- **10-03 — Systems page shape** (Mario: "sounds good, but let me click on
+  the incident and see further"). Top: a few areas (server, backups,
+  security, desktop, laptop, router), a dot each, fine unless an open
+  incident needs him; the one that does is circled in raspberry ink with
+  handled · ask Felt · details. Below: what happened, newest first, her line
+  per incident, Claude's verdict as a small note, expected ones quiet and
+  grey. Built from the incidents only (no second source of truth); Zabbix /
+  Wazuh linked from details.
+- **10-03 — Incident details + Claude's trail now; chatting with Claude from
+  the app later** (Mario: "in a perfect world, it would let me hop on the
+  claude chat itself if needed but that might be to sketchy"; "I like both").
+  Details: her line, Claude's full report, the raw alerts, the session id,
+  and his investigation trail (each command and what it showed), read-only.
+  Continuing the session from the app = WP-61: not sketchy as such, since that
+  Claude stays read-only in its sandbox with the same usage limits; changes
+  still go through Mario.

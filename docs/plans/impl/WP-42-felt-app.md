@@ -534,3 +534,8 @@ Mockups go through the review app before phase A's UI is built.
     weren't saved - no trail, nothing to join; fixed. (3) With the push,
     Claude could close an incident before her first line, which then never
     came; now she says both in one line.
+- **10-03 — Systems approved** after one fix round (Mario: "it scrolls the
+  whole page, instead of just the bottom, so the circled bit stays in the
+  middle of the screen" -> areas pinned, only the history scrolls; her ink now
+  scrolls with its words, which also fixed marks in Talk; felt-dashboard
+  2f40f82). Mario: "Looks great, good job".

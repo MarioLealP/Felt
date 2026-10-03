@@ -72,3 +72,10 @@ Until 5, the ntfy app keeps working exactly as now.
   padding").
   Until WP-58 lands, lines for Claude-handled incidents say "Claude is
   looking into it" before that's true (not delivered anywhere yet).
+- 10-03, **acceptance check** (Mario: "if you go over acceptance criteria
+  you will notice some are missing"): back to In progress. Still missing:
+  "urgent spoken promptly" and "warn mentioned once, casually" - her alert
+  lines pop up (WP-42.5) but she doesn't say them. **Decided:** "She doesn't
+  speak through quiet, quiet is quiet, ntfy pop ups come through as
+  notifications instead" - outside quiet she says urgent ones aloud; during
+  quiet only the pop-up.

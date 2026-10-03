@@ -424,3 +424,16 @@ Mockups go through the review app before phase A's UI is built.
   diary: her note on the left, his brief (WP-45) on the right when it
   exists. Margins are all hers (left); list items sit on the side of whoever
   added them. felt-app 7add3b1.
+- **10-03 — She lives on the server; devices are windows and senses.**
+  Mario: "the whole she lives on the server is the right way. The link is
+  just until we have an app going, there is no reason to build around
+  something that will be fixed ... ntfy stuff and spotify and calendar and
+  etc still exist even if desktop is closed. So she needs to receive and
+  react to those ... dont build around the whole browser". So: no PWA / web
+  push work; the hosted link is a stopgap view. The phone app (native
+  Android, ex-42.6) replaces ntfy; it can report "he's up" (unlock / sleep
+  API). How its notifications travel is decided when we get there (Mario:
+  "we cross that bridge when we get there"). Order: first move the senses
+  that don't need the desktop to the server (day start from any sign of
+  him, song remarks from the server's own Spotify poll, ntfy alerts she
+  can react to), then the app. Diary page paused until then.

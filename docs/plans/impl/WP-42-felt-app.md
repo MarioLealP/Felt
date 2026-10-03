@@ -437,3 +437,22 @@ Mockups go through the review app before phase A's UI is built.
   that don't need the desktop to the server (day start from any sign of
   him, song remarks from the server's own Spotify poll, ntfy alerts she
   can react to), then the app. Diary page paused until then.
+- **10-03 — Alerts: she is the first responder, rules per alert type.**
+  Reread of 09-26 C4 / WP-41 / WP-44 and 10-02 8.5 / 2.8 / WP-58 after
+  Claude drifted into "she stays quiet on most alerts" (Mario: "the plan is
+  for her to do the first responder to them, along with me getting the
+  notifications but on her app itself so I can yeet ntfy since this is just a
+  topic thing"). ntfy stays only as the server-side topic; the ntfy app goes.
+  - **Notifications pop everywhere** (Mario: "I should get the phone alert
+    indepent if im on the pc, or the phone, can pop them everywhere"): every
+    alert notifies on phone and desktop alike, wherever he is.
+  - **Who handles what depends on the alert type** (Mario: "any cyber
+    related stuff should be throwing at you, if its server restarted, then
+    she can handle it since there is nothing to handle"): security alerts go
+    to Claude for triage (the WP-58 cloud opening, accepted for this);
+    benign/expected ones she closes herself; the rest per type.
+  - **Her 12B's real ability is unknown** ("i dont know what kind of task can
+    she actually handle on her own"): measure on real alerts before giving
+    her a class of alerts to handle alone.
+  - Next: a catalogue of the real alert types (from the 1,449 stored), each
+    with tier, who handles it, and what handling means.

@@ -71,7 +71,13 @@ already went out at hand-over - Mario 10-03, two pings by design)
      is a possible separate infra step later.
    - Suricata: through OpenObserve (`suricata` stream) + its eve files.
    - Trivy: its report file, for Trivy alerts only.
-   - Wazuh: read-only user, next.
+   - **Wazuh: done** - indexer user `felt-responder`, role
+     `felt-responder-read` (wazuh-alerts-* read only; the alerts carry each
+     file's checksum before/after), password in sops
+     (`WAZUH_INDEXER_USER/PASSWORD`, infra e201122). Indexer now on
+     127.0.0.1:9200 (infra 78f71ac). Other indexes, writes and the security
+     API refused (tested). Mario allowed the manager API too ("you choose");
+     left out until a report needs a file's current state.
    - Runs as its own OS user with no sudo, not as clockmost-claude (which has
      broad NOPASSWD sudo and the docker group) - to decide with the
      allowlist.

@@ -600,3 +600,23 @@ Mockups go through the review app before phase A's UI is built.
   - **controls** = what's flipped often: her status and mood, quiet mode
     with a timer, hush/stop. Replaces the "tap her name" card (dropped: one
     obvious place beats a hidden gesture).
+- **10-03 — Flags flipped to the bottom** (felt-dashboard 306b33a; Mario:
+  "Change the order controls then settings, settings always the bottom";
+  "flip the whole list and put it near the bottom, it's a better layout for
+  phone"): from the bottom up talk, margins, diary, lists, systems,
+  controls, settings.
+- **10-03 — Controls = two tiles, hide and quiet, HyperOS-style** (Mario:
+  "I need quiet and I need hide. So one hides but doesn't quiet her, the
+  other hides and quiets her. Like on phone you have the bell for
+  notifications and the moon for full dnd. Use the same system it has on
+  hyper os. Tap for unlimited, slide for set timer 15 30 1h 8h").
+  - **hide**: off the screen, still talks and tells him things.
+  - **quiet**: off the screen and silent (cuts her off; unprompted lines
+    wait in the Margins). Replaces both hush and the planned quiet mode.
+  - Tap = on until turned off; slide = timer snapping to 15m / 30m / 1h /
+    8h; the tile shows the time left.
+  - Default (Claude's, to confirm): urgent server alerts still pop during
+    quiet, like phone DND letting alarms through.
+  - How: felt-core holds the two switches (the app sets them from anywhere);
+    the desktop tray applies them to felt-animation and reports her real
+    state and mood back, so the page is right from the phone too.

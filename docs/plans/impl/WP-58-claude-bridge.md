@@ -130,5 +130,9 @@ already went out at hand-over - Mario 10-03, two pings by design)
      called fine - a genuine change in that window would have been absorbed.
      Both fixed.
    - Daily cap: 20 (Claude's suggestion, never objected to).
+   - **Timer stays off until the WP-59 exam passes** (Mario 10-03: "wait for
+     the exam"). Meanwhile Claude-handled incidents are marked missed after
+     15 min and her follow-up truthfully says Claude couldn't look. Rounds
+     can still be run by hand: `sudo systemctl start felt-responder.service`.
 7. ~~Until this ships, "Claude is looking into it" isn't true~~ - true once
    the timer is on.

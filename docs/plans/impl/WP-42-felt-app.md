@@ -622,3 +622,11 @@ Mockups go through the review app before phase A's UI is built.
   - How: felt-core holds the two switches (the app sets them from anywhere);
     the desktop tray applies them to felt-animation and reports her real
     state and mood back, so the page is right from the phone too.
+- **10-03 — controls built** (felt-core 2466ee1, felt-tray af979b6,
+  felt-dashboard bb79fec, Caddy gate infra 555fcc4). felt-core holds the
+  switches + the desktop heartbeat; the tray applies a change to
+  felt-animation (hide -> presence hide; quiet -> hush for the time left +
+  hide; off -> unhush / show), only on a change so a hotkey hide isn't fought,
+  and reports presence, hush and mood every 15 s. The page: the two tiles
+  (tap / slide / wheel), what the desktop really says or "the PC's off", each
+  part up/down, her mood in words. To test live with Mario.

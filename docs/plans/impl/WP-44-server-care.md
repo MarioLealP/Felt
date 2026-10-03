@@ -57,3 +57,16 @@ Until 5, the ntfy app keeps working exactly as now.
   our own setup), 22 update runs noted, 69 dropped. Live: the deploy's own
   "update deployed" became incident #1, noted. One-shot alerts with no
   RESOLVED (Wazuh, CI, backups) stay open until handled (WP-58 / Systems).
+- 10-03, **step 2 done** (felt-core aa3c87f, cc6e6d7): alert_lines.py. The
+  facts are fixed (catalogue + MEANINGS: plain words per type and what Mario
+  can do); her 12B only words them. Tested on 46 real past incidents across
+  every type: faithful, every specific detail came from the alert text. The
+  two mistakes were the rules' (Ollama-failed lumped with GPU-hot, package
+  changes filed as load) - split into nitro-ollama / nitro-gpu-hot,
+  packages-changed and pc-agent (desktop agent quiet = PC off, expected).
+  Lines go to the incident and her log as kind "alert" (not the Margins).
+  Live: incident 1 (a deploy) got its line. Fix: once she's told an update
+  run, the next update starts a new one. To check with Mario: her wording
+  is samey ("Hey, just a heads up ... you don't need to do a thing").
+  Until WP-58 lands, lines for Claude-handled incidents say "Claude is
+  looking into it" before that's true (not delivered anywhere yet).

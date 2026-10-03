@@ -582,3 +582,20 @@ Mockups go through the review app before phase A's UI is built.
   just flex upwards as much as space as it needs" -> each measures itself,
   sits on the bottom edge, stacks up by real height; felt-tray 942bb50).
   Sound: "nice and not too loud". Mario: "much better, good job".
+- **10-03 — Lists live** (felt-dashboard 4fe19e9, felt-core c3451ca): add,
+  cross off yourself (Mario: "Let me add stuff manually to shopping list, and
+  cross it myself"), remove, clear crossed off; her voice edits show at once.
+  Mario: "Looks good".
+- **10-03 — Two more flags: settings and controls** (Mario: "we might need to
+  rethink where the other lists live, they more of a config thing, they can
+  have their own flag ... we can easily fit 3 or so more flags"; "Sounds good
+  with settings, maybe a controls which has the controls cards and on
+  desktop the keybinds?"). Flags: talk · margins · diary · lists · systems ·
+  settings · controls.
+  - **lists** = real lists only (shopping now, reminders with WP-46).
+  - **settings** = things tuned about her once in a while: games for news
+    (WP-49), email noise (WP-43), what she remembers about you.
+  - **controls** = her status and mood, quiet mode with a timer, hush/stop,
+    and on the desktop the keybinds (all of them, rebindable there); the
+    phone hides that part. Replaces the "tap her name" card (dropped: one
+    obvious place beats a hidden gesture).

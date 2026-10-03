@@ -7,6 +7,20 @@ type by type (WP-42 decisions log, 10-03: "she is the first responder";
 "any cyber related stuff should be throwing at you, if its server
 restarted, then she can handle it since there is nothing to handle").
 
+**What she tells Mario, for every alert** (Mario 10-03: "mostly I need her
+to tell me if this is a warning that is meant to be happening and if there
+is something i can do kind of deal, cuz most concerning warnings is
+something you need to handle. Update deployed or Renovate started, is
+something that needs to be told but not acted upon"):
+1. **Expected or not** — "meant to happen" (a deploy, a reboot, the PC is
+   off) vs. a real problem.
+2. **Anything for him to do** — usually nothing; when there is, exactly what.
+3. **Who's on it** — her (nothing to handle) or Claude (concerning ones).
+
+So concerning alerts, security or not, are **Claude's to handle**; Mario is
+told what's happening and whether he needs to do anything. Expected events
+are **told, never acted on**.
+
 **Handlers**
 - **Felt** — she reads it, checks it read-only where she can (container
   status, Zabbix, "is that host just off?"), files it and/or tells Mario in
@@ -14,7 +28,8 @@ restarted, then she can handle it since there is nothing to handle").
   real alerts first).
 - **Claude** — security, and anything whose cause needs real digging.
   Felt hands it over; the result comes back to Systems (WP-58).
-- **Mario** — needs a decision or hands-on work; Felt notifies with her take.
+- **Mario** — told every time; hands-on only when there is something only
+  he can do (a disk to plug in, a decision to make), and she says what.
 - **WP-41** — shouldn't be sent like this at all; fixed at the source on the
   server (thresholds, expected-event suppression, dedupe).
 
@@ -33,34 +48,34 @@ Notifications pop on every device (Mario 10-03).
 | Trivy weekly scan (191 critical, 2,487 high fixable) | weekly | — | **Claude**, default. Weekly digest: what's actually exposed vs. noise, what to update. |
 | Wazuh out-of-memory kill | 6 | — | Not security, it's resources. **Felt**, default: which host, what got killed. High if it's felt-core/llm or repeats. |
 
-## Backups and updates → Mario, with Felt explaining
+## Backups and updates → Claude handles, Felt tells Mario
 
 | Type | Count | Self-resolves | Proposal |
 |---|---|---|---|
-| Backup FAILED (full / precious) | 26 (burst 09-28/29) | no | **Mario**, urgent. Felt says it plainly ("backup failed, 3rd time tonight, restic exit 10"). Cause digging → Claude. Repeats folded into one. |
-| Storage/backup check (disk not mounted, SMART, snapshots stale) | 6 | no | **Mario**, urgent. |
+| Backup FAILED (full / precious) | 26 (burst 09-28/29) | no | **Claude** handles; Mario urgent. Felt says it plainly ("backup failed, 3rd time tonight; Claude's on it; nothing for you to do"). Repeats folded into one. |
+| Storage/backup check (disk not mounted, SMART, snapshots stale) | 6 | no | **Claude** handles; Mario urgent, with what he can do (e.g. "the backup disk isn't mounted, is it plugged in?"). |
 | Updates SKIPPED (backup failed first) | 23 | no | Folded into the backup failure it comes from; never its own notification. |
-| Auto-reverting / update reverted | 14 | no | **Mario**, high. Felt names the stack and the version. |
-| CI / deploy pipeline failed | 6 | no | **Mario**, high (usually Claude's own pushes, so Claude gets it too). |
+| Auto-reverting / update reverted | 14 | no | **Claude** handles; Mario high. Felt names the stack and the version. |
+| CI / deploy pipeline failed | 6 | no | **Claude** handles (usually its own pushes); Mario high. |
 
-## Outages that mostly fix themselves → Felt watches, Mario only if it lasts
+## Outages that mostly fix themselves → Felt watches; if it lasts, Claude handles and Mario is told
 
 | Type | Count | Self-resolves | Proposal |
 |---|---|---|---|
-| Authentik outpost disconnected | 74 | yes, ~6 min | **WP-41** (fires on deploys). **Felt**: quiet unless still down after 15 min → high to Mario (SSO is down = apps unreachable). |
-| Caddy upstream unhealthy | 22 | yes, ~4 min | Same: **Felt**, high only if >10 min, naming the upstream. |
+| Authentik outpost disconnected | 74 | yes, ~6 min | **WP-41** (fires on deploys). **Felt**: told as expected if it clears; still down after 15 min → Claude handles, Mario high (SSO down = apps unreachable). |
+| Caddy upstream unhealthy | 22 | yes, ~4 min | Same: **Felt**; >10 min → Claude handles, Mario high, naming the upstream. |
 | Route check failing | 19 | yes, ~3 min | Same as Caddy. |
-| Container unhealthy / stopped | 32 | yes, ~10 min | **Felt**: checks status; >15 min → high with the container and its last log lines. (twitch-robin unhealthy since 10-01, still open.) |
-| Pi-hole DNS not resolving | 2 | slow (18 h once) | **Felt**, high after 10 min (DNS down hits everything). |
-| Home Assistant VM not running / autostart off | 4 | ~2 min | **Felt**, high if >10 min. |
+| Container unhealthy / stopped | 32 | yes, ~10 min | **Felt**: checks status; >15 min → Claude handles, Mario high, naming the container. (twitch-robin unhealthy since 10-01, still open.) |
+| Pi-hole DNS not resolving | 2 | slow (18 h once) | **Felt**; >10 min → Claude handles, Mario high (DNS down hits everything). |
+| Home Assistant VM not running / autostart off | 4 | ~2 min | **Felt**; >10 min → Claude handles, Mario high. |
 
 ## Expected events → Felt files them, nothing to handle
 
 | Type | Count | Proposal |
 |---|---|---|
-| Update deployed | 208 | **Felt**, low. Never mentioned (09-26: info → never). A line in the morning brief at most. |
-| Pre-update backup ok, weekly reboot, ntfy upgraded, container version changed | ~30 | **Felt**, low. |
-| Host restarted (server, desktop, Nitro5) | 30 | **Felt**, low (Mario's example). Default if the server restarted outside the Monday window. |
+| Update deployed (and Renovate runs, once they notify) | 208 | **Felt**, default: told, not acted on (Mario 10-03, replacing 09-26's "info → never"). One line per update run ("updated immich and caddy, expected, nothing to do"), not one per stack. |
+| Pre-update backup ok, weekly reboot, ntfy upgraded, container version changed | ~30 | **Felt**, default: told as expected, nothing to do. |
+| Host restarted (server, desktop, Nitro5) | 30 | **Felt**, default: told as expected (Mario's example); if the server restarted outside the Monday window, not expected → Claude looks. |
 | Zabbix agent unavailable (desktop / laptop) | 80 | **WP-41** + **Felt**: almost always the PC is just off (resolves in ~9 h). She knows when the desktop is off, so low; default if the server's own agent is down. |
 
 ## Noise → WP-41, not sent

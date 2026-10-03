@@ -456,3 +456,12 @@ Mockups go through the review app before phase A's UI is built.
     her a class of alerts to handle alone.
   - Next: a catalogue of the real alert types (from the 1,449 stored), each
     with tier, who handles it, and what handling means.
+- **10-03 — What she tells him about an alert.** Security split accepted
+  ("sounds good"). For every alert she says: is it expected, is there
+  anything he can do, who's on it (Mario: "mostly I need her to tell me if
+  this is a warning that is meant to be happening and if there is something
+  i can do kind of deal, cuz most concerning warnings is something you need
+  to handle. Update deployed or Renovate started, is something that needs to
+  be told but not acted upon"). Concerning alerts, security or not, are
+  Claude's to handle; expected ones are told, never acted on (replaces 09-26
+  "info → never"). Catalogue updated: docs/plans/impl/alert-catalogue.md.

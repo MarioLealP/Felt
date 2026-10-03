@@ -37,6 +37,13 @@ are **told, never acted on**.
 notification · **default** = in Systems, quiet · **low** = history only.
 Notifications pop on every device (Mario 10-03).
 
+**Since the infra session's 10-02 Zabbix cleanup** (runbooks/
+clockmost-security-visibility-plan.md): the Windows service noise
+(GoogleUpdater, Web Threat Defense) is gone, and twitch-robin /
+clockmost-healthcheck were retired on purpose (not open problems). In the
+27 h after it: 91 alerts — update deployed 35, router bandwidth 20, Wazuh
+file changes 9, Wazuh OOM 5, everything else ≤5.
+
 ## Security → Claude
 
 | Type | Count | Self-resolves | Proposal |
@@ -65,7 +72,7 @@ Notifications pop on every device (Mario 10-03).
 | Authentik outpost disconnected | 74 | yes, ~6 min | **WP-41** (fires on deploys). **Felt**: told as expected if it clears; still down after 15 min → Claude handles, Mario high (SSO down = apps unreachable). |
 | Caddy upstream unhealthy | 22 | yes, ~4 min | Same: **Felt**; >10 min → Claude handles, Mario high, naming the upstream. |
 | Route check failing | 19 | yes, ~3 min | Same as Caddy. |
-| Container unhealthy / stopped | 32 | yes, ~10 min | **Felt**: checks status; >15 min → Claude handles, Mario high, naming the container. (twitch-robin unhealthy since 10-01, still open.) |
+| Container unhealthy / stopped | 32 | yes, ~10 min | **Felt**: checks status; >15 min → Claude handles, Mario high, naming the container. |
 | Pi-hole DNS not resolving | 2 | slow (18 h once) | **Felt**; >10 min → Claude handles, Mario high (DNS down hits everything). |
 | Home Assistant VM not running / autostart off | 4 | ~2 min | **Felt**; >10 min → Claude handles, Mario high. |
 

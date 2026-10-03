@@ -50,3 +50,10 @@ Until 5, the ntfy app keeps working exactly as now.
 - 10-03: plan written from the WP-42 decisions; catalogue built from the
   1,449 stored alerts; WP-41's cleanup already removed the Windows-service
   noise.
+- 10-03, **step 1 done** (felt-core 6213b21): alert_types.py (the catalogue
+  as rules) + incidents.py (intake, folding, RESOLVED pairing, joins, Wazuh
+  grouped per host, waits promoted by a 60 s background task). Replayed on
+  the real alerts, last 7 days: ~65 incidents that counted (16 Wazuh, mostly
+  our own setup), 22 update runs noted, 69 dropped. Live: the deploy's own
+  "update deployed" became incident #1, noted. One-shot alerts with no
+  RESOLVED (Wazuh, CI, backups) stay open until handled (WP-58 / Systems).

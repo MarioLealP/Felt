@@ -465,3 +465,13 @@ Mockups go through the review app before phase A's UI is built.
   be told but not acted upon"). Concerning alerts, security or not, are
   Claude's to handle; expected ones are told, never acted on (replaces 09-26
   "info → never"). Catalogue updated: docs/plans/impl/alert-catalogue.md.
+- **10-03 — Handing alerts to Claude: A, a headless Claude on the server,
+  investigate-only to start** (Mario: "A sounds good, I can open the normal
+  Claude app too if needed, the idea is she can interact with you, and i
+  interact with her if needed, but if its very serious i will just pop over
+  the app so we deal with it together directly"). Felt hands concerning
+  alerts to Claude Code running headless under the clockmost-claude account;
+  the report comes back to her and to Systems; server changes wait for
+  Mario's go-ahead. She talks to Claude, Mario talks to her; for something
+  serious Mario joins Claude directly, so each incident's Claude session is
+  kept resumable (its session id stored with the incident).

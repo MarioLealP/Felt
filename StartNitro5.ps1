@@ -1,34 +1,21 @@
-Write-Host "Checking Felt's services on the Nitro5 (STT/TTS + the GPU-backed Ollama the server's brain calls)..."
+Write-Host "Checking Felt's services on the Nitro5 (felt-voice STT/TTS + felt-indextts)..."
 
-# felt-voice (STT/TTS) and ollama are real systemd services there with scoped
-# NOPASSWD sudo for benylin (systemctl only - confirmed 2026-09-22). ComfyUI
-# is NOT a systemd service - Mario hand-swaps it with Ollama for the 6GB VRAM
-# budget (never auto-restart Ollama, never touch ComfyUI here) - this script
-# only ever starts felt-voice/ollama, never stops or restarts anything, and
-# never touches ComfyUI at all.
-$check = ssh clockmost-nitro5 "systemctl is-active felt-voice.service ollama.service"
-$lines = $check -split "`n"
-$feltVoiceActive = $lines[0] -eq "active"
-$ollamaActive = $lines[1] -eq "active"
-
-if ($feltVoiceActive) {
-    Write-Host "  felt-voice: already running."
-} else {
-    Write-Host "  felt-voice: not running - starting..."
-    ssh clockmost-nitro5 "sudo -n systemctl start felt-voice.service"
+# felt-voice (STT/TTS) and felt-indextts (the TTS engine it calls) are systemd services there,
+# started with benylin's NOPASSWD systemctl. Ollama is gone from the laptop (2026-10 audit:
+# Felt's brain is felt-llm on the server's P104). ComfyUI is a user service Mario manages -
+# this script only ever starts the two Felt services, never stops or restarts anything, and
+# never touches ComfyUI.
+foreach ($svc in "felt-voice", "felt-indextts") {
+    $state = ssh clockmost-nitro5 "systemctl is-active $svc.service"
+    if ($state -eq "active") {
+        Write-Host "  ${svc}: already running."
+        continue
+    }
+    Write-Host "  ${svc}: not running - starting..."
+    ssh clockmost-nitro5 "sudo -n systemctl start $svc.service"
     Start-Sleep -Seconds 1
-    $status = ssh clockmost-nitro5 "systemctl is-active felt-voice.service"
-    if ($status -eq "active") { Write-Host "  felt-voice: started." } else { Write-Host "  felt-voice: FAILED to start (status: $status)." }
-}
-
-if ($ollamaActive) {
-    Write-Host "  ollama: already running."
-} else {
-    Write-Host "  ollama: not running - starting..."
-    ssh clockmost-nitro5 "sudo -n systemctl start ollama.service"
-    Start-Sleep -Seconds 1
-    $status = ssh clockmost-nitro5 "systemctl is-active ollama.service"
-    if ($status -eq "active") { Write-Host "  ollama: started." } else { Write-Host "  ollama: FAILED to start (status: $status) - is ComfyUI using the GPU right now instead? Swap it back by hand first." }
+    $state = ssh clockmost-nitro5 "systemctl is-active $svc.service"
+    if ($state -eq "active") { Write-Host "  ${svc}: started." } else { Write-Host "  ${svc}: FAILED to start (status: $state)." }
 }
 
 Write-Host "Nitro5 check complete."

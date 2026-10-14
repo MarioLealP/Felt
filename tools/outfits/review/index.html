@@ -76,6 +76,7 @@
   #media .tag { font-family: var(--mono); font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
   #media audio { width: min(640px, 90%); }
   #media img { max-width: 100%; max-height: 80%; object-fit: contain; }
+  #media iframe { width: 100%; flex: 1; border: 0; background: #000; display: none; }
   #fitbox { display: none; }
   #fitbox .xyz { display: grid; grid-template-columns: 34px 1fr 1fr 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
   #fitbox input { width: 100%; font: 12px var(--mono); color: var(--text); background: #25292e; border: 1px solid var(--line); padding: 5px 6px; }
@@ -98,7 +99,7 @@
     <div id="media"><div class="tag" id="media-tag"></div><div class="line" id="media-line"></div>
       <audio id="audio" controls preload="auto"></audio>
       <button id="refbtn" class="cut">▶ Neutral <kbd>N</kbd></button><audio id="refaudio" preload="auto"></audio>
-      <img id="image" alt=""></div>
+      <img id="image" alt=""><iframe id="page" title="live mockup"></iframe></div>
     <div id="grid"></div>
   </div>
   <aside>
@@ -415,11 +416,16 @@ async function open(name) {
     $("media-line").textContent = it.info?.text || "";
     audio.style.display = it.kind === "audio" ? "block" : "none";
     image.style.display = it.kind === "image" ? "block" : "none";
+    const page = $("page");
+    page.style.display = it.kind === "page" ? "block" : "none";
+    if (it.kind !== "page" && page.src) page.removeAttribute("src");
+    if (it.kind === "page") $("media-line").textContent = it.info?.about || "";
     $("refaudio").pause();
     $("refbtn").style.display = it.info?.reference ? "block" : "none";
     if (it.info?.reference) $("refaudio").src = "/refs/" + encodeURIComponent(it.info.reference);
     $("animbox").style.display = "none";
     if (it.kind === "audio") { audio.src = url; audio.play().catch(() => {}); }
+    else if (it.kind === "page") { if (page.src !== new URL(url, location.href).href) page.src = url; page.focus(); }
     else image.src = url;
     return;
   }
@@ -493,6 +499,7 @@ function showGrid() {
     return `<h2 class="s-${st}">${title} · ${list.length}</h2><div class="cards">` + list.map((i) =>
       `<button class="card ${st}" data-name="${encodeURIComponent(i.name)}">` +
       (i.kind === "image" ? `<img loading="lazy" alt="" src="/files/${i.state}/${encodeURIComponent(i.name)}?t=${i.mtime}">`
+        : i.kind === "page" ? `<div class="noimg">▶ live mockup</div>`
         : i.kind === "audio" ? `<div class="noimg">♪ ${esc([i.info?.mood, i.info?.level].filter(Boolean).join(" · ") || "audio")}</div>`
         : i.thumb ? `<img loading="lazy" alt="" src="/thumbs/${encodeURIComponent(i.name.replace(/\.(vrm|glb)$/i, ".webp"))}?t=${i.thumb}">` : `<div class="noimg">not viewed</div>`) +
       `<div class="cap">${esc(i.info?.title || i.name)}</div>` + (i.info?.mario ? `<div class="note">✎ ${esc(i.info.mario)}</div>` : "") + `</button>`).join("") + "</div>";

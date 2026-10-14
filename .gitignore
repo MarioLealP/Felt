@@ -38,3 +38,9 @@
 # Outfit tooling caches
 /tools/outfits/.preview_shaders/
 /tools/outfits/__pycache__/
+
+# git sees the junctions as files, so the /dir/ patterns above miss them
+/Animations
+/Model
+__pycache__/
+*.lnk

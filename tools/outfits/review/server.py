@@ -50,9 +50,10 @@ HERE = Path(__file__).parent
 REVIEW_ROOT = Path(r"E:\Felt\review")  # one sub-folder per batch; gitignored in the umbrella repo
 ANIM_DIR = Path(r"E:\Felt\felt-character-assets\felt-godot-overlay\animations\library")
 STATES = ("pending", "approved", "rejected", "fix")  # fix = "close, see my comment"
-# What a batch can hold: 3D models, audio clips, images.
+# What a batch can hold: 3D models, audio clips, images, live HTML pages.
 KINDS = {".vrm": "vrm", ".glb": "accessory", ".wav": "audio", ".mp3": "audio", ".ogg": "audio",
-         ".png": "image", ".jpg": "image", ".jpeg": "image", ".webp": "image"}
+         ".png": "image", ".jpg": "image", ".jpeg": "image", ".webp": "image",
+         ".html": "page"}  # page = a self-contained live mockup (e.g. desktop design concepts)
 _IDLE_EXIT_S = 45
 
 mimetypes.add_type("model/gltf-binary", ".vrm")

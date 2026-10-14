@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Literata:ital,wght@0,400;0,600;1,400&amp;family=Nunito+Sans:wght@400;500;600;700&amp;family=Rubik:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"tertiary-fixed":"#ffdbd0","on-error-container":"#ffdad6","on-tertiary-fixed-variant":"#7e2c10","on-secondary-container":"#9cbe97","outline":"#a7898d","surface-container-low":"#001b3d","primary-container":"#f7577c","on-tertiary-container":"#531300","inverse-on-surface":"#003062","primary":"#ffb2bd","error-container":"#93000a","on-primary-fixed":"#400013","on-secondary-fixed-variant":"#304e2f","surface-container":"#001f44","secondary-container":"#304e2f","primary-fixed":"#ffd9dd","surface":"#00132e","tertiary-fixed-dim":"#ffb59e","background":"#00132e","on-primary":"#670024","on-tertiary-fixed":"#3a0a00","inverse-primary":"#b3224c","surface-bright":"#003972","secondary-fixed-dim":"#add0a7","surface-container-highest":"#00346a","on-error":"#690005","on-tertiary":"#5e1700","on-secondary-fixed":"#042107","on-surface-variant":"#e0bec2","inverse-surface":"#d6e3ff","on-surface":"#d6e3ff","on-primary-container":"#5a001f","secondary":"#add0a7","secondary-fixed":"#c8ecc2","tertiary":"#ffb59e","error":"#ffb4ab","surface-container-lowest":"#000e25","primary-fixed-dim":"#ffb2bd","on-background":"#d6e3ff","on-primary-fixed-variant":"#900036","surface-variant":"#00346a","surface-container-high":"#002957","surface-dim":"#00132e","on-secondary":"#1a371a","surface-tint":"#ffb2bd","outline-variant":"#594044","tertiary-container":"#dd7351"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xl":"2.25rem","gutter":"1rem","space-sm":"0.5rem","space-xs":"0.25rem","margin-md":"1.5rem","margin":"1rem","gutter-lg":"1.5rem","space-lg":"1.5rem","space-md":"1rem","margin-lg":"2.5rem"},"fontFamily":{"label-lg":["Rubik"],"display-lg":["Epilogue"],"display-lg-mobile":["Epilogue"],"label-md":["Rubik"],"label-sm":["Rubik"],"body-sm":["Nunito Sans"],"body-lg":["Nunito Sans"],"headline-md":["Epilogue"],"diary-entry":["Literata"],"body-md":["Nunito Sans"],"headline-lg":["Epilogue"]},"fontSize":{"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.02em","fontWeight":"600"}],"display-lg":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"800"}],"display-lg-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"800"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"600"}],"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.06em","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"body-lg":["17px",{"lineHeight":"26px","fontWeight":"500"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"700"}],"diary-entry":["16px",{"lineHeight":"28px","letterSpacing":"0.01em","fontWeight":"400"}],"body-md":["15px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["26px",{"lineHeight":"34px","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"><header class="fixed top-0 left-0 right-0 h-16 z-50 bg-surface-container-lowest/90 backdrop-blur-md"><div class="h-16 w-full px-gutter-lg flex items-center justify-between"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><span class="w-3 h-3 rounded-full bg-primary-container inline-block shadow-sm"></span><span class="w-3 h-3 rounded-full bg-tertiary-container inline-block shadow-sm"></span><span class="w-3 h-3 rounded-full bg-secondary inline-block shadow-sm"></span></div><div class="h-4 w-px bg-surface-container-high mx-space-xs"></div><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-primary text-[18px]">pets</span><span class="font-headline-md text-headline-md tracking-tight text-on-surface">Felt</span><span class="bg-surface-container-high text-secondary font-label-sm text-label-sm px-space-xs py-0.5 rounded-full">v2.4</span></div><div class="hidden md:flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface-variant">Awake &amp; watchful</span></div></div><div class="flex items-center gap-space-md"><nav class="hidden lg:flex items-center gap-space-xs bg-surface-container-low p-1 rounded-xl" data-active-classes="bg-primary-container text-on-primary-container rounded-lg"><a aria-current="page" class="px-space-md py-1.5 font-label-md transition-colors bg-primary-container text-on-primary-container rounded-lg" data-path="companion-hub" href="#">Hub</a><a class="px-space-md py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="feed" href="#">Feed</a><a class="px-space-md py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="alerts" href="#">Alerts</a><a class="px-space-md py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="chat" href="#">Chat</a><a class="px-space-md py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="diary" href="#">Diary</a><a class="px-space-md py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="brief" href="#">Brief</a><a class="px-space-md py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="lists" href="#">Lists</a></nav><div class="flex items-center gap-space-sm"><button aria-label="Search notes" class="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[20px]">search</span></button><button aria-label="Notifications" class="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors relative"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary-container"></span></button><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMLpSQKvk57jJnzztSQzdhLc7lle6brRen1imWbt2P1jH7HBm68pSo-J1YHxjEgqbcGLvD91O70Kx_9lUM75Nz7g2ieI28k9PsCclPzECoV8rHsN7zDcuXBdAX2VI546NHVmSiST0ZitR-RbniBJ6HDVzO4MboHvKwCmTOlRX1hkFasMxqaJBV6U3OtW1NDEm71-ZBIW6WlwORGbEvfWj9jW5GVY1WYruvj6dhCK3Y7sD9THUhOndt"/></div></div></div></header><aside class="fixed left-0 top-16 bottom-0 w-80 bg-surface-container-lowest z-40 flex flex-col justify-between p-margin-md overflow-hidden"><div class="flex flex-col gap-space-md flex-1"><div class="relative w-full aspect-square rounded-xl bg-surface-container-low overflow-hidden flex flex-col items-center justify-center p-space-md shadow-[2px_3px_0px_rgba(0,14,37,0.85)]"><div class="absolute top-space-sm left-space-sm px-space-xs py-0.5 rounded bg-surface-container-high text-secondary font-label-sm text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">nightlight</span>2:14 AM</div><div class="absolute top-space-sm right-space-sm w-3 h-3 rounded-full bg-secondary"></div><div class="w-24 h-24 rounded-full bg-surface-container flex items-center justify-center shadow-inner relative"><span class="material-symbols-outlined text-[54px] text-tertiary">cruelty_free</span><span class="absolute -bottom-1 -right-1 bg-primary-container text-on-primary-container text-[12px] font-label-sm px-1.5 py-0.5 rounded-full">moody</span></div><div class="mt-space-sm text-center"><div class="font-headline-md text-headline-md text-on-surface">Felt's Chamber</div><div class="font-body-sm text-body-sm text-on-surface-variant italic">"You've been staring at code for 3 hours. Hydrate or else."</div></div></div><div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-space-sm"><div class="flex justify-between items-center"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Affinity</span><span class="font-label-sm text-label-sm text-primary">Lvl 14 · Confidant</span></div><div class="w-full h-2 bg-surface-container rounded-full overflow-hidden"><div class="w-3/4 h-full bg-primary-container rounded-full"></div></div><div class="flex justify-between items-center text-on-surface-variant font-label-sm text-label-sm pt-space-xs"><span>Quiet Room Lamp</span><span class="text-secondary">Warm 2700K</span></div></div><div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-space-xs"><div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Companion Quick Pings</div><div class="flex flex-wrap gap-space-xs pt-space-xs"><span class="bg-surface-container px-space-xs py-1 rounded font-label-sm text-label-sm text-on-surface">Snack Veto</span><span class="bg-surface-container px-space-xs py-1 rounded font-label-sm text-label-sm text-on-surface">Focus Lofi</span><span class="bg-surface-container px-space-xs py-1 rounded font-label-sm text-label-sm text-secondary">Bedtime Soon</span></div></div></div><div class="pt-space-md flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-secondary">lock</span>E2E Encrypted</span><span class="hover:text-on-surface cursor-pointer">Memory Core</span></div></aside><div class="pl-80"><main class="relative pt-16 bg-surface min-h-screen px-gutter-lg pb-margin-lg"><div class="flex flex-col w-full">
+<div class="w-full max-w-[1240px] mx-auto my-2 rounded-xl overflow-hidden shadow-2xl bg-surface-container-lowest">
+<!-- Desktop Window Frame Titlebar -->
+<div class="h-10 bg-[#083D77] px-4 flex items-center justify-between select-none">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-[#DA4167] inline-block shadow-sm hover:opacity-80 cursor-pointer"></span>
+<span class="w-3 h-3 rounded-full bg-[#F78764] inline-block shadow-sm hover:opacity-80 cursor-pointer"></span>
+<span class="w-3 h-3 rounded-full bg-[#7A9B76] inline-block shadow-sm hover:opacity-80 cursor-pointer"></span>
+</div>
+<div class="h-4 w-px bg-surface-container-high mx-1"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">cruelty_free</span>
+<span class="font-headline-md text-label-md text-on-surface tracking-wide">Felt v2.4 · Desktop Companion</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 bg-surface-container-low px-2.5 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Awake · 1:42 AM</span>
+</div>
+<div class="flex items-center gap-1.5 bg-[#DA4167] text-on-primary-container px-2 py-0.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[13px]">warning</span>
+<span class="font-label-sm text-label-sm font-bold">1 Critical Alert</span>
+</div>
+<div class="flex items-center text-on-surface-variant hover:text-on-surface text-[16px] gap-2 ml-1">
+<span class="material-symbols-outlined text-[16px] cursor-pointer">minimize</span>
+<span class="material-symbols-outlined text-[16px] cursor-pointer">crop_square</span>
+<span class="material-symbols-outlined text-[16px] cursor-pointer">close</span>
+</div>
+</div>
+</div>
+<!-- Main Companion Shell Window Body -->
+<div class="grid grid-cols-12 min-h-[740px] bg-surface-container-lowest">
+<!-- LEFT PANEL (42% width ~ 5 cols) Her Room Space -->
+<div class="col-span-12 lg:col-span-5 p-margin-md flex flex-col justify-between relative bg-gradient-to-b from-[#062244] to-[#00132e] overflow-hidden">
+<!-- Atmospheric Window in Room (Backdrop) -->
+<div class="relative w-full h-[360px] rounded-xl overflow-hidden bg-[#000e25] flex flex-col justify-end p-space-md shadow-md">
+<!-- Sky Elements -->
+<div class="absolute inset-0 bg-gradient-to-b from-[#000a1c] via-[#083D77]/40 to-transparent">
+<!-- Moon & Stars SVG decoration -->
+<svg class="absolute top-4 right-6 w-14 h-14 opacity-80" fill="none" viewbox="0 0 100 100">
+<path d="M48 10C26 10 8 28 8 50C8 72 26 90 48 90C40 80 36 66 36 50C36 34 40 20 48 10Z" fill="#ffdbd0"></path>
+<circle class="animate-pulse" cx="82" cy="18" fill="#ffffff" r="1.5"></circle>
+<circle cx="70" cy="38" fill="#ffffff" opacity="0.6" r="1"></circle>
+<circle cx="22" cy="15" fill="#ffffff" opacity="0.7" r="1.5"></circle>
+<circle class="animate-pulse" cx="88" cy="55" fill="#ffffff" r="1"></circle>
+</svg>
+<!-- Vertical desk window pane mullions -->
+<div class="absolute inset-0 grid grid-cols-3 pointer-events-none opacity-20">
+<div class="bg-surface-container-lowest/40 h-full w-1 ml-auto"></div>
+<div class="bg-surface-container-lowest/40 h-full w-1 ml-auto"></div>
+</div>
+<!-- Gentle Warm Lamp Glow on desk -->
+<div class="absolute -bottom-8 left-4 w-40 h-40 bg-[#F78764]/20 rounded-full blur-2xl pointer-events-none"></div>
+</div>
+<!-- Speech Bubble Floating Over Her -->
+<div class="relative z-20 mb-space-sm self-start max-w-[92%] bg-[#F5F0F6] text-[#00132e] px-space-md py-space-sm rounded-xl shadow-lg -rotate-1">
+<!-- Mini Smug Companion Portrait Pin -->
+<div class="absolute -top-3 -left-2 bg-[#7A9B76] text-on-surface px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[13px] text-tertiary-fixed">smart_toy</span>
+<span class="font-label-sm text-label-sm font-bold text-[#00132e]">Felt</span>
+</div>
+<p class="font-diary-entry text-diary-entry leading-relaxed text-[#001f44] pt-1">
+              "You've been alt-tabbing every 3 minutes. Need me to summarize that doc for you?"
+            </p>
+<div class="flex justify-between items-center mt-1 text-[#594044]">
+<span class="font-label-sm text-label-sm">Just now · Desk Monitor 02</span>
+<button class="font-label-sm text-label-sm bg-[#e0bec2]/50 hover:bg-[#e0bec2] text-[#5a001f] px-2 py-0.5 rounded-full transition-colors">Veto tease</button>
+</div>
+</div>
+<!-- Felt Anime Character Sprite Seated at Desk -->
+<div class="relative z-10 w-full flex items-end justify-center">
+<div class="relative w-48 h-48 -mb-4 drop-shadow-[0_12px_16px_rgba(0,0,0,0.6)]">
+<img alt="Felt Desktop Companion" class="w-full h-full object-contain rounded-2xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMLpSQKvk57jJnzztSQzdhLc7lle6brRen1imWbt2P1jH7HBm68pSo-J1YHxjEgqbcGLvD91O70Kx_9lUM75Nz7g2ieI28k9PsCclPzECoV8rHsN7zDcuXBdAX2VI546NHVmSiST0ZitR-RbniBJ6HDVzO4MboHvKwCmTOlRX1hkFasMxqaJBV6U3OtW1NDEm71-ZBIW6WlwORGbEvfWj9jW5GVY1WYruvj6dhCK3Y7sD9THUhOndt"/>
+<!-- Desk edge silhouetted below sprite -->
+<div class="absolute -bottom-2 inset-x-0 h-4 bg-surface-container-high rounded-t-sm shadow-inner"></div>
+</div>
+</div>
+</div>
+<!-- Interactive Room Clickable Nodes (Stationery / Item Badges) -->
+<div class="mt-space-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-secondary">meeting_room</span>
+              Room Hotspots &amp; Gadgets
+            </span>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container-low px-2 py-0.5 rounded-full">Interactive</span>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<!-- Node: Corkboard -->
+<button class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-all text-left group shadow-sm active:translate-y-0.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[18px]">push_pin</span>
+<span class="font-label-md text-label-md text-on-surface group-hover:text-tertiary">Corkboard</span>
+</div>
+<span class="bg-[#F78764] text-[#531300] font-label-sm text-label-sm px-1.5 py-0.5 rounded-full font-bold">7 unread</span>
+</button>
+<!-- Node: Desk Warning Lamp (Alerting) -->
+<button class="flex items-center justify-between p-2.5 rounded-xl bg-[#DA4167]/20 hover:bg-[#DA4167]/30 transition-all text-left group shadow-sm active:translate-y-0.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#ffb2bd] text-[18px] animate-bounce">warning</span>
+<span class="font-label-md text-label-md text-[#ffdad6] font-bold">Desk Lamp</span>
+</div>
+<span class="bg-[#DA4167] text-white font-label-sm text-label-sm px-1.5 py-0.5 rounded-full font-bold animate-pulse">1 Active!</span>
+</button>
+<!-- Node: Notebook Diary -->
+<button class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-all text-left group shadow-sm active:translate-y-0.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">auto_stories</span>
+<span class="font-label-md text-label-md text-on-surface group-hover:text-secondary">Diary Log</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Page 42</span>
+</button>
+<!-- Node: Phone Chat -->
+<button class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-all text-left group shadow-sm active:translate-y-0.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">chat_bubble</span>
+<span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Phone Chat</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary">Standby</span>
+</button>
+</div>
+<!-- Morning Brief Ribbon -->
+<div class="flex items-center justify-between px-3 py-2 rounded-xl bg-surface-container-low text-on-surface-variant shadow-sm hover:text-on-surface cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[17px] text-[#F78764]">calendar_today</span>
+<span class="font-label-md text-label-md">Morning Brief Calendar</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary">Next: 09:00 AM Sprint</span>
+</div>
+</div>
+<!-- Quick Mini Companion Toggles Footer -->
+<div class="pt-space-md mt-space-sm flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-bright text-label-sm font-label-sm transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">volume_off</span>
+              Quiet Mode
+            </button>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-bright text-label-sm font-label-sm transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">timer</span>
+              Hush 1h
+            </button>
+</div>
+<div class="flex items-center gap-1.5 bg-[#7A9B76]/20 px-2.5 py-1 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">Mood: Smug &amp; Alert</span>
+</div>
+</div>
+</div>
+<!-- RIGHT PANEL (58% width ~ 7 cols) Active Section: Feed & Desk Lamp -->
+<div class="col-span-12 lg:col-span-7 bg-[#001b3d] p-margin-md flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<!-- Top Tab Navigation Strip -->
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-1.5 overflow-x-auto py-1">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DA4167] text-white font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined text-[15px]">dashboard</span>
+                Corkboard Feed
+                <span class="bg-white/20 text-white font-label-sm text-label-sm px-1.5 py-0.2 rounded-full">7</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">
+<span class="material-symbols-outlined text-[15px] text-[#ffb2bd]">lightbulb</span>
+                Desk Lamp Alerts
+                <span class="bg-[#DA4167] text-white font-label-sm text-label-sm px-1.5 py-0.2 rounded-full font-bold">1</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">
+                Chat
+              </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">
+                Diary
+              </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">
+                Morning Brief
+              </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">
+                Lists
+              </button>
+</div>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors" title="Filter Feed">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+<!-- Desk Lamp Urgent Warning Alert Banner -->
+<div class="relative rounded-xl overflow-hidden bg-gradient-to-r from-[#93000a] via-[#5a001f] to-[#001f44] p-space-md shadow-lg">
+<!-- Accent Top Strip -->
+<div class="absolute top-0 inset-x-0 h-1 bg-[#DA4167]"></div>
+<div class="flex items-start justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<!-- Illustrated Retro Warning Lamp Indicator -->
+<div class="w-10 h-10 rounded-xl bg-[#DA4167] flex items-center justify-center text-white shadow-md animate-pulse">
+<span class="material-symbols-outlined text-[24px]">thermostat</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="bg-[#ffdad6] text-[#690005] font-label-sm text-label-sm uppercase px-1.5 py-0.5 rounded font-extrabold tracking-wider">CRITICAL ALERT</span>
+<span class="font-label-sm text-label-sm text-primary-fixed">Rig Sensor: 2m ago</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-white mt-0.5">
+                    VRAM Spike (92°C) on desktop-rig-01
+                  </h4>
+<p class="font-body-sm text-body-sm text-[#ffdad6]/80 mt-0.5">
+                    Background model rendering instance exceeded thermal target. Felt slowed clock cycle.
+                  </p>
+</div>
+</div>
+<!-- Action Pills -->
+<div class="flex flex-col sm:flex-row gap-2 self-center shrink-0">
+<button class="px-3 py-1.5 rounded-lg bg-[#DA4167] hover:bg-[#b3224c] text-white font-label-sm text-label-sm font-bold shadow-md transition-all active:translate-y-0.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">psychology</span>
+                  Ask Felt to Triage
+                </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-sm text-label-sm transition-all active:translate-y-0.5">
+                  Handled
+                </button>
+</div>
+</div>
+</div>
+<!-- Pinned Corkboard Feed Section Header -->
+<div class="flex items-center justify-between pt-space-xs">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-[#F78764]"></span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Corkboard Memo Stream</h3>
+<span class="text-on-surface-variant font-label-sm text-label-sm">(Late night desk clippings)</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Auto-pinned by Felt</span>
+<span class="material-symbols-outlined text-[16px] text-tertiary">push_pin</span>
+</div>
+</div>
+<!-- Feed Note Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Card 1: Washi Tape Paper Card (Alex Reply) -->
+<div class="relative bg-[#F5F0F6] text-[#00132e] p-space-md rounded-xl shadow-[3px_4px_0px_rgba(0,0,0,0.4)] rotate-[-0.8deg] transition-transform hover:rotate-0 flex flex-col justify-between min-h-[175px]">
+<!-- Salmon Washi Tape Strip at top edge -->
+<div class="absolute -top-2.5 left-1/2 -translate-x-1/2 w-28 h-5 bg-[#F78764]/90 backdrop-blur-sm rounded-sm shadow-sm flex items-center justify-center">
+<span class="text-[9px] font-label-sm uppercase tracking-widest text-[#531300] font-bold opacity-75">felt·memo</span>
+</div>
+<!-- Content -->
+<div class="pt-2">
+<div class="flex items-center justify-between text-[#594044] mb-1.5">
+<span class="font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-[#dd7351]">mail</span>
+                    Inbox Intercept
+                  </span>
+<span class="font-label-sm text-label-sm">1:34 AM</span>
+</div>
+<p class="font-diary-entry text-diary-entry text-[#001f44] leading-relaxed">
+                  "btw regarding that email from Alex... I drafted a polite 'no thanks' for 10am."
+                </p>
+</div>
+<!-- Interactions -->
+<div class="mt-3 pt-2 flex items-center justify-between">
+<button class="bg-[#7A9B76] hover:bg-[#304e2f] text-white px-2.5 py-1 rounded-md font-label-sm text-label-sm font-bold shadow-sm transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">edit_note</span>
+                  Draft Reply
+                </button>
+<div class="flex items-center gap-1">
+<button class="p-1 rounded hover:bg-black/10 text-[#001f44] transition-colors font-label-sm text-label-sm flex items-center gap-0.5">
+<span>♡</span>
+<span class="text-[11px]">Accept</span>
+</button>
+<button class="p-1 rounded hover:bg-black/10 text-[#594044] transition-colors font-label-sm text-label-sm">
+                    meh
+                  </button>
+</div>
+</div>
+</div>
+<!-- Card 2: Lined Paper Sticky Note (Steam Alert) -->
+<div class="relative bg-[#fbf8f5] text-[#00132e] p-space-md rounded-xl shadow-[3px_4px_0px_rgba(0,0,0,0.4)] rotate-[1deg] transition-transform hover:rotate-0 flex flex-col justify-between min-h-[175px]">
+<!-- Enameled Metallic Pushpin at corner -->
+<div class="absolute -top-2 left-3 w-5 h-5 rounded-full bg-[#DA4167] shadow-[1px_2px_0px_rgba(0,0,0,0.5)] flex items-center justify-center">
+<div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+</div>
+<!-- Content with subtle lined notebook look -->
+<div class="pt-2">
+<div class="flex items-center justify-between text-[#594044] mb-1.5">
+<span class="font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-[#083D77]">sports_esports</span>
+                    Telemetry Check
+                  </span>
+<span class="font-label-sm text-label-sm">1:02 AM</span>
+</div>
+<p class="font-diary-entry text-diary-entry text-[#001f44] leading-relaxed">
+                  "Steam database updated an hour ago. Go to bed."
+                </p>
+<div class="mt-1 flex items-center gap-1 text-[11px] text-[#7e2c10]">
+<span class="material-symbols-outlined text-[13px]">bedtime</span>
+<span>Health Affinity -2 pts if awake at 2:30</span>
+</div>
+</div>
+<!-- Interactions -->
+<div class="mt-3 pt-2 flex items-center justify-end gap-1.5">
+<button class="bg-[#F78764]/20 hover:bg-[#F78764]/40 text-[#531300] px-2.5 py-1 rounded-md font-label-sm text-label-sm font-bold transition-colors flex items-center gap-1">
+<span>♡ Haha</span>
+</button>
+<button class="bg-black/5 hover:bg-black/10 text-[#594044] px-2.5 py-1 rounded-md font-label-sm text-label-sm transition-colors">
+                  meh
+                </button>
+</div>
+</div>
+</div>
+<!-- Secondary Companion Insight Bar -->
+<div class="bg-surface-container rounded-xl p-space-sm flex items-center justify-between text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">neurology</span>
+<span class="font-body-sm text-body-sm text-on-surface">Felt synced 3 tabs into memory. Your context cache is at 64%.</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary cursor-pointer hover:underline">View Index</span>
+</div>
+</div>
+<!-- BOTTOM CHAT PREVIEW / AUDIO BAR -->
+<div class="mt-space-md pt-space-sm">
+<div class="relative bg-surface-container-low rounded-2xl p-1.5 pl-4 flex items-center justify-between shadow-inner">
+<div class="flex items-center gap-2 flex-1">
+<span class="material-symbols-outlined text-tertiary text-[20px]">edit_note</span>
+<input class="bg-transparent text-on-surface placeholder:text-on-surface-variant/60 font-body-md text-body-md focus:outline-none w-full" placeholder="Quick whisper to Felt..." type="text"/>
+</div>
+<!-- Mini Audio / Waveform Trigger Cluster -->
+<div class="flex items-center gap-2">
+<!-- Audio waveform decorative visualizer -->
+<div class="hidden sm:flex items-center gap-0.5 px-2 py-1 bg-surface-container rounded-lg h-7">
+<span class="w-1 h-2 bg-secondary rounded-full"></span>
+<span class="w-1 h-4 bg-secondary rounded-full"></span>
+<span class="w-1 h-3 bg-tertiary rounded-full"></span>
+<span class="w-1 h-5 bg-primary-container rounded-full animate-pulse"></span>
+<span class="w-1 h-2 bg-secondary rounded-full"></span>
+</div>
+<!-- Hold-to-Talk Button -->
+<button class="h-9 px-3 rounded-xl bg-[#7A9B76] hover:bg-[#304e2f] active:scale-95 text-[#042107] font-label-md text-label-md font-bold flex items-center gap-1.5 transition-all shadow-sm" id="mic-trigger-btn" title="Hold to talk to Felt">
+<span class="material-symbols-outlined text-[18px]">mic</span>
+<span class="hidden md:inline">Hold to talk</span>
+</button>
+<!-- Send Button -->
+<button class="w-9 h-9 rounded-xl bg-primary-container text-on-primary-container hover:bg-primary-container/80 flex items-center justify-center transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+</button>
+</div>
+</div>
+<div class="flex justify-between items-center px-2 pt-1 text-[11px] text-on-surface-variant/70">
+<span>Press <kbd class="px-1 py-0.2 bg-surface-container rounded font-mono text-[10px]">Alt + Space</kbd> for quick command overlay</span>
+<span>Desktop Link: Active (WiFi 6E · 4ms)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const micBtn = document.getElementById('mic-trigger-btn');
+    if (micBtn) {
+      micBtn.addEventListener('mousedown', () => {
+        micBtn.classList.add('bg-[#DA4167]', 'text-white');
+        micBtn.classList.remove('bg-[#7A9B76]', 'text-[#042107]');
+      });
+      micBtn.addEventListener('mouseup', () => {
+        micBtn.classList.remove('bg-[#DA4167]', 'text-white');
+        micBtn.classList.add('bg-[#7A9B76]', 'text-[#042107]');
+      });
+      micBtn.addEventListener('mouseleave', () => {
+        micBtn.classList.remove('bg-[#DA4167]', 'text-white');
+        micBtn.classList.add('bg-[#7A9B76]', 'text-[#042107]');
+      });
+    }
+  })();
+</script></main></div></body></html>

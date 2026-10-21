@@ -130,3 +130,6 @@ untouched) -> tray-rust -> dashboard -> animation -> e2e + timer -> Mario's live
   reactions/background on the one slot), cold re-read ~100 s > felt-core's 60 s timeout -> 503. Fixed: infra #405
   (cache 6 GiB, `FELT_LOCAL_LLM_TIMEOUT_S=150`) + felt-tray **0.9.1** (180 s wait; props manifest panic fix).
   Live check of the streamed reply itself still open.
+- 2026-10-21 (afternoon): laptop off (Mario, voice is on the server since infra #402). Same day: feature switches
+  (felt-core #51), llm_gate scheduler (#52), parallel tests (#53) - see workspace runbooks/felt-model-spike.md sec 13.
+  WP-65 open: Mario's live check of the streamed reply.

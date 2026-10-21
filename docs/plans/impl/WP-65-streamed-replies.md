@@ -125,3 +125,8 @@ untouched) -> tray-rust -> dashboard -> animation -> e2e + timer -> Mario's live
   Mario's live check; (3) dashboard needs nothing (app chat is text-only `/v1/app/chat`); felt-animation
   has no chat calls on Linux - nothing to change; (4) faster than ~6 s needs less GPU contention while
   Bonsai still writes.
+- 2026-10-21 (morning): felt-tray **0.9.0** released + installed (v2 client). Mario's live check: "she follows my
+  instructions but doesn't reply" - not WP-65: felt-llm's 4 GiB `--cache-ram` evicted her chat prompt (screen
+  reactions/background on the one slot), cold re-read ~100 s > felt-core's 60 s timeout -> 503. Fixed: infra #405
+  (cache 6 GiB, `FELT_LOCAL_LLM_TIMEOUT_S=150`) + felt-tray **0.9.1** (180 s wait; props manifest panic fix).
+  Live check of the streamed reply itself still open.

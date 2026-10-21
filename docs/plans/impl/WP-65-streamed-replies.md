@@ -115,3 +115,13 @@ untouched) -> tray-rust -> dashboard -> animation -> e2e + timer -> Mario's live
   **v2 8.8-10.7 s vs v1 10.1-23.9 s**; text ready v2 2.3-2.6 s vs v1 3.6-13.3 s; **chunk 0's TTS on the laptop's
   felt-voice is 6-8 s (74-97 chars)** - the rest of the gap to the 4 s target is the voice (server voice stack:
   ~1.9 s in the spike), or a shorter first chunk (`reply_stream_first_chunk_chars`, 40 today). Next: tray-rust.
+- 2026-10-21 (night, paused - Mario off to sleep): live = felt-core #49 + #50 (ReplyMeta: a skill's tag /
+  ui_action on chunk 0; first chunk may end at a clause break). Voice on the server built + tested
+  (felt-voice #4 + #5, image `clockmost/felt-voice:a3adb81fb292`, models `/home/ai-models/voice`): fits both
+  cards beside Bonsai 32K, no OOM in the worst case. Timer, message -> first sound, server voice: **~6-7 s
+  typical** (best 5.7). **Open:** (1) infra #402 (felt-voice stack + felt-core -> `http://felt-voice:8421`)
+  waits for Mario's merge - then turn the laptop off (ComfyUI goes with it); (2) tray `pkgs/felt-tray` main
+  has the v2 change (commit 25cb9ee, vetted bumps) - cut `./release.sh 0.9.0`, `pacman -Syu`, install log,
+  Mario's live check; (3) dashboard needs nothing (app chat is text-only `/v1/app/chat`); felt-animation
+  has no chat calls on Linux - nothing to change; (4) faster than ~6 s needs less GPU contention while
+  Bonsai still writes.

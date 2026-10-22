@@ -133,3 +133,5 @@ untouched) -> tray-rust -> dashboard -> animation -> e2e + timer -> Mario's live
 - 2026-10-21 (afternoon): laptop off (Mario, voice is on the server since infra #402). Same day: feature switches
   (felt-core #51), llm_gate scheduler (#52), parallel tests (#53) - see workspace runbooks/felt-model-spike.md sec 13.
   WP-65 open: Mario's live check of the streamed reply.
+- 2026-10-22: **closed** - Mario's live check not done, accepted without it ("mark what we been through as done");
+  bead cm-l86 closed.

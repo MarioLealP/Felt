@@ -1,7 +1,7 @@
 # Felt
 
-A local-first AI companion for my desktop: text/voice chat backed by a
-local model (with opt-in cloud delegation for banter it isn't great at), and
+A fully local AI companion for my desktop: text/voice chat backed by local
+models on my own GPUs (no cloud model, nothing leaves the LAN), and
 an animated VRM avatar that lives on the desktop and reacts to the
 conversation - lipsync, expressions, idle behavior, the works.
 

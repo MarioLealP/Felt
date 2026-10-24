@@ -1,6 +1,6 @@
 # Felt
 
-A local-first AI companion for Mario's desktop: text/voice chat backed by a
+A local-first AI companion for my desktop: text/voice chat backed by a
 local model (with opt-in cloud delegation for banter it isn't great at), and
 an animated VRM avatar that lives on the desktop and reacts to the
 conversation - lipsync, expressions, idle behavior, the works.

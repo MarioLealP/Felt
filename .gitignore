@@ -44,3 +44,17 @@
 /Model
 __pycache__/
 *.lnk
+
+# bought / third-party models, animations, textures and voice clips - never commit (stripped from history 2026-10-24)
+VRoid/
+AnimBackup/
+Assets/
+Sounds/
+scratch/
+*.vrm
+*.vrma
+*.glb
+*.fbx
+*.wav
+*.pmx
+*.psd
